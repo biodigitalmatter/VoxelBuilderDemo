@@ -13,7 +13,7 @@ def create_random_array(n):
     return a
 
 class Layer:
-    def __init__(self, name = 'Air', voxel_size = 100, diffusion_strength = 1/7, rgb = [1, 0.5, 0.5], axis_order = ['z', 'y', 'x']):
+    def __init__(self, name = 'Air', voxel_size = 100, diffusion_strength = 1/12, rgb = [1, 0.5, 0.5], axis_order = ['z', 'y', 'x']):
         self._name = name
         self._n = voxel_size
         self._d = diffusion_strength
@@ -26,11 +26,13 @@ class Layer:
 
     def zeros(self):
         self._array = np.zeros(self._n ** 3).reshape([self._n, self._n, self._n])
+        return self._array
     
     def random(self, add = 0, strech = 1, crop = False, start = 0, end = 1):
         self._array = (np.random.random(self._n ** 3).reshape(self._n,self._n,self._n) + add) * strech
         if crop:
             self._array = self.crop_array(self._array, start ,end)
+
 
     
     def crop_array(self, array, start = 0, end = 1):
@@ -57,8 +59,8 @@ class Layer:
             
             for i in range(6):
                 y = np.copy(self._array)
-                y = np.roll(y, shifts[i % 1], axis = axes[i])
-                diffusion_one_side = -1 * self.diffusion_strength * (self._array - y)
+                y = np.roll(y, shifts[i % 2], axis = axes[i])
+                diffusion_one_side = -1 * self._d * (self._array - y)
                 total_diffusions += diffusion_one_side
                 # print('total_diffusions', total_diffusions)
         
