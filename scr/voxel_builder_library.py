@@ -1,23 +1,43 @@
 import numpy as np
 
+def create_zero_array(n):
+    # create voxel-like array
+    a = np.zeros(n ** 3)  # 3 dimensional numpy array representing voxel voxel
+    a = np.reshape(a, [n, n, n])
+    return a
+
+def create_random_array(n):
+    # create voxel-like array
+    a = np.random.random(n ** 3)
+    a = np.reshape(a, [n, n, n])
+    return a
+
 class Layer:
     def __init__(self, name = 'Air', voxel_size = 100, diffusion_strength = 0.61, rgb = [1, 0.5, 0.5], attraction_strength = None, axis_order = ['z', 'y', 'x']):
-        self.name = name
+        self._name = name
         self._n = voxel_size
         self._d = diffusion_strength
         self._rgb = rgb
         self._axis_order = axis_order
-        self.voxel_array = None
+        self._array = None
         
     def __repr__(self):
-        return f"Layer(name={self.name}, voxel_shape={self.voxel_array.shape}, diffusion_strength={self.diffusion_strength}, color={self.color}, attraction_strength={self.attraction_strength})"
+        return f"Layer(_name={self._name}, voxel_shape={self._array.shape}, diffusion_strength={self.diffusion_strength}, color={self.color}, attraction_strength={self.attraction_strength})"
 
-    def create_empty(self):
-        # create voxel-like array
-        a = np.zeros(self._n ** 3)  # 3 dimensional numpy array representing voxel voxel
-        a = np.reshape(a, [self._n, self._n, self._n])
-        return a
+    def zeros(self):
+        self._array = np.zeros(self._n ** 3).reshape([self._n, self._n, self._n])
+    
+    def random(self, add = 0, strech = 1, crop = False, start = 0, end = 1):
+        self._array = (np.random.random(self._n ** 3).reshape(self._n,self._n,self._n) + add) * strech
+        if crop:
+            self._array = self.crop_array(self._array, start ,end)
 
+    
+    def crop_array(self, array, start = 0, end = 1):
+        array = np.minimum(array, end)
+        array = np.maximum(array, start)
+        return array
+    
     def diffusion(self, repeat = 1, limit_by_Hirsh = True):
         """every value of the voxel cube diffuses with its face nb
          standard finite volume approach (Hirsch, 1988). 
@@ -33,25 +53,25 @@ class Layer:
         axes = [0,0,1,1,2,2]
         for j in range(repeat):
             # six face nb 
-            total_diffusions = self.create_empty()
+            total_diffusions = self.zeros()
             for i in range(6):
-                y = np.copy(self.voxel_array)
+                y = np.copy(self._array)
                 y = np.roll(y, shifts[i % 2], axis = axes[i])
-                diffusion_one_side = - self.diffusion_strength * (self.voxel_array- y)
+                diffusion_one_side = - self.diffusion_strength * (self._array - y)
                 total_diffusions += diffusion_one_side
         
-            self.voxel_array += total_diffusions
+            self._array += total_diffusions
         
-        return self.array
+        return self._array
     
     def get_color_dimension(self):
         r,g,b = self._rgb
-        colors = np.copy(self.voxel_array)
-        red = np.reshape(colors * r, self._n, self._n, self._n, 1)
-        green = np.reshape(colors * g, self._n, self._n, self._n, 1)
-        blue = np.reshape(colors * b, self._n, self._n, self._n, 1)
-        
-        self._colors = np.concatenate((red, green, blue), axis = -1)
+        colors = np.copy(self.array)
+        colors = (1 - self.crop_array(colors, 0, 1))
+        reds = np.reshape(colors * (r), [self._n, self._n, self._n, 1])
+        greens = np.reshape(colors * (g), [self._n, self._n, self._n, 1])
+        blues = np.reshape(colors * (b), [self._n, self._n, self._n, 1])
+        self._colors = np.concatenate((reds, greens, blues), axis = -1)
         return self._colors
     
     # Property getters
@@ -77,16 +97,28 @@ class Layer:
         return self._color
     
     @property
-    def voxel_array(self):
-        return self.voxel_array
+    def array(self):
+        return self._array
     
-    # # Property setters
-    # @color.setter
-    # def color(self, value):
-    #     """Setter method for color property"""
-    #     if not isinstance(value, list):
-    #         raise ValueError("Color must be a list of integrers")
-    #     self._color = value
+    # Property setters
+    @array.setter
+    def array(self, a):
+        """Setter method for size property"""
+        if not isinstance(a, np.ndarray):
+            raise ValueError("Size must be a np.ndarray instance")
+        if np.ndim(a) != 3:
+            raise ValueError("Array should be 3D")
+        self._array = a
+    
+    @rgb.setter
+    def rgb(self, a):
+        """Setter method for size property"""
+        if not isinstance(a, list):
+            raise ValueError("rgb must be a list of three floats")
+        if len(a) != 3:
+            raise ValueError("list length should be 3")
+        self._rgb = a
+
 
 
 class Agent:
