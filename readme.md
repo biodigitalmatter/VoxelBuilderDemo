@@ -71,6 +71,8 @@ it could perhaphs make sense to create mechanism Classes instead of inbuilt func
 - OverlaySomeLayers
 - DumpState *dumps a state of a layer or the entire world*
 - LoadAsBuilt
+- Wind
+- Gravity
 
 ## Visualisers
 

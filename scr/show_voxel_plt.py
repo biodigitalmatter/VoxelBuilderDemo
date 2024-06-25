@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 
-def show_voxel(voxel_fill_3D, colors_4D, show = True, save = False, title = 'img', No = 1):
+def show_voxel(voxel_fill_3D, colors_4D = None, show = True, save = False, title = 'img', No = 1):
     # ################## visualise
     # # and plot everything
     fig = plt.figure(figsize = [4, 4], dpi = 200)
@@ -9,7 +9,7 @@ def show_voxel(voxel_fill_3D, colors_4D, show = True, save = False, title = 'img
 
     # voxels
     ax.voxels(voxel_fill_3D, facecolors = colors_4D)
-    
+
     # style
     filename = __file__
     fig.suptitle("%s_%s-%ds" %(filename, title, No ), fontsize = 5)
