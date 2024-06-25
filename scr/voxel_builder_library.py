@@ -13,7 +13,7 @@ def create_random_array(n):
     return a
 
 class Layer:
-    def __init__(self, name = 'Air', voxel_size = 100, diffusion_strength = 1/12, decay = 1/2, absolute_decay = 0.0001, rgb = [1, 0.5, 0.5], axis_order = ['z', 'y', 'x'], color_visibility = 0.001):
+    def __init__(self, name = 'Air', voxel_size = 100, diffusion_strength = 1/12, decay = 1/2, absolute_decay = 0.0001, rgb = [1, 0.5, 0.5], axis_order = ['z', 'y', 'x'], voxel_visibility = [0.001, 1]):
         self._name = name
         self._n = voxel_size
         self._d = diffusion_strength
@@ -21,7 +21,7 @@ class Layer:
         self._absolute_decay = absolute_decay
         self._rgb = rgb
         self._axis_order = axis_order
-        self.color_visibility = color_visibility
+        self.voxel_visibility = voxel_visibility
         self._array = None
         
     def __repr__(self):
@@ -69,7 +69,7 @@ class Layer:
 
         return self._array
     
-    def diffuse2(self, repeat = 1, limit_by_Hirsh = True, reintroduce_on_the_other_end = False, randomize = True, factor = 10):
+    def diffuse2(self, repeat = 1, limit_by_Hirsh = True, reintroduce_on_the_other_end = False, randomize = False, factor = 0.1):
         """infinitive borders
         every value of the voxel cube diffuses with its face nb
         standard finite volume approach (Hirsch, 1988). 
@@ -117,7 +117,7 @@ class Layer:
                 
                 diffusion_one_side = -1 * self._d * (self._array - y)
                 if randomize:
-                    diffusion_one_side *= create_random_array(self._n) * factor
+                    diffusion_one_side += diffusion_one_side * (create_random_array(self._n) - 0.5) * factor
                 total_diffusions += diffusion_one_side
         
             self._array += total_diffusions
@@ -139,9 +139,10 @@ class Layer:
     def get_color_dimension(self):
 
         r,g,b = self._rgb
+        s, e = self.voxel_visibility
         colors = np.copy(self.array)
-        colors = (1 - self.crop_array(colors, 0, 1))
-
+        colors = (1 - self.crop_array(colors, s,e))
+        # colors = self.crop_array(colors, s,e)
         reds = np.reshape(colors * (r), [self._n, self._n, self._n, 1])
         greens = np.reshape(colors * (g), [self._n, self._n, self._n, 1])
         blues = np.reshape(colors * (b), [self._n, self._n, self._n, 1])
@@ -173,6 +174,12 @@ class Layer:
     @property
     def array(self):
         return self._array
+
+    @property
+    def voxels(self):
+        s, e = self.voxel_visibility
+        _voxels = self.crop_array(self._array, s, e)
+        return _voxels
     
     # Property setters
     @array.setter
