@@ -13,16 +13,18 @@ def create_random_array(n):
     return a
 
 class Layer:
-    def __init__(self, name = 'Air', voxel_size = 100, diffusion_strength = 1/12, rgb = [1, 0.5, 0.5], axis_order = ['z', 'y', 'x']):
+    def __init__(self, name = 'Air', voxel_size = 100, diffusion_strength = 1/12, decay = 1/2, absolute_decay = 0.0001, rgb = [1, 0.5, 0.5], axis_order = ['z', 'y', 'x']):
         self._name = name
         self._n = voxel_size
         self._d = diffusion_strength
+        self._decay = decay
+        self._absolute_decay = absolute_decay
         self._rgb = rgb
         self._axis_order = axis_order
         self._array = None
         
     def __repr__(self):
-        return f"Layer(_name={self._name}, voxel_shape={self._array.shape}, diffusion_strength={self.diffusion_strength}, rgb={self._rgb}, axis_order = {self._axis_order})"
+        return f"Layer(_name={self._name}, voxel_shape={self._array.shape}, diffusion_strength={self.diffusion_strength}, decay_speed={self._decay}, rgb={self._rgb}, axis_order = {self._axis_order})"
 
     def zeros(self):
         self._array = np.zeros(self._n ** 3).reshape([self._n, self._n, self._n])
@@ -66,8 +68,18 @@ class Layer:
         
             self._array += total_diffusions
 
-        
         return self._array
+    
+    def decay_proportional(self):
+        # a = self._array
+        # decay = self._decay * a
+        self.array *= self._decay
+
+    def decay_absolute(self):
+        self._array = self.crop_array(self._array - self._absolute_decay, 0, 1)
+
+    
+
     
     def get_color_dimension(self):
         r,g,b = self._rgb
