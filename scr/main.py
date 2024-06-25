@@ -6,7 +6,7 @@ import numpy as np
 
 n = 9
 
-smells = builder.Layer('air', voxel_size = n, diffusion_strength= 1/36 , decay = 0.8)
+smells = builder.Layer('air', voxel_size = n, diffusion_strength= 1/7 , decay = 0.0001, voxel_visibility=[0.2, 1])
 smells.rgb = [1,0.998,0.999]
 # smells.random(add = -0.95, crop=True, strech=1)
 a = smells.zeros()
@@ -16,13 +16,9 @@ a[0][0][0] = 1
 smells.array = a
 view.show_voxel(smells.array, smells.colors)
 for i in range(5):
-    smells.decay_proportional(randomize = True)
-    # smells.decay_absolute()
-    smells.diffuse2(repeat=2)
-    
-    
+    smells.decay_proportional(randomize = False)
+    smells.diffuse2(repeat=1, randomize=False, factor = 0)
     view.show_voxel(smells.array, smells.colors)
-# print(np.amin(smells.array), np.amax(smells.array) )
-# print(smells.array)
+
 print('done')
 # print('done\n',smells.__repr__)
