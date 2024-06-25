@@ -13,7 +13,7 @@ def create_random_array(n):
     return a
 
 class Layer:
-    def __init__(self, name = 'Air', voxel_size = 100, diffusion_strength = 1/12, decay = 1/2, absolute_decay = 0.0001, rgb = [1, 0.5, 0.5], axis_order = ['z', 'y', 'x']):
+    def __init__(self, name = 'Air', voxel_size = 100, diffusion_strength = 1/12, decay = 1/2, absolute_decay = 0.0001, rgb = [1, 0.5, 0.5], axis_order = ['z', 'y', 'x'], show_color_limit = 0.001):
         self._name = name
         self._n = voxel_size
         self._d = diffusion_strength
@@ -21,6 +21,7 @@ class Layer:
         self._absolute_decay = absolute_decay
         self._rgb = rgb
         self._axis_order = axis_order
+        self._show_color_limt = show_color_limit
         self._array = None
         
     def __repr__(self):
@@ -35,8 +36,6 @@ class Layer:
         if crop:
             self._array = self.crop_array(self._array, start ,end)
 
-
-    
     def crop_array(self, array, start = 0, end = 1):
         array = np.minimum(array, end)
         array = np.maximum(array, start)
@@ -70,6 +69,60 @@ class Layer:
 
         return self._array
     
+    def diffuse2(self, repeat = 1, limit_by_Hirsh = True, reintroduce_on_the_other_end = False):
+        """infinitive borders
+        every value of the voxel cube diffuses with its face nb
+        standard finite volume approach (Hirsch, 1988). 
+        diffusion change of voxel_x between voxel_x and y:
+        delta_x = -a(x-y) 
+        where 0 <= a <= 1/6 
+        """
+        if limit_by_Hirsh:
+            self._d = max(0, self._d)
+            self._d = min(1/6, self._d)
+        
+        shifts = [-1, 1]
+        axes = [0,0,1,1,2,2] 
+        # order: left, right, front
+        for j in range(repeat):
+            # six face nb 
+            total_diffusions = create_zero_array(self._n)
+            
+            for i in range(6):
+                y = np.copy(self._array)
+                y = np.roll(y, shifts[i % 2], axis = axes[i])
+
+                if not reintroduce_on_the_other_end:
+                    e = self._n - 1
+                    # removing the values from the other end after rolling
+                    if i == 0:
+                        y[:][:][e] = 0
+                    elif i == 1:
+                        y[:][:][0] = 0
+                    elif 2 <= i <= 3:
+                        m = y.transpose((1,0,2))
+                        if i == 2:
+                            m[:][:][e] = 0
+                        elif i == 3:
+                            m[:][:][0] = 0
+                        y = m.transpose((1,0,2))
+
+                    elif 4 <= i <= 5:
+                        m = y.transpose((2,0,1))
+                        if i == 4:
+                            m[:][:][e] = 0
+                        elif i == 5:
+                            m[:][:][0] = 0
+                        y = m.transpose((1,2,0))
+                
+                diffusion_one_side = -1 * self._d * (self._array - y)
+                total_diffusions += diffusion_one_side
+                # print('total_diffusions', total_diffusions)
+        
+            self._array += total_diffusions
+
+        return self._array
+    
     def decay_proportional(self):
         # a = self._array
         # decay = self._decay * a
@@ -78,9 +131,6 @@ class Layer:
     def decay_absolute(self):
         self._array = self.crop_array(self._array - self._absolute_decay, 0, 1)
 
-    
-
-    
     def get_color_dimension(self):
         r,g,b = self._rgb
         colors = np.copy(self.array)
