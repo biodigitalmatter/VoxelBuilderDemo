@@ -13,7 +13,7 @@ def create_random_array(n):
     return a
 
 class Layer:
-    def __init__(self, name = 'Air', voxel_size = 100, diffusion_strength = 0.61, rgb = [1, 0.5, 0.5], attraction_strength = None, axis_order = ['z', 'y', 'x']):
+    def __init__(self, name = 'Air', voxel_size = 100, diffusion_strength = 1/7, rgb = [1, 0.5, 0.5], axis_order = ['z', 'y', 'x']):
         self._name = name
         self._n = voxel_size
         self._d = diffusion_strength
@@ -22,7 +22,7 @@ class Layer:
         self._array = None
         
     def __repr__(self):
-        return f"Layer(_name={self._name}, voxel_shape={self._array.shape}, diffusion_strength={self.diffusion_strength}, color={self.color}, attraction_strength={self.attraction_strength})"
+        return f"Layer(_name={self._name}, voxel_shape={self._array.shape}, diffusion_strength={self.diffusion_strength}, rgb={self._rgb}, axis_order = {self._axis_order})"
 
     def zeros(self):
         self._array = np.zeros(self._n ** 3).reshape([self._n, self._n, self._n])
@@ -38,7 +38,7 @@ class Layer:
         array = np.maximum(array, start)
         return array
     
-    def diffusion(self, repeat = 1, limit_by_Hirsh = True):
+    def diffuse(self, repeat = 1, limit_by_Hirsh = True):
         """every value of the voxel cube diffuses with its face nb
          standard finite volume approach (Hirsch, 1988). 
          diffusion change of voxel_x between voxel_x and y:
@@ -47,20 +47,23 @@ class Layer:
         """
         if limit_by_Hirsh:
             self._d = max(0, self._d)
-            self._d = min(0.6, self._d)
+            self._d = min(1/6, self._d)
         
         shifts = [-1, 1]
         axes = [0,0,1,1,2,2]
         for j in range(repeat):
             # six face nb 
-            total_diffusions = self.zeros()
+            total_diffusions = create_zero_array(self._n)
+            
             for i in range(6):
                 y = np.copy(self._array)
-                y = np.roll(y, shifts[i % 2], axis = axes[i])
-                diffusion_one_side = - self.diffusion_strength * (self._array - y)
+                y = np.roll(y, shifts[i % 1], axis = axes[i])
+                diffusion_one_side = -1 * self.diffusion_strength * (self._array - y)
                 total_diffusions += diffusion_one_side
+                # print('total_diffusions', total_diffusions)
         
             self._array += total_diffusions
+
         
         return self._array
     
