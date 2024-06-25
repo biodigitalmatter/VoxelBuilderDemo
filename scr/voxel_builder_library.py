@@ -13,7 +13,7 @@ def create_random_array(n):
     return a
 
 class Layer:
-    def __init__(self, name = 'Air', voxel_size = 100, diffusion_strength = 1/12, decay = 1/2, absolute_decay = 0.0001, rgb = [1, 0.5, 0.5], axis_order = ['z', 'y', 'x'], show_color_limit = 0.001):
+    def __init__(self, name = 'Air', voxel_size = 100, diffusion_strength = 1/12, decay = 1/2, absolute_decay = 0.0001, rgb = [1, 0.5, 0.5], axis_order = ['z', 'y', 'x'], color_visibility = 0.001):
         self._name = name
         self._n = voxel_size
         self._d = diffusion_strength
@@ -21,7 +21,7 @@ class Layer:
         self._absolute_decay = absolute_decay
         self._rgb = rgb
         self._axis_order = axis_order
-        self._show_color_limt = show_color_limit
+        self.color_visibility = color_visibility
         self._array = None
         
     def __repr__(self):
@@ -69,7 +69,7 @@ class Layer:
 
         return self._array
     
-    def diffuse2(self, repeat = 1, limit_by_Hirsh = True, reintroduce_on_the_other_end = False):
+    def diffuse2(self, repeat = 1, limit_by_Hirsh = True, reintroduce_on_the_other_end = False, randomize = True, factor = 10):
         """infinitive borders
         every value of the voxel cube diffuses with its face nb
         standard finite volume approach (Hirsch, 1988). 
@@ -116,25 +116,32 @@ class Layer:
                         y = m.transpose((1,2,0))
                 
                 diffusion_one_side = -1 * self._d * (self._array - y)
+                if randomize:
+                    diffusion_one_side *= create_random_array(self._n) * factor
                 total_diffusions += diffusion_one_side
-                # print('total_diffusions', total_diffusions)
         
             self._array += total_diffusions
 
         return self._array
     
-    def decay_proportional(self):
+    def decay_proportional(self, randomize = False, factor = 0.25):
         # a = self._array
         # decay = self._decay * a
-        self.array *= self._decay
+        if not randomize:
+            self.array -= self.array *  self._decay
+        else:
+            randomized_decay = (create_random_array(self._n) * factor + factor * 1.5) * self._decay
+            self.array -= self.array * randomized_decay
 
     def decay_absolute(self):
         self._array = self.crop_array(self._array - self._absolute_decay, 0, 1)
 
     def get_color_dimension(self):
+
         r,g,b = self._rgb
         colors = np.copy(self.array)
         colors = (1 - self.crop_array(colors, 0, 1))
+
         reds = np.reshape(colors * (r), [self._n, self._n, self._n, 1])
         greens = np.reshape(colors * (g), [self._n, self._n, self._n, 1])
         blues = np.reshape(colors * (b), [self._n, self._n, self._n, 1])
