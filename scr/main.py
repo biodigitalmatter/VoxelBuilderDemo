@@ -8,15 +8,16 @@ n = 30
 iter = 20
 show_img = True
 save_img = True
+note = 'decay'
 
 smells = designer.Layer()
 smells.name = 'smells'
 smells.voxel_size = n
-smells.diffusion_ratio = 1/7
+smells.diffusion_ratio = 1/36
 smells.decay_ratio = 0
 smells.decay_random_factor = 0
-smells.diffusion_random_factor = 0.3
-smells.gradient_resolution = 20000
+smells.diffusion_random_factor = 0
+smells.gradient_resolution = 0
 smells.rgb = [1,1,1]
 
 # initiate random drops
@@ -42,6 +43,6 @@ print(smells)
 print(smells.array[0][0][0], smells.array[0][0][1], smells.array[1][0][1])
 bottomline = smells.__str__()
 smells.calculate_color_array()
-view.show_voxel(smells.array, smells.color_array, save=save_img, show = show_img, title='voxels_test_smells', suffix = 'n-%s_iter-%s_diffusion_validation' %(smells._n, iter), bottom_line = bottomline)
+view.show_voxel(smells.array, smells.color_array, save=save_img, show = show_img, title='voxels_test_smells', suffix = 'n-%s_iter-%s_%s' %(smells._n, iter, note), bottom_line = bottomline)
 
 print('done')
