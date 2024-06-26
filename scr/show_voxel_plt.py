@@ -15,7 +15,7 @@ def show_voxel(voxel_fill_3D, colors_4D = None, show = True, save = False, title
 
     # style    
     fig.suptitle('%s_%s_%s.png' %(title, timestamp_now, suffix), fontsize = 5)
-    fig.text(0,2, s = str(bottom_line), fontsize = 2.5)
+    fig.text(0,0, s = str(bottom_line), fontsize = 3.4, verticalalignment = 'baseline' )
     
     ax.set_xticks([])
     ax.set_yticks([])
