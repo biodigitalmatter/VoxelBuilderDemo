@@ -4,30 +4,30 @@ import voxel_builder_library as designer
 import show_voxel_plt as view
 import numpy as np
 
-n = 8
-iter = 7
+n = 30
+iter = 20
 show_img = True
 save_img = True
 
 smells = designer.Layer()
 smells.name = 'smells'
 smells.voxel_size = n
-smells.diffusion_ratio = 1/12
+smells.diffusion_ratio = 1/7
 smells.decay_ratio = 0
 smells.decay_random_factor = 0
-smells.diffusion_random_factor = 0
-smells.gradient_resolution = 0
+smells.diffusion_random_factor = 0.3
+smells.gradient_resolution = 20000
 smells.rgb = [1,1,1]
 
 # initiate random drops
 smells.empty_array()
-smells.array[0][0][0] = 1
+smells.array[0][int(n/3)][0] = 1
 # for _ in range(2):
 #     i, j, k = np.random.randint(0, n -1, size = 3)
 #     smells.array[i][j][k] = 1 - np.random.random(1) * 0.2
 for i in range(iter):
     # decay
-    # smells.decay()
+    smells.decay()
     # diffuse
     smells.diffuse(limit_by_Hirsh=False, reintroduce_on_the_other_end=False)
     # # add new drops
