@@ -310,7 +310,7 @@ class Layer:
                 diff_ratio = self.diffusion_ratio * (1 - create_random_array(self._n) * self.diffusion_random_factor)
             # summ up the diffusions per faces
             total_diffusions += diff_ratio * (self._array - y) / 2
-        self._array += total_diffusions
+        self._array -= total_diffusions
         return self._array
     
     def emmission(self):

@@ -5,7 +5,7 @@ import show_voxel_plt as view
 import numpy as np
 
 n = 8
-iter = 3
+iter = 7
 show_img = True
 save_img = True
 
