@@ -5,32 +5,38 @@ import show_voxel_plt as view
 import numpy as np
 
 n = 60
+iter = 20
+save_img = True
 
-smells = builder.Layer('air', voxel_size = n, diffusion_strength= 1/7 , decay = 0.01)
-smells.rgb = [1,1,0]
-smells.rgb = [1,0.998,0.999]
-# smells.random(add = -0.95, crop=True, strech=1)
-a = smells.zeros()
-# a[4][4][4] = 1
+smells = builder.Layer()
+smells.name = 'smells'
+smells.voxel_size = n
+smells.diffusion_ratio = 1/7
+smells.decay_ratio = 0.01
+smells.decay_random_factor = 0
+smells.diffusion_random_factor = 0
+smells.gradient_resolution = 100
+
+# initiate random drops
+smells.empty_array()
+print(smells.array.shape)
+
 for _ in range(1):
     i, j, k = np.random.randint(0, n -1, size = 3)
-    a[i][j][k] = np.random.random(1) + 0.5
-smells.array = a
-# view.show_voxel(smells.array, smells.colors)
-iter = 20
+    smells.array[i][j][k] = np.random.random(1) + 0.5
 for i in range(iter):
-    smells.decay_proportional(randomize = False)
-    smells.diffuse2(repeat=1, randomize=False, factor = 0)
+    # decay
+    smells.decay()
+    # diffuse
+    smells.diffuse()
+    # add new drops
     i, j, k = np.random.randint(0, n -1, size = 3)
-    a[i][j][k] = np.random.random(1) + 0.5
+    smells.array[i][j][k] = np.random.random(1) + 0.5
 
+# discretize gradient
+smells.grade()
 
-a = smells.array
-grading = 500
-a = np.int64(a * grading) / grading
-smells.array = a
-name = 'grade-500'
-save_ = True
-view.show_voxel(smells.array, smells.colors, save=save_, title='voxels_test_smells', suffix = 'n-%s_iter-%s' %(smells._n, iter), bottom_line = smells.__repr__)
+# show result and save image
+view.show_voxel(smells.array, smells.color_array, save=save_img, title='voxels_test_smells', suffix = 'n-%s_iter-%s' %(smells._n, iter), bottom_line = smells.__repr__)
 
 print('done')
