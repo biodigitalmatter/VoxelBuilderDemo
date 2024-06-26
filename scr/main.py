@@ -29,7 +29,7 @@ for i in range(iter):
     # decay
     # smells.decay()
     # diffuse
-    smells.diffuse(limit_by_Hirsh=False, reintroduce_on_the_other_end=True)
+    smells.diffuse(limit_by_Hirsh=False, reintroduce_on_the_other_end=False)
     # # add new drops
     # i, j, k = np.random.randint(0, n -1, size = 3)
     # smells.array[i][j][k] = np.random.random(1) + 0.5
