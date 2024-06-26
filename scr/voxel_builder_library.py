@@ -13,7 +13,7 @@ def create_random_array(n):
     return a
 
 class Layer:
-    def __init__(self, name = 'Air', voxel_size = 100, diffusion_strength = 1/12, decay = 1/2, absolute_decay = 0.0001, rgb = [1, 0.5, 0.5], axis_order = ['z', 'y', 'x'], voxel_visibility = [0.001, 1]):
+    def __init__(self, name = 'Air', voxel_size = 100, diffusion_strength = 1/12, decay = 1/2, absolute_decay = 0.0001, rgb = [1, 0.5, 0.5], axis_order = 'zyx', voxel_visibility = [0.001, 1]):
         self._name = name
         self._n = voxel_size
         self._d = diffusion_strength
@@ -41,7 +41,56 @@ class Layer:
         array = np.maximum(array, start)
         return array
     
-    def diffuse(self, repeat = 1, limit_by_Hirsh = True):
+    def fill_by_logical_larger(self, value = 0.5):
+        """returns new voxel_array with 0,1 values based on condition"""
+        smaller = self.array < value
+        larger = np.logical_not(self.array, smaller)
+        a = create_zero_array(self._n)
+        a[:,:,:][larger] = 1
+        return a
+    
+    def convert_array_logical(self, value = 0.5, condition = '<', override_self = False):
+        """returns new voxel_array with 0,1 values based on condition"""
+        if condition == '<':
+            mask_inv = self.array > value
+        elif condition == '>':
+            mask_inv = self.array < value
+        elif condition == '<=':
+            mask_inv = self.array >= value
+        elif condition == '>=':
+            mask_inv = self.array >=  value
+        mask = np.logical_not(self.array, mask_inv)
+        a = create_zero_array(self._n)
+        a[:,:,:][mask] = 1
+
+        if override_self:
+            self.array = a
+        return a
+
+    def get_nonzero_point_list(self, array):
+        """returns indicies of nonzero values
+        if list_of_points:
+            shape = [n,3]
+        else:
+            shape = [3,n]"""
+        non_zero_array = np.nonzero(array)
+        return np.transpose(non_zero_array)
+    
+
+    def get_nonzero_index_coordinates(self, array):
+        """returns indicies of nonzero values
+        list of coordinates
+            shape = [3,n]"""
+        non_zero_array = np.nonzero(array)
+        return non_zero_array
+        
+
+
+
+
+       
+
+    def diffuse_old(self, repeat = 1, limit_by_Hirsh = True):
         """every value of the voxel cube diffuses with its face nb
          standard finite volume approach (Hirsch, 1988). 
          diffusion change of voxel_x between voxel_x and y:
@@ -227,6 +276,10 @@ class Agent:
     def __repr__(self):
         return f"Agent(position={self.position}, movement_limitations={self.movement_limitations}, pathpheromon_strength={self.pathpheromon_strength})"
 
+
+
+def convert_to_compas_pointcloud(voxel_array, order = 'xyz'):
+    pass
 
 def overlay_layers(layers, weight_mask):
     # add several layers
