@@ -1,10 +1,10 @@
 from voxel_builder_library import *
+from show_voxel_plt import *
 import numpy as np
 
-v = Layer('Test', 2)
+# Test conditional formatting
+v = Layer('Test', 5)
 v.random()
-larger = np.nonzero(v.array > 0.5)
-print(v.array)
-print(v.array[:,:,:][v.array > 0.5])
-print(np.asarray(larger).transpose())
+v.conditional_fill('<', 0.1,  override_self=True)
+show_voxel(v.array)
 
