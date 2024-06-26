@@ -14,7 +14,7 @@ def create_random_array(n):
 
 class Layer:
     def __init__(self, name = '', voxel_size = 20, rgb = [1,1,1], 
-                diffusion_ratio = 1/7, diffusion_random_factor = 0,
+                diffusion_ratio = 0.12, diffusion_random_factor = 0,
                 decay_ratio = 0, decay_random_factor = 0, decay_linear_value = 0,
                 gradient_resolution = 0):
         
@@ -31,7 +31,29 @@ class Layer:
         self._decay_linear_value = decay_linear_value
         self._gradient_resolution = gradient_resolution
         self._voxel_crop_range = [0,1] # too much
+    
+    def __str__(self):
+        properties = []
+        count = 0
+        for name in dir(self):
+            if isinstance(getattr(self.__class__, name, None), property):
+                # Conditionally exclude properties from the string
+                if name == 'array' or name == "color_array":  # Example condition: exclude 'voxel_size' property
+                    pass
+                else:
+                    value = getattr(self, name)
+                    properties.append(f"{name}={value}")
+                    # if (count % 2) == 1:
+                    properties.append('\n')
+                    count += 1
+        return f"{self.__class__.__name__}({', '.join(properties)})"
+    
 
+
+    def get_params(self):
+        text = str(self.__str__)
+        return text
+    
     # Property getters
     @property
     def array(self):
@@ -68,8 +90,8 @@ class Layer:
         return self._decay_ratio
 
     @property
-    def decay_linear_ratio(self):
-        return self._decay_linear_ratio
+    def decay_linear_value(self):
+        return self._decay_linear_value
 
     @property
     def decay_random_factor(self):
@@ -148,11 +170,11 @@ class Layer:
             raise ValueError('Decay ratio must be non-negative')
         self._decay_ratio = value
 
-    @decay_linear_ratio.setter
+    @decay_linear_value.setter
     def decay_linear_ratio(self, value):
         if not isinstance(value, (int, float)):
             raise ValueError("Decay linear ratio must be a number")
-        self._decay_linear_ratio = value
+        self._decay_linear_value = value
 
     @decay_random_factor.setter
     def decay_random_factor(self, value):
@@ -211,12 +233,8 @@ class Layer:
             mask_inv = self.array <= value
         elif condition == '>=':
             mask_inv = self.array >=  value
-        print(mask_inv)
-
         a = create_zero_array(self._n)
-        print(a)
         a[mask_inv] = 0
-        print(a)
         if override_self:
             self.array = a
         return a
@@ -291,7 +309,7 @@ class Layer:
             else:
                 diff_ratio = self.diffusion_ratio * (1 - create_random_array(self._n) * self.diffusion_random_factor)
             # summ up the diffusions per faces
-            total_diffusions += diff_ratio * (self._array - y)
+            total_diffusions += diff_ratio * (self._array - y) / 2
         self._array += total_diffusions
         return self._array
     
@@ -310,7 +328,7 @@ class Layer:
         self._array = self.crop_array(self._array - self.decay_linear_value, s,e)
 
     def calculate_color_array(self):
-        r,g,b = self._rgb
+        r,g,b = self.rgb
         s, e = self.voxel_crop_range
         colors = np.copy(self.array)
         colors = (1 - self.crop_array(colors, s,e))
@@ -318,8 +336,8 @@ class Layer:
         reds = np.reshape(colors * (r), [self._n, self._n, self._n, 1])
         greens = np.reshape(colors * (g), [self._n, self._n, self._n, 1])
         blues = np.reshape(colors * (b), [self._n, self._n, self._n, 1])
-        self._colors = np.concatenate((reds, greens, blues), axis = -1)
-        return self._colors
+        self._color_array = np.concatenate((reds, greens, blues), axis = -1)
+        return self._color_array
 
 class Agent:
     def __init__(self, position, movement_limitations, pathpheromon_strength):
