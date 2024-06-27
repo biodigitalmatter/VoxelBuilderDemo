@@ -12,6 +12,32 @@ def create_random_array(n):
     a = np.reshape(a, [n, n, n])
     return a
 
+def set_value_at_index(array, index = [0,0,0], value = 1):
+    i,j,k = index
+    array[i][j][k] = value
+    return array
+
+def get_value_at_index(array, index = [0,0,0]):
+    i,j,k = index
+    v = array[i][j][k]
+    return v
+
+def conditional_fill(array, n, condition = '<', value = 0.5, override_self = False):
+    """returns new voxel_array with 0,1 values based on condition"""
+    if condition == '<':
+        mask_inv = array < value
+    elif condition == '>':
+        mask_inv = array > value
+    elif condition == '<=':
+        mask_inv = array <= value
+    elif condition == '>=':
+        mask_inv = array >=  value
+    a = create_zero_array(n)
+    a[mask_inv] = 0
+    if override_self:
+        array = a
+    return a
+
 global direction_dict
 
 direction_dict_np = {
@@ -22,6 +48,7 @@ direction_dict_np = {
     'front' : np.asarray([0,-1,0]),
     'back' : np.asarray([0,1,0])
 }
+compass_dictonary_full_names = direction_dict_np
 
 class Layer:
     def __init__(self, name = '', voxel_size = 20, rgb = [1,1,1], 
@@ -259,6 +286,17 @@ class Layer:
             self.array = a
         return a
 
+
+    def set_value_at_index(self, index = [0,0,0], value = 1):
+        i,j,k = index
+        self.array[i][j][k] = value
+        return self.array
+
+    def get_value_at_index(self, index = [0,0,0]):
+        i,j,k = index
+        v = self.array[i][j][k]
+        return v
+
     def get_nonzero_point_list(self, array):
         """returns indicies of nonzero values
         if list_of_points:
@@ -367,32 +405,52 @@ class Layer:
         self.diffuse(diffusion_limit_by_Hirsh, reintroduce_on_the_other_end)
         # emmite
         self.emmission()
-        
+     
+
+# there will be objects per agents
+# but there is a layer containing all agents too.
 
 class Agent:
-    def __init__(self, position, movement_limitations, pathpheromon_strength):
-        self.position = position  # tuple representing the agent's position in the environment
-        self.movement_limitations = movement_limitations  # constraints on agent's movement
-        self.pathpheromon_strength = pathpheromon_strength  # strength of the path pheromone
+    def __init__(self, position = [0,0,0], compass_array = compass_dictonary_full_names):
+        self.position = np.asarray(position)  # [i,j,k]
+        self.compass_array = compass_array
+        self.compass_keys = compass_array.keys()
 
-    def move(self):
-        # Implementation of agent movement
-        pass
+    def move(self, key):
+        # changes the position property
+        v = self.compass_array[key]
+        self.position += v
+    
+    def random_move(self):
+        i = np.random.randint(0,5)
+        all_dir = self.compass_array.keys()
+        v = all_dir[i]
+        self.position += v
 
-    def check_move_options(self):
-        # Implementation to check possible movement options
-        pass
+    def get_nb_cell_values_of_layer(self, layer):
+        nb_value_dict = {}
+        value_list = []
+        for key in self.compass_array.keys():
+            d = self.compass_array[key]
+            nb_cell_index = d + self.position
+            v = get_value_at_index(layer, nb_cell_index)
+            nb_value_dict[key] = v
+            value_list.append(v)
+        return np.asarray(value_list)
+    
+n = 5
+space = Layer(voxel_size=n, )
+space.empty_array()
+agent = Agent()
+pose = [1,1,1]
 
-    def get_impulse(self):
-        # Implementation to get the impulse controlling the agent
-        pass
 
-    def get_neighbor_voxels(self):
-        # Implementation to get neighboring voxels in the environment
-        pass
 
-    def __repr__(self):
-        return f"Agent(position={self.position}, movement_limitations={self.movement_limitations}, pathpheromon_strength={self.pathpheromon_strength})"
+
+
+
+        
+
 
 
 
