@@ -5,11 +5,11 @@ import show_voxel_plt as view
 import numpy as np
 
 n = 30
-iter = 20
+iter = 5
 show_result = True
 show_animation = False
 save_img = False
-note = 'decay'
+note = ''
 
 smells = designer.Layer()
 smells.name = 'smells'
@@ -24,7 +24,9 @@ smells.rgb = [1,1,1]
 # SETUP #
 smells.empty_array()
 # add one drop
-smells.array[0][int(n/3)][0] = 1
+
+smells.array[n-1][int(n/3)][0] = 1
+# order = ('x','y','z') #!!!???
 # add random drops
 # for _ in range(2):
 #     i, j, k = np.random.randint(0, n -1, size = 3)
@@ -32,12 +34,13 @@ smells.array[0][int(n/3)][0] = 1
 
 
 # RUN #
-def run(iter):
-    for i in range(iter):
+def run(loop_count):
+    for _ in range(loop_count):
         smells.iterate()
 
 # SHOW #
 if show_result and not show_animation:
+    run(iter)
     fig, ax = view.init_fig(
         suffix = 'n-%s_iter-%s_%s' %(smells._n, iter, note),
         bottom_line = smells.__str__()

@@ -114,6 +114,10 @@ class Layer:
     @property
     def iter_count(self):
         return self._iter_count
+    
+    @iter_count.setter
+    def iter_count(self, value):
+        self._iter_count = value
 
     # Property setters
     @array.setter
