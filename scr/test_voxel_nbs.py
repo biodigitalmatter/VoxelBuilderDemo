@@ -4,8 +4,8 @@ from voxel_builder_library import direction_dict_np
 
 def value_at_index(array, index = [0,0,0], value = 1):
     i,j,k = index
-    a[i][j][k] = value
-    return a
+    array[i][j][k] = value
+    return array
 
 def get_color_array(array, n):
     a = np.copy(array)
