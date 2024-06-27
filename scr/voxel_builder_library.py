@@ -31,6 +31,7 @@ class Layer:
         self._decay_linear_value = decay_linear_value
         self._gradient_resolution = gradient_resolution
         self._voxel_crop_range = [0,1] # too much
+        self._iter_count = 0
     
     def __str__(self):
         properties = []
@@ -109,6 +110,10 @@ class Layer:
     @property
     def gradient_resolution(self):
         return self._gradient_resolution
+
+    @property
+    def iter_count(self):
+        return self._iter_count
 
     # Property setters
     @array.setter
@@ -338,6 +343,16 @@ class Layer:
         blues = np.reshape(colors * (b), [self._n, self._n, self._n, 1])
         self._color_array = np.concatenate((reds, greens, blues), axis = -1)
         return self._color_array
+
+    def iterate(self, diffusion_limit_by_Hirsh=False, reintroduce_on_the_other_end=False ):
+        self.iter_count += 1
+        # decay
+        self.decay()
+        # diffuse
+        self.diffuse(diffusion_limit_by_Hirsh, reintroduce_on_the_other_end)
+        # emmite
+        self.emmission()
+        
 
 class Agent:
     def __init__(self, position, movement_limitations, pathpheromon_strength):
