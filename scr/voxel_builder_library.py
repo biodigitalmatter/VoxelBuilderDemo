@@ -426,6 +426,9 @@ class Agent:
         all_dir = self.compass_array.keys()
         v = all_dir[i]
         self.position += v
+    
+    def random_pheromones(self):
+        return np.random.random(6)
 
     def get_nb_cell_values_of_layer(self, layer):
         nb_value_dict = {}
@@ -437,6 +440,11 @@ class Agent:
             nb_value_dict[key] = v
             value_list.append(v)
         return np.asarray(value_list)
+    
+    def follow_top_pheromone(self, pheromones):
+        """pheromones : np.array.([1,0,0,0,0,0])"""
+        top = np.amax(pheromones)
+
     
 n = 5
 space = Layer(voxel_size=n, )
