@@ -7,9 +7,11 @@ import numpy as np
 n = 30
 iter = 5
 show_result = True
-show_animation = False
+show_animation = True
+show_nth = 1
 save_img = False
-note = ''
+save_anim = False
+note = 'test_animation'
 
 smells = designer.Layer()
 smells.name = 'smells'
@@ -40,28 +42,46 @@ def run(loop_count):
 
 # SHOW #
 if show_result and not show_animation:
+    # generate the result
     run(iter)
+    print('voxel_done')
+    # initiate figure
     fig, ax = view.init_fig(
         suffix = 'n-%s_iter-%s_%s' %(smells._n, iter, note),
         bottom_line = smells.__str__()
     )
+    # show result plot
     view.show(fig, ax, smells)
+
     # print(smells)
     # print(smells.array[0][0][0], smells.array[0][0][1], smells.array[1][0][1])
-    print('done')
+    print('plot_done')
 
 # ANIMATION
 
-# from matplotlib import animation
-# from matplotlib import pyplot as plt
+if show_result and show_animation:
+    from matplotlib import animation
+    from matplotlib import pyplot as plt
 
-# def update():
-#     "generate next plot"
-#     pass
+    # initiate figure
+    fig, ax = view.init_fig(
+        suffix = 'n-%s_iter-%s_%s' %(smells._n, iter, note),
+        bottom_line = smells.__str__()
+    )
+    print(fig)
+    print(ax)
 
-# def animate(frame):
-#     run(1)
+    # animation function
+    # global counter
+    # counter = 0
+    def animate(frame):
+        run(1)
+        # if counter % show_nth == 0:
+        view.show(fig, ax, smells, save_img=False, show_img=False)
+        # counter += 1
 
-# anim = animation.FuncAnimation(figure, animate, frames = 50, interval = 50)
-# # anim.save("img/gif/test.gif")
-# plt.show()
+    # run animation
+    anim = animation.FuncAnimation(fig, animate, frames = 50, interval = 50)
+    if save_anim:
+        anim.save("img/gif/test.gif")
+    plt.show()
