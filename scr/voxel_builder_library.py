@@ -12,6 +12,17 @@ def create_random_array(n):
     a = np.reshape(a, [n, n, n])
     return a
 
+global direction_dict
+
+direction_dict_np = {
+    'up' : np.asarray([0,0,1]),
+    'left' : np.asarray([-1,0,0]),
+    'down' : np.asarray([0,0,-1]),
+    'right' : np.asarray([1,0,0]),
+    'front' : np.asarray([0,-1,0]),
+    'back' : np.asarray([0,1,0])
+}
+
 class Layer:
     def __init__(self, name = '', voxel_size = 20, rgb = [1,1,1], 
                 diffusion_ratio = 0.12, diffusion_random_factor = 0,
