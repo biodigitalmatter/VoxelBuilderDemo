@@ -13,13 +13,15 @@ def create_random_array(n):
     return a
 
 def set_value_at_index(layer, index = [0,0,0], value = 1):
-    print(index)
+    print('set value at index', index)
     i,j,k = index
     layer.array[i][j][k] = value
+            
+
     return layer
 
 def get_value_at_index(layer, index = [0,0,0]):
-    print('value at index', index)
+    print('get value at index', index)
     
     i,j,k = index
     v = layer.array[i][j][k]
@@ -417,17 +419,17 @@ class Layer:
 # but there is a layer containing all agents too.
 
 class Agent:
-    def __init__(self, pose = [0,0,0], compass_array = direction_dict_np, space_layer = None, auto_update = False):
+    def __init__(self, pose = [0,0,0], compass_array = direction_dict_np, space_layer = None, trace = False):
         self.pose = np.asarray(pose)  # [i,j,k]
         self.compass_array = compass_array
         self.compass_keys = list(compass_array.keys())
         self.space_layer = space_layer
-        self.auto_update = auto_update
+        self.trace = trace
         
 
     def move(self, key):
         """move to a neighbor voxel based on the compas dictonary"""
-        v = self.compass_array[key]
+        v = self.compass_array[self.compass_keys[key]]
         self.pose += v
     
     def random_move(self):
@@ -453,20 +455,21 @@ class Agent:
     def follow_pheromones(self, six_pheromones):
         choice = np.argmax(six_pheromones)
         print('choice index: %s' %choice)
-        if not self.auto_update:
-            self.move(self.compass_keys[choice])
-        else:
+        if self.trace:
+            self.move(choice)
+            set_value_at_index(self.space_layer, *self.pose, 1)
+        elif not self.trace:
             set_value_at_index(self.space_layer, *self.pose , 0)
-            self.move(self.compass_keys[choice])
+            self.move(choice)
             set_value_at_index(self.space_layer, *self.pose, 1)
         return choice
 
     
-n = 5
-space = Layer(voxel_size=n, )
-space.empty_array()
-agent = Agent()
-pose = [1,1,1]
+# n = 5
+# space = Layer(voxel_size=n, )
+# space.empty_array()
+# agent = Agent()
+# pose = [1,1,1]
 
 
 
