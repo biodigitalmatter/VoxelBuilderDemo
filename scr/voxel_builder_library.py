@@ -20,7 +20,7 @@ def set_value_at_index(layer, index = [0,0,0], value = 1):
 
     return layer
 
-def get_value_at_index(layer, index = [0,0,0]):
+def get_layer_value_at_index(layer, index = [0,0,0]):
     print('get value at index', index)
     
     i,j,k = index
@@ -61,7 +61,7 @@ class Layer:
     def __init__(self, name = '', voxel_size = 20, rgb = [1,1,1], 
                 diffusion_ratio = 0.12, diffusion_random_factor = 0,
                 decay_ratio = 0, decay_random_factor = 0, decay_linear_value = 0,
-                gradient_resolution = 0):
+                gradient_resolution = 0, color_array = None):
         
         # self._array =  # value array
         self._color_array = None # colored array 4D
@@ -78,6 +78,7 @@ class Layer:
         self._gradient_resolution = gradient_resolution
         self._voxel_crop_range = [0,1] # too much
         self._iter_count = 0
+        self._color_array = color_array
     
     def __str__(self):
         properties = []
@@ -419,19 +420,27 @@ class Layer:
 # but there is a layer containing all agents too.
 
 class Agent:
-    def __init__(self, pose = [0,0,0], compass_array = direction_dict_np, space_layer = None, trace = False):
+    def __init__(self, 
+        pose = [0,0,0], 
+        compass_array = direction_dict_np,
+        ground_layer = None, 
+        walk_on_ground = True,
+        space_layer = None, 
+        leave_trace = False):
+
         self.pose = np.asarray(pose)  # [i,j,k]
         self.compass_array = compass_array
         self.compass_keys = list(compass_array.keys())
+        self.limited_to_ground = walk_on_ground
+        self.leave_trace = leave_trace
         self.space_layer = space_layer
-        self.trace = trace
+        self.ground_layer = ground_layer
         
-
     def move(self, key):
         """move to a neighbor voxel based on the compas dictonary"""
         v = self.compass_array[self.compass_keys[key]]
         self.pose += v
-    
+
     def random_move(self):
         i = np.random.randint(0,5)
         all_dir = self.compass_array.keys()
@@ -440,46 +449,65 @@ class Agent:
     
     def random_pheromones(self):
         return np.random.random(6)
+    
+    def get_nb_cell_indicies(self, pose):
+        """returns the list of nb cell indexes"""
+        nb_cell_index_list = []
+        for key in self.compass_array.keys():
+            d = self.compass_array[key]
+            nb_cell_index_list.append( d + pose)
+        return nb_cell_index_list
 
-    def get_nb_cell_values_of_layer(self, layer):
+    def get_nb_cell_values(self, layer, pose = None):
         nb_value_dict = {}
         value_list = []
         for key in self.compass_array.keys():
             d = self.compass_array[key]
-            nb_cell_index = d + self.pose
-            v = get_value_at_index(layer.array, nb_cell_index)
+            nb_cell_index = d + pose
+            v = layer.get_value_at_index(nb_cell_index)
             nb_value_dict[key] = v
             value_list.append(v)
         return np.asarray(value_list)
     
     def follow_pheromones(self, six_pheromones):
+        # check ground condition
+        if self.limited_to_ground:
+            ground_bool = self.check_ground(self.ground_layer)
+            six_pheromones[ground_bool] = 0
+        # select best pheromon
         choice = np.argmax(six_pheromones)
         print('choice index: %s' %choice)
-        if self.trace:
+        # update location in space layer
+        if self.leave_trace:
             self.move(choice)
-            set_value_at_index(self.space_layer, *self.pose, 1)
-        elif not self.trace:
-            set_value_at_index(self.space_layer, *self.pose , 0)
+            set_value_at_index(self.space_layer, self.pose, 1)
+        elif not self.leave_trace:
+            set_value_at_index(self.space_layer, self.pose , 0)
             self.move(choice)
-            set_value_at_index(self.space_layer, *self.pose, 1)
+            set_value_at_index(self.space_layer, self.pose, 1)
         return choice
-
     
-# n = 5
-# space = Layer(voxel_size=n, )
-# space.empty_array()
-# agent = Agent()
-# pose = [1,1,1]
+    def check_ground(self, ground_layer):
+        """return ground directions as bools"""
+        # get nb cell indicies
+        nb_cells = self.get_nb_cell_indicies(self.pose)
+        print(nb_cells)
+        # get values around nb cells
+        ground_list = []
+        for nb_pose in list(nb_cells):
+            nbs_values = self.get_nb_cell_values(ground_layer, nb_pose)
+            if np.sum(nbs_values) > 0:
+                cell_on_ground = True
+            else: cell_on_ground = False
+            ground_list.append(cell_on_ground)
+        ground_pheromone = np.asarray(ground_list)
+        return ground_pheromone
 
 
 
 
 
-
-        
-
-
-
+# Other helper functions
 
 def convert_to_compas_pointcloud(voxel_array, order = 'xyz'):
     pass
