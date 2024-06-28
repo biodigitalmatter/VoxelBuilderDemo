@@ -2,7 +2,7 @@ from voxel_builder_library import *
 from show_voxel_plt import *
 
 
-voxel_size = 40
+voxel_size = 15
 agent_count = 2
 iterations = 25
 
