@@ -22,8 +22,8 @@ def set_value_at_index(layer, index = [0,0,0], value = 1):
 
 def get_layer_value_at_index(layer, index = [0,0,0]):
     print('get value at index', index)
-    
-    i,j,k = index
+    index2 = np.mod(index, layer.voxel_size)
+    i,j,k = index2
     v = layer.array[i][j][k]
     return v
 
@@ -296,8 +296,9 @@ class Layer:
         return a
 
 
-    def set_value_at_index(self, index = [0,0,0], value = 1):
-        i,j,k = index
+    def set_layer_value_at_index(self, index = [0,0,0], value = 1):
+        index2 = np.mod(index, self.voxel_size)
+        i,j,k = index2
         self.array[i][j][k] = value
         return self.array
 
@@ -435,7 +436,9 @@ class Agent:
         self.leave_trace = leave_trace
         self.space_layer = space_layer
         self.ground_layer = ground_layer
-        
+        if ground_layer != None:
+            self.voxel_size = ground_layer.voxel_size
+
     def move(self, key):
         """move to a neighbor voxel based on the compas dictonary"""
         v = self.compass_array[self.compass_keys[key]]
@@ -459,42 +462,58 @@ class Agent:
         return nb_cell_index_list
 
     def get_nb_cell_values(self, layer, pose = None):
-        nb_value_dict = {}
+        # nb_value_dict = {}
         value_list = []
         for key in self.compass_array.keys():
             d = self.compass_array[key]
             nb_cell_index = d + pose
-            v = layer.get_value_at_index(nb_cell_index)
-            nb_value_dict[key] = v
+            
+            # # check index in boundary
+            # n_ = self.voxel_size
+            # min_ = np.amin(nb_cell_index)
+            # max_ = np.amax(nb_cell_index)
+            # print(n_, min_, max_)
+            # if n_ >= min_ or n_ <= max_:
+            #     v = -2
+            # else:
+            #     v = get_layer_value_at_index(layer, nb_cell_index)
+            
+            # dont check index in boundary
+            v = get_layer_value_at_index(layer, nb_cell_index)
+
+            print('value', v)
             value_list.append(v)
         return np.asarray(value_list)
     
     def follow_pheromones(self, six_pheromones):
         # check ground condition
+        print('six_pheromones')
         if self.limited_to_ground:
             ground_bool = self.check_ground(self.ground_layer)
             six_pheromones[ground_bool] = 0
+        
         # select best pheromon
         choice = np.argmax(six_pheromones)
         print('choice index: %s' %choice)
         # update location in space layer
         if self.leave_trace:
             self.move(choice)
-            set_value_at_index(self.space_layer, self.pose, 1)
+            self.space_layer.set_layer_value_at_index(self.pose, 1)
         elif not self.leave_trace:
-            set_value_at_index(self.space_layer, self.pose , 0)
+            self.space_layer.set_layer_value_at_index(self.pose, 0)
             self.move(choice)
-            set_value_at_index(self.space_layer, self.pose, 1)
+            self.space_layer.set_layer_value_at_index(self.pose, 1)
         return choice
     
     def check_ground(self, ground_layer):
         """return ground directions as bools"""
         # get nb cell indicies
         nb_cells = self.get_nb_cell_indicies(self.pose)
-        print(nb_cells)
+        print('nnb_cells', nb_cells)
         # get values around nb cells
         ground_list = []
         for nb_pose in list(nb_cells):
+            print('nb_pose;', nb_pose)
             nbs_values = self.get_nb_cell_values(ground_layer, nb_pose)
             if np.sum(nbs_values) > 0:
                 cell_on_ground = True
