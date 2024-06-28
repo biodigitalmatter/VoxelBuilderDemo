@@ -13,7 +13,7 @@ def create_random_array(n):
     return a
 
 def set_value_at_index(layer, index = [0,0,0], value = 1):
-    print('set value at index', index)
+    # print('set value at index', index)
     i,j,k = index
     layer.array[i][j][k] = value
             
@@ -21,7 +21,7 @@ def set_value_at_index(layer, index = [0,0,0], value = 1):
     return layer
 
 def get_layer_value_at_index(layer, index = [0,0,0]):
-    print('get value at index', index)
+    # print('get value at index', index)
     index2 = np.mod(index, layer.voxel_size)
     i,j,k = index2
     v = layer.array[i][j][k]
@@ -404,7 +404,10 @@ class Layer:
         reds = np.reshape(colors * (r), [self._n, self._n, self._n, 1])
         greens = np.reshape(colors * (g), [self._n, self._n, self._n, 1])
         blues = np.reshape(colors * (b), [self._n, self._n, self._n, 1])
-        self._color_array = np.concatenate((reds, greens, blues), axis = -1)
+        c = np.concatenate((reds, greens, blues), axis = -1)
+        c = np.minimum(c, 1)
+        c = np.maximum(c, 0)
+        self._color_array = c
         return self._color_array
 
     def iterate(self, diffusion_limit_by_Hirsh=False, reintroduce_on_the_other_end=False ):
@@ -427,6 +430,7 @@ class Agent:
         ground_layer = None, 
         walk_on_ground = True,
         space_layer = None, 
+        track_layer = None,
         leave_trace = False):
 
         self.pose = np.asarray(pose)  # [i,j,k]
@@ -435,6 +439,7 @@ class Agent:
         self.limited_to_ground = walk_on_ground
         self.leave_trace = leave_trace
         self.space_layer = space_layer
+        self.track_layer = track_layer
         self.ground_layer = ground_layer
         if ground_layer != None:
             self.voxel_size = ground_layer.voxel_size
@@ -467,42 +472,27 @@ class Agent:
         for key in self.compass_array.keys():
             d = self.compass_array[key]
             nb_cell_index = d + pose
-            
-            # # check index in boundary
-            # n_ = self.voxel_size
-            # min_ = np.amin(nb_cell_index)
-            # max_ = np.amax(nb_cell_index)
-            # print(n_, min_, max_)
-            # if n_ >= min_ or n_ <= max_:
-            #     v = -2
-            # else:
-            #     v = get_layer_value_at_index(layer, nb_cell_index)
-            
             # dont check index in boundary
             v = get_layer_value_at_index(layer, nb_cell_index)
-
-            print('value', v)
             value_list.append(v)
         return np.asarray(value_list)
     
     def follow_pheromones(self, six_pheromones):
         # check ground condition
-        print('six_pheromones')
+        # print('six_pheromones')
         if self.limited_to_ground:
             exclude_pheromones = self.check_ground(self.ground_layer)
             six_pheromones[exclude_pheromones] = -1
         
         # select best pheromon
         choice = np.argmax(six_pheromones)
-        print('choice index: %s' %choice)
+        # print('choice index: %s' %choice)
         # update location in space layer
         if self.leave_trace:
-            self.move(choice)
-            self.space_layer.set_layer_value_at_index(self.pose, 1)
-        elif not self.leave_trace:
-            self.space_layer.set_layer_value_at_index(self.pose, 0)
-            self.move(choice)
-            self.space_layer.set_layer_value_at_index(self.pose, 1)
+            self.track_layer.set_layer_value_at_index(self.pose, 1)
+        self.space_layer.set_layer_value_at_index(self.pose, 0)
+        self.move(choice)
+        self.space_layer.set_layer_value_at_index(self.pose, 1)
         return choice
     
     # def check_ground_around_cell(self, ground_layer, index):
@@ -514,15 +504,15 @@ class Agent:
     #     return cell_not_on_ground
 
     def check_ground(self, ground_layer):
-        """return ground directions as bools"""
+        """        return ground directions as bools"""
         # get nb cell indicies
         nb_cells = self.get_nb_cell_indicies(self.pose)
-        cells_to_check = list(nb_cells) # .extend(self.pose)
-        # get values around nb cells
+        cells_to_check = list(nb_cells)
+
         check_failed = []
         # iterate through nb cells
         for nb_pose in cells_to_check:
-            print('nb_pose;', nb_pose)
+            # print('nb_pose;', nb_pose)
             # check nbs of nb cell
             nbs_values = self.get_nb_cell_values(ground_layer, nb_pose)
             # check nb cell
