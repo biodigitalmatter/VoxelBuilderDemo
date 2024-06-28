@@ -489,8 +489,8 @@ class Agent:
         # check ground condition
         print('six_pheromones')
         if self.limited_to_ground:
-            ground_bool = self.check_ground(self.ground_layer)
-            six_pheromones[ground_bool] = 0
+            exclude_pheromones = self.check_ground(self.ground_layer)
+            six_pheromones[exclude_pheromones] = -1
         
         # select best pheromon
         choice = np.argmax(six_pheromones)
@@ -505,22 +505,33 @@ class Agent:
             self.space_layer.set_layer_value_at_index(self.pose, 1)
         return choice
     
+    # def check_ground_around_cell(self, ground_layer, index):
+    #     """True is """
+    #     nbs_values = self.get_nb_cell_values(ground_layer, index)
+    #     if np.sum(nbs_values) > 0:
+    #         cell_not_on_ground = False
+    #     else: cell_not_on_ground = True
+    #     return cell_not_on_ground
+
     def check_ground(self, ground_layer):
         """return ground directions as bools"""
         # get nb cell indicies
         nb_cells = self.get_nb_cell_indicies(self.pose)
-        print('nnb_cells', nb_cells)
+        cells_to_check = list(nb_cells) # .extend(self.pose)
         # get values around nb cells
-        ground_list = []
-        for nb_pose in list(nb_cells):
+        check_failed = []
+        # iterate through nb cells
+        for nb_pose in cells_to_check:
             print('nb_pose;', nb_pose)
+            # check nbs of nb cell
             nbs_values = self.get_nb_cell_values(ground_layer, nb_pose)
-            if np.sum(nbs_values) > 0:
-                cell_on_ground = True
-            else: cell_on_ground = False
-            ground_list.append(cell_on_ground)
-        ground_pheromone = np.asarray(ground_list)
-        return ground_pheromone
+            # check nb cell
+            nb_value = get_layer_value_at_index(ground_layer, nb_pose)
+            if np.sum(nbs_values) > 0 and nb_value == 0:
+                check_failed.append(False)
+            else: check_failed.append(True)
+        exclude_pheromones = np.asarray(check_failed)
+        return exclude_pheromones
 
 
 
