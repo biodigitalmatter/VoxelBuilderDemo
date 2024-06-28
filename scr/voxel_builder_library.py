@@ -38,7 +38,7 @@ def conditional_fill(array, n, condition = '<', value = 0.5, override_self = Fal
         array = a
     return a
 
-global direction_dict
+global direction_dict_np, direction_keys
 
 direction_dict_np = {
     'up' : np.asarray([0,0,1]),
@@ -48,7 +48,9 @@ direction_dict_np = {
     'front' : np.asarray([0,-1,0]),
     'back' : np.asarray([0,1,0])
 }
-compass_dictonary_full_names = direction_dict_np
+direction_keys = list(direction_dict_np.keys())
+# print(direction_keys)[5]
+
 
 class Layer:
     def __init__(self, name = '', voxel_size = 20, rgb = [1,1,1], 
@@ -411,10 +413,12 @@ class Layer:
 # but there is a layer containing all agents too.
 
 class Agent:
-    def __init__(self, position = [0,0,0], compass_array = compass_dictonary_full_names):
+    def __init__(self, position = [0,0,0], compass_array = direction_dict_np, space_layer = None, auto_update = False):
         self.position = np.asarray(position)  # [i,j,k]
         self.compass_array = compass_array
-        self.compass_keys = compass_array.keys()
+        self.compass_keys = list(compass_array.keys())
+        self.space_layer = space_layer
+        self.auto_update = auto_update
 
     def move(self, key):
         # changes the position property
@@ -436,14 +440,19 @@ class Agent:
         for key in self.compass_array.keys():
             d = self.compass_array[key]
             nb_cell_index = d + self.position
-            v = get_value_at_index(layer, nb_cell_index)
+            v = get_value_at_index(layer.array, nb_cell_index)
             nb_value_dict[key] = v
             value_list.append(v)
         return np.asarray(value_list)
     
-    def follow_top_pheromone(self, pheromones):
-        """pheromones : np.array.([1,0,0,0,0,0])"""
-        top = np.amax(pheromones)
+    def follow_best_choice(self, six_pheromones):
+        choice = np.argmax(six_pheromones)
+        if not self.auto_update:
+            self.move(self.compass_keys[choice])
+        else:
+            set_value_at_index(self.space_layer, self.position , 0)
+            self.move(self.compass_keys[choice])
+            set_value_at_index(self.space_layer, self.location, 1)
 
     
 n = 5
