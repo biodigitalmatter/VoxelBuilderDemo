@@ -2,32 +2,27 @@ from voxel_builder_library import *
 from show_voxel_plt import *
 
 
-n = 5
-space = Layer(voxel_size=n, )
-space.empty_array()
-agent = Agent()
-agent.position = [1,1,1]
-set_value_at_index(space.array, agent.position, value=2)
-agent.move('left')
-set_value_at_index(space.array, agent.position)
-# print(space.array)
-# move follow_pheromones
-pheromes = agent.random_pheromones()
-pheromes = np.arange(6)
-choice = np.argmax(pheromes)
-agent.move(direction_keys[choice])
+voxel_size = 6
+agent_count = 2
+iterations = 4
 
-# update space
-set_value_at_index(space.array, agent.position, value=0.5)
+space = Layer(voxel_size=voxel_size)
 
-agent.move('up')
-set_value_at_index(space.array, agent.position, value=0.3)
-agent.move('left')
-set_value_at_index(space.array, agent.position, value = 0.123)
-values = agent.get_nb_cell_values_of_layer(space)
-print(space.array)
-print(values)
-choice = np.argmax(values)
-print(direction_keys[choice])
+agents = []
+for i in range(agent_count):
+    agent = Agent(space_layer = space, auto_update=True)
+    agents.append(agent)
+for i in range(iterations):
+    for agent in agents:
+        agent.pose = [np.random.randint(0,5,[3])]
+        #follow random pheromones
+        random_pheromones = agent.random_pheromones()
+        random_pheromones_2 = agent.random_pheromones()
+        choice = random_pheromones + random_pheromones_2
+        dir_key = agent.follow_pheromones(choice)
+        # print(dir_key) # choice.argmax()
+
+
+# show image
 f,a = init_fig()
 show_voxel(f,a, space.array)
