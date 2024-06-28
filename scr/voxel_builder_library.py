@@ -12,14 +12,17 @@ def create_random_array(n):
     a = np.reshape(a, [n, n, n])
     return a
 
-def set_value_at_index(array, index = [0,0,0], value = 1):
+def set_value_at_index(layer, index = [0,0,0], value = 1):
+    print(index)
     i,j,k = index
-    array[i][j][k] = value
-    return array
+    layer.array[i][j][k] = value
+    return layer
 
-def get_value_at_index(array, index = [0,0,0]):
+def get_value_at_index(layer, index = [0,0,0]):
+    print('value at index', index)
+    
     i,j,k = index
-    v = array[i][j][k]
+    v = layer.array[i][j][k]
     return v
 
 def conditional_fill(array, n, condition = '<', value = 0.5, override_self = False):
@@ -58,11 +61,12 @@ class Layer:
                 decay_ratio = 0, decay_random_factor = 0, decay_linear_value = 0,
                 gradient_resolution = 0):
         
-        self._array = None # value array
+        # self._array =  # value array
         self._color_array = None # colored array 4D
         self._axis_order = 'zyx'
         self._name = name
         self._n = voxel_size
+        self._array = np.zeros(self._n ** 3).reshape([self._n, self._n, self._n])
         self._rgb = rgb
         self._diffusion_ratio = diffusion_ratio
         self._diffusion_random_factor = diffusion_random_factor
@@ -413,23 +417,24 @@ class Layer:
 # but there is a layer containing all agents too.
 
 class Agent:
-    def __init__(self, position = [0,0,0], compass_array = direction_dict_np, space_layer = None, auto_update = False):
-        self.position = np.asarray(position)  # [i,j,k]
+    def __init__(self, pose = [0,0,0], compass_array = direction_dict_np, space_layer = None, auto_update = False):
+        self.pose = np.asarray(pose)  # [i,j,k]
         self.compass_array = compass_array
         self.compass_keys = list(compass_array.keys())
         self.space_layer = space_layer
         self.auto_update = auto_update
+        
 
     def move(self, key):
-        # changes the position property
+        """move to a neighbor voxel based on the compas dictonary"""
         v = self.compass_array[key]
-        self.position += v
+        self.pose += v
     
     def random_move(self):
         i = np.random.randint(0,5)
         all_dir = self.compass_array.keys()
         v = all_dir[i]
-        self.position += v
+        self.pose += v
     
     def random_pheromones(self):
         return np.random.random(6)
@@ -439,20 +444,22 @@ class Agent:
         value_list = []
         for key in self.compass_array.keys():
             d = self.compass_array[key]
-            nb_cell_index = d + self.position
+            nb_cell_index = d + self.pose
             v = get_value_at_index(layer.array, nb_cell_index)
             nb_value_dict[key] = v
             value_list.append(v)
         return np.asarray(value_list)
     
-    def follow_best_choice(self, six_pheromones):
+    def follow_pheromones(self, six_pheromones):
         choice = np.argmax(six_pheromones)
+        print('choice index: %s' %choice)
         if not self.auto_update:
             self.move(self.compass_keys[choice])
         else:
-            set_value_at_index(self.space_layer, self.position , 0)
+            set_value_at_index(self.space_layer, *self.pose , 0)
             self.move(self.compass_keys[choice])
-            set_value_at_index(self.space_layer, self.location, 1)
+            set_value_at_index(self.space_layer, *self.pose, 1)
+        return choice
 
     
 n = 5
@@ -497,8 +504,8 @@ as_built = Layer(name="AsBuilt", voxel=np.zeros((10, 10, 10)), diffusion_strengt
 collision_area = Layer(name="CollisionArea", voxel=np.zeros((10, 10, 10)), diffusion_strength=0.0, color='black', attraction_strength=0.0)
 
 # Examples of agents
-builder = Agent(position=(5, 5, 5), movement_limitations={'max_steps': 10}, pathpheromon_strength=0.9)
-explorer = Agent(position=(2, 2, 2), movement_limitations={'max_steps': 15}, pathpheromon_strength=0.6)
+builder = Agent(pose=(5, 5, 5), movement_limitations={'max_steps': 10}, pathpheromon_strength=0.9)
+explorer = Agent(pose=(2, 2, 2), movement_limitations={'max_steps': 15}, pathpheromon_strength=0.6)
 
 # Example of mechanism usage
 voxel_engine = VoxelEngine()
