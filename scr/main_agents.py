@@ -3,20 +3,20 @@ from show_voxel_plt import *
 
 
 voxel_size = 40
-agent_count = 40
-iterations = 2000
+agent_count = 80
+iterations = 3000
 save_ = True
 title_ = 'img'
-note = 'queen_ph'
+note = 'queen_ph-decay-001-i3K'
 
-construct_limit_1 = 0.001
-construct_limit_2 = 0.1
+construct_limit_1 = 0.0001
+construct_limit_2 = 0.01
 wait = 100
 
 agent_space = Layer(voxel_size=voxel_size, rgb=[0.5,0.5,0.5])
 queen_space = Layer(voxel_size=voxel_size, rgb=[0.5,0.5,0.5])
 track_layer = Layer(voxel_size=voxel_size, rgb=[.09,.08,0])
-smell_layer = Layer(voxel_size=voxel_size, rgb=[0.1,0.1,0.1], diffusion_ratio=1/6, decay_ratio=0.1)
+smell_layer = Layer(voxel_size=voxel_size, rgb=[0.1,0.1,0.1], diffusion_ratio=1/6, decay_ratio=0.01)
 offset_ph = Layer(name = 'offset_ph', voxel_size=voxel_size, rgb = [0.25, 0.25, 0.25])
 
 # create ground:
@@ -83,7 +83,7 @@ for i in range(iterations):
         if built: 
             x = np.random.randint(0, voxel_size)
             y = np.random.randint(0, voxel_size)
-            print(x,y)
+            # print(x,y)
             agent.pose = [x,y,1]
         
     
