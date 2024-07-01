@@ -3,21 +3,21 @@ from show_voxel_plt import *
 
 
 voxel_size = 20
-agent_count = 2
-iterations = 2
-save_ = False
+agent_count = 1
+iterations = 40
+save_ = True
 title_ = 'img'
 note = 'wall_1'
 
 agent_space = Layer(voxel_size=voxel_size, rgb=[0.2,0,0.2])
 track_layer = Layer(voxel_size=voxel_size, rgb=[.5,0,0])
-smell_layer = Layer(voxel_size=voxel_size, rgb=[0.001,0.001,0.001], decay_linear_value=0.01, diffusion_ratio=0.5)
+smell_layer = Layer(voxel_size=voxel_size, rgb=[0.001,0.001,0.001], decay_linear_value=0.0001, diffusion_ratio=1, decay_ratio=0)
 
 # create ground:
 ground_level_Z = 1
 ground = Layer(voxel_size=voxel_size, name='Ground')
-a = make_solid_box_z(voxel_size, 2)
-b = make_solid_box_xxyyzz(voxel_size, 2,2,0,20,0,12)
+a = make_solid_box_z(voxel_size, 1)
+b = make_solid_box_xxyyzz(voxel_size, 18,18,0,20,0,12)
 ground.array += a + b
 ground.rgb = [0.5,0.5,0.5]
 
@@ -30,10 +30,10 @@ for i in range(agent_count):
         leave_trace=False,
         ground_layer=ground, 
         walk_on_ground=True)
-    # agent.pose = [np.random.randint(0, voxel_size,[3])]
     x = np.random.randint(0, voxel_size)
     y = np.random.randint(0, voxel_size)
-    agent.pose = [x, y, ground_level_Z]
+    # agent.pose = [x, y, ground_level_Z]
+    agent.pose = [15,3,2]
     agents.append(agent)
 
 # run simulation
@@ -43,10 +43,10 @@ for i in range(iterations):
         random_pheromones = agent.random_pheromones()
         choice = random_pheromones
         agent.follow_pheromones(choice)
-    # smell_layer.emissision_intake(agent_space.array, 1, False)
-    # smell_layer.diffuse()
-    # smell_layer.decay_linear()
-        
+    smell_layer.emissision_intake(agent_space.array, 1, False)
+    smell_layer.diffuse()
+    ground.block_layers([smell_layer])
+    smell_layer.decay_linear()
 
 # add layers and layer_colors
 c1 = ground.color_array
