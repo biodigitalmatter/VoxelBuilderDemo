@@ -1,6 +1,15 @@
 # Notes
 
-## meeting 240626
+## 240701
+
+### next todos
+
+- test offset pheromons vs movement_constraints
+- save steps
+- build conditions
+- movement attractor pheromons
+
+## meeting notes 240626
 
 ### design parameters: combination of algorithms
 
@@ -59,13 +68,9 @@ scanned mesh has an inside outside information
 
 later
 
-## Todos next
+### Todos next
 
 ### first
-
-test a wall as an obstacle for the pheromones
-
-code the Agent Class
 
 just explore build_algorithms,
 behaviours strategies interactions whatever
