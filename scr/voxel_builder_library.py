@@ -60,7 +60,7 @@ direction_keys = list(direction_dict_np.keys())
 class Layer:
     def __init__(self, name = '', voxel_size = 20, rgb = [1,1,1], 
                 diffusion_ratio = 0.12, diffusion_random_factor = 0,
-                decay_ratio = 0, decay_random_factor = 0, decay_linear_value = 0,
+                decay_ratio = 0, decay_random_factor = 0, decay_linear_value = 0, emission_factor = 0.1,
                 gradient_resolution = 0, color_array = None):
         
         # self._array =  # value array
@@ -79,6 +79,8 @@ class Layer:
         self._voxel_crop_range = [0,1] # too much
         self._iter_count = 0
         self._color_array = color_array
+        self._emission_factor = emission_factor
+        self._emmision_array = None
     
     def __str__(self):
         properties = []
@@ -162,11 +164,26 @@ class Layer:
     def iter_count(self):
         return self._iter_count
     
-    @iter_count.setter
-    def iter_count(self, value):
-        self._iter_count = value
+    @property
+    def emission_factor(self):
+        return self._emission_factor
+
+    @property
+    def voxel_crop_range(self):
+        return self._voxel_crop_range
 
     # Property setters
+
+    @emission_factor.setter
+    def emission_factor(self, value):
+        self._emission_factor = value
+    
+    @iter_count.setter
+    def iter_count(self, value):
+        if not isinstance(value, float):
+            raise ValueError("value must be a float")
+        self._iter_count = value
+
     @array.setter
     def array(self, a):
         """Setter method for size property"""
@@ -256,10 +273,6 @@ class Layer:
             raise ValueError("Gradient resolution must be a nonnegative integrer")
         self._gradient_resolution = value
     
-    @property
-    def voxel_crop_range(self):
-        return self._voxel_crop_range
-    
     @voxel_crop_range.setter
     def voxel_crop_range(self,value):
         if not(isinstance(list, tuple)):
@@ -294,7 +307,6 @@ class Layer:
         if override_self:
             self.array = a
         return a
-
 
     def set_layer_value_at_index(self, index = [0,0,0], value = 1):
         index2 = np.mod(index, self.voxel_size)
@@ -381,8 +393,29 @@ class Layer:
         self._array -= total_diffusions
         return self._array
     
-    def emmission(self):
-        pass
+
+    def emissision(self, external_emission_array = None, external_emission_factor = 1, proportional = True):
+        """updates array values based on self array values
+        by an emission factor ( multiply / linear )"""
+
+        if proportional: #proportional
+            self.array += self.array * self.emission_factor
+        else: # absolut
+            self.array = np.where(self.array != 0, self.array + self.emission_factor, self.array)
+    
+    # def self_emission(self):
+    #     self.array += self.emission_array * self.emission_factor
+
+    def emissision_intake(self, external_emission_array, factor, proportional = True):
+        """updates array values based on a given array
+        and an emission factor ( multiply / linear )"""
+
+        if proportional: #proportional
+            # self.array += external_emission_array * self.emission_factor
+            self.array = np.where(external_emission_array != 0, self.array + external_emission_array * factor, self.array)
+        else: # absolut
+            self.array = np.where(external_emission_array != 0, self.array + factor, self.array)
+
 
     def decay(self):
         if self._decay_random_factor == 0:
@@ -412,12 +445,14 @@ class Layer:
 
     def iterate(self, diffusion_limit_by_Hirsh=False, reintroduce_on_the_other_end=False ):
         self.iter_count += 1
+        # emission update
+        self.emmission_in()
         # decay
         self.decay()
         # diffuse
         self.diffuse(diffusion_limit_by_Hirsh, reintroduce_on_the_other_end)
-        # emmite
-        self.emmission()
+        #emission_out
+        self.emmission_out_update()
      
 
 # there will be objects per agents
