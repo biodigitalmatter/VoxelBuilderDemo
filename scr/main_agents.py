@@ -4,19 +4,19 @@ from show_voxel_plt import *
 
 voxel_size = 40
 agent_count = 40
-iterations = 100
+iterations = 2000
 save_ = True
 title_ = 'img'
 note = 'queen_ph'
 
 construct_limit_1 = 0.001
-construct_limit_2 = 0.01
+construct_limit_2 = 0.1
 wait = 100
 
 agent_space = Layer(voxel_size=voxel_size, rgb=[0.5,0.5,0.5])
 queen_space = Layer(voxel_size=voxel_size, rgb=[0.5,0.5,0.5])
 track_layer = Layer(voxel_size=voxel_size, rgb=[.09,.08,0])
-smell_layer = Layer(voxel_size=voxel_size, rgb=[0.1,0.1,0.1], diffusion_ratio=1/6, decay_ratio=0.05)
+smell_layer = Layer(voxel_size=voxel_size, rgb=[0.1,0.1,0.1], diffusion_ratio=1/6, decay_ratio=0.1)
 offset_ph = Layer(name = 'offset_ph', voxel_size=voxel_size, rgb = [0.25, 0.25, 0.25])
 
 # create ground:
@@ -33,12 +33,14 @@ offset_ph.decay_ratio = 0
 offset_ph.diffusion_ratio = 1/3
 grounds_emission_value = 2
 
+# gravity_option = 'neighbor'
+gravity_option = 'offset'
 # make agents
 agents = []
 for i in range(agent_count):
     agent = Agent(
         space_layer = agent_space, ground_layer = ground, construction_layer = ground,
-        limited_to_ground = 'neighbor', track_layer = track_layer, leave_trace=True)
+        limited_to_ground = gravity_option, track_layer = track_layer, leave_trace=False)
     x = np.random.randint(0, voxel_size)
     y = np.random.randint(0, voxel_size)
     agent.pose = [x,y,1]
@@ -72,12 +74,20 @@ for i in range(iterations):
     ground.block_layers([smell_layer])
 
     #follow pheromones
+    # print(i)
     for agent in agents:
         pheromones = agent.get_nb_cell_values(smell_layer, agent.pose)
-        random_ph = agent.random_pheromones() * 0.05
+        random_ph = agent.random_pheromones() * 0
         agent.follow_pheromones(pheromones + random_ph, offset_limit = offset_ph)
         built = agent.construct(smell_layer, construct_limit_1, construct_limit_2)
-        if built: print('built')
+        if built: 
+            x = np.random.randint(0, voxel_size)
+            y = np.random.randint(0, voxel_size)
+            print(x,y)
+            agent.pose = [x,y,1]
+        
+    
+    # print(len(agents))
     # make path_pheromone
     # smell_layer.emission_intake(agent_space.array, 1, False)
     

@@ -582,9 +582,12 @@ class Agent:
         """agent builds on construction_layer, if pheromon value in cell hits limit
         return bool"""
         v = get_layer_value_at_index(pheromon_layer, self.pose)
-        print(v)
+        # print(v)
         if limit1 <= v <= limit2:
-            set_value_at_index(self.construction_layer, self.pose, 1)
+            try:
+                set_value_at_index(self.construction_layer, self.pose, 1)
+            except:
+                print(self.pose)
             return True
         else: return False
 
