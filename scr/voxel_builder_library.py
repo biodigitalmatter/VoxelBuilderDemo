@@ -516,16 +516,19 @@ class Agent:
         if ground_layer != None:
             self.voxel_size = ground_layer.voxel_size
 
-    def move(self, i):
+    def move(self, i, n = 0):
         """move to a neighbor voxel based on the compas dictonary key index"""
         v = self.compass_array[self.compass_keys[i]]
         self.pose += v
+        if n != 0:
+            self.pose = np.mod(self.pose, np.asarray([n,n,n]))
 
-    def move_key(self, key):
+    def move_key(self, key, n=0):
         """move to a neighbor voxel based on the compas dictonary key"""
         v = self.compass_array[key]
         self.pose += v
-
+        if n != 0:
+            self.pose = np.mod(self.pose, np.asarray([n,n,n]))
     def random_move(self):
         i = np.random.randint(0,5)
         all_dir = self.compass_array.keys()
@@ -537,6 +540,13 @@ class Agent:
     
     def random_pheromones(self):
         return np.random.random(6)
+    
+    def direction_preference_pheromones(self, up = True):
+        if up:
+            direction_preference = np.asarray([1,0.5,0.1,0.5,0.5,0.5])
+        else:
+            direction_preference = np.ones(6)
+        return direction_preference
     
     def get_nb_cell_indicies(self, pose):
         """returns the list of nb cell indexes"""
@@ -574,7 +584,7 @@ class Agent:
         if self.leave_trace:
             self.track_layer.set_layer_value_at_index(self.pose, 1)
         self.space_layer.set_layer_value_at_index(self.pose, 0)
-        self.move(choice)
+        self.move(choice, n = self.space_layer.voxel_size)
         self.space_layer.set_layer_value_at_index(self.pose, 1)
         return choice
     
