@@ -43,7 +43,31 @@ import numpy as np
 
 # show.show_voxel(fig, ax, a, colors)
 
-bool_ = np.array([True, True, False, False, False])
-checklist = np.arange(5)
-checklist[bool_] = 0
-print(checklist)
+# bool_ = np.array([True, True, False, False, False])
+# checklist = np.arange(5)
+# checklist[bool_] = 0
+# print(checklist)
+test_i = np.indices((4,4,4))
+x_min = 2
+x_max = 2
+z_max = 1
+# x1 = np.logical_not(test_i[0,:,:,:] < x_min)
+# x2 =np.logical_not(test_i[1,:,:,:] > x_max)
+# z = np.logical_not(test_i[2,:,:,:] > z_max)
+
+x1 = test_i[2,:,:,:] >= x_min
+x2 = test_i[2,:,:,:] <= x_max
+z = test_i[0,:,:,:] <= z_max
+
+
+# x = np.logical_and(x1, x2, z)
+# x = np.where(z == True, 1, 0)
+d = np.zeros((4,4,4))
+d[x2 & x1 & z] = 1
+print('x', d)
+
+
+
+
+
+

@@ -43,6 +43,38 @@ def conditional_fill(array, n, condition = '<', value = 0.5, override_self = Fal
         array = a
     return a
 
+def make_solid_box_z(voxel_size, z_max):
+    n = voxel_size
+    test_i = np.indices((n,n,n))
+    z = test_i[2,:,:,:] <= z_max
+    d = np.zeros((n,n,n))
+    d[z] = 1
+    return d
+
+def make_solid_box_xxz(voxel_size, x_min, x_max, z_max):
+    n = voxel_size
+    test_i = np.indices((n,n,n))
+    x1 = test_i[0,:,:,:] >= x_min
+    x2 = test_i[0,:,:,:] <= x_max
+    z = test_i[2,:,:,:] <= z_max
+    d = np.zeros((n,n,n))
+    d[x2 & x1 & z] = 1
+    return d
+
+def make_solid_box_xxyyzz(voxel_size, x_min, x_max, y_min, y_max, z_min, z_max):
+    """boolean box including limits"""
+    n = voxel_size
+    test_i = np.indices((n,n,n))
+    x1 = test_i[0,:,:,:] >= x_min
+    x2 = test_i[0,:,:,:] <= x_max
+    y1 = test_i[1,:,:,:] >= y_min
+    y2 = test_i[1,:,:,:] <= y_max
+    z1 = test_i[2,:,:,:] >= z_min
+    z2 = test_i[2,:,:,:] <= z_max
+    d = np.zeros((n,n,n))
+    d[x2 & x1 & y1 & y2 & z1 & z2] = 1
+    return d
+
 global direction_dict_np, direction_keys
 
 direction_dict_np = {
