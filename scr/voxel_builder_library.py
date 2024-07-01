@@ -1,5 +1,12 @@
 import numpy as np
 
+# parameters backup::
+# # grounds_offset
+# offset_pheromone.decay_linear_value = 1/6
+# offset_pheromone.decay_ratio = 0
+# offset_pheromone.diffusion_ratio = 1/3
+# grounds_emission_value = 2
+
 def create_zero_array(n):
     # create voxel-like array
     a = np.zeros(n ** 3)  # 3 dimensional numpy array representing voxel voxel

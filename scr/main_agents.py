@@ -2,25 +2,26 @@ from voxel_builder_library import *
 from show_voxel_plt import *
 
 
-voxel_size = 20
-agent_count = 10
+voxel_size = 40
+agent_count = 100
 iterations = 40
-save_ = False
+save_ = True
 title_ = 'img'
 note = 'queen_ph'
 
-agent_space = Layer(voxel_size=voxel_size, rgb=[0.1,0.02,0.02])
-queen_space = Layer(voxel_size=voxel_size, rgb=[0.2,0,0.04])
+agent_space = Layer(voxel_size=voxel_size, rgb=[0.5,0.5,0.5])
+queen_space = Layer(voxel_size=voxel_size, rgb=[0.5,0.5,0.5])
 track_layer = Layer(voxel_size=voxel_size, rgb=[.09,.08,0])
-smell_layer = Layer(voxel_size=voxel_size, rgb=[0.001,0.001,0.001], diffusion_ratio=1/7, decay_ratio=0.2)
+smell_layer = Layer(voxel_size=voxel_size, rgb=[0.1,0.1,0.1], diffusion_ratio=1/7, decay_ratio=0.2)
 # offset_pheromone = Layer(name = 'offset_pheromone', voxel_size=voxel_size, rgb = [0.25, 0.25, 0.25])
 
 # create ground:
 ground_level_Z = 0
 ground = Layer(voxel_size=voxel_size, name='Ground')
 ground.array = make_solid_box_z(voxel_size, ground_level_Z)
-# wall = make_solid_box_xxyyzz(voxel_size, 18,18,0,20,0,12)
-ground.rgb = [0.25,0.25,0.2]
+wall = make_solid_box_xxyyzz(voxel_size, 12,12,0,20,0,6)
+ground.array += wall
+ground.rgb = [0.025,0.025,0.025]
 
 # # grounds_offset
 # offset_pheromone.decay_linear_value = 1/6
@@ -76,11 +77,8 @@ c1 = ground.color_array
 c2 = agent_space.color_array
 c3 = queen_space.color_array
 c4 = track_layer.color_array
-# c4 = smell_layer.color_array
-# c4 = offset_pheromone.color_array
-colors = (c2 + c3 + c4) / 3
-colors = agent_space.color_array
-show_layer = agent_space.array # + queen_space.array #+ track_layer.array
+colors = (c1 + c2 + c3) / 3
+show_layer = agent_space.array + queen_space.array + ground.array
 
 # show image
 f,a = init_fig(suffix=note)  #bottom_line=Layer.__str__())
