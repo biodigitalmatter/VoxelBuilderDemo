@@ -416,7 +416,7 @@ class Layer:
         return self._array
     
 
-    def emissision(self, external_emission_array = None, external_emission_factor = 1, proportional = True):
+    def emission(self, external_emission_array = None, external_emission_factor = 1, proportional = True):
         """updates array values based on self array values
         by an emission factor ( multiply / linear )"""
 
@@ -426,7 +426,7 @@ class Layer:
             self.array = np.where(self.array != 0, self.array + self.emission_factor, self.array)
     
 
-    def emissision_intake(self, external_emission_array, factor, proportional = True):
+    def emission_intake(self, external_emission_array, factor, proportional = True):
         """updates array values based on a given array
         and an emission factor ( multiply / linear )"""
 
@@ -441,7 +441,7 @@ class Layer:
         input list of layers"""
         for i in range(len(other_layers)):
             layer = other_layers[i]
-            layer.array = np.where(self.array == 1, 0, layer.array)
+            layer.array = np.where(self.array == 1, 0 * layer.array, 1 * layer.array)
         pass
 
     def decay(self):
@@ -506,9 +506,14 @@ class Agent:
         if ground_layer != None:
             self.voxel_size = ground_layer.voxel_size
 
-    def move(self, key):
-        """move to a neighbor voxel based on the compas dictonary"""
-        v = self.compass_array[self.compass_keys[key]]
+    def move(self, i):
+        """move to a neighbor voxel based on the compas dictonary key index"""
+        v = self.compass_array[self.compass_keys[i]]
+        self.pose += v
+
+    def move_key(self, key):
+        """move to a neighbor voxel based on the compas dictonary key"""
+        v = self.compass_array[key]
         self.pose += v
 
     def random_move(self):
@@ -516,6 +521,9 @@ class Agent:
         all_dir = self.compass_array.keys()
         v = all_dir[i]
         self.pose += v
+    
+    def update_space(self):
+        self.space_layer.set_layer_value_at_index(self.pose, 1)
     
     def random_pheromones(self):
         return np.random.random(6)
