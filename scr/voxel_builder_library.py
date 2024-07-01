@@ -172,10 +172,6 @@ class Layer:
         return self._decay_ratio
 
     @property
-    def decay_linear_value(self):
-        return self._decay_linear_value
-
-    @property
     def decay_random_factor(self):
         return self._decay_random_factor
 
@@ -276,22 +272,16 @@ class Layer:
         self._decay_ratio = value
 
     @decay_linear_value.setter
-    def decay_linear_ratio(self, value):
+    def decay_linear_value(self, value):
         if not isinstance(value, (int, float)):
             raise ValueError("Decay linear ratio must be a number")
-        self._decay_linear_value = value
+        self._decay_linear_value = abs(value * -1)
 
     @decay_random_factor.setter
     def decay_random_factor(self, value):
         if not isinstance(value, (int, float)):
             raise ValueError("Decay random factor must be a number")
         self._decay_random_factor = value
-
-    @decay_linear_value.setter
-    def decay_linear_value(self, value):
-        if not isinstance(value, (int, float)):
-            raise ValueError("Decay linear value must be a number")
-        self._decay_linear_value = value
 
     @axis_order.setter
     def axis_order(self, value):
