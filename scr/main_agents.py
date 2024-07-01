@@ -4,12 +4,14 @@ from show_voxel_plt import *
 
 voxel_size = 40
 agent_count = 80
-iterations = 3000
+iterations = 20000
 save_ = True
 title_ = 'img'
-note = 'queen_ph-decay-001-i3K'
+note = 'queen_ph-decay-001_up-pref'
 
-construct_limit_1 = 0.0001
+# gravity_option = 'neighbor'
+gravity_option = 'offset'
+construct_limit_1 = 0.001
 construct_limit_2 = 0.01
 wait = 100
 
@@ -17,24 +19,24 @@ agent_space = Layer(voxel_size=voxel_size, rgb=[0.5,0.5,0.5])
 queen_space = Layer(voxel_size=voxel_size, rgb=[0.5,0.5,0.5])
 track_layer = Layer(voxel_size=voxel_size, rgb=[.09,.08,0])
 smell_layer = Layer(voxel_size=voxel_size, rgb=[0.1,0.1,0.1], diffusion_ratio=1/6, decay_ratio=0.01)
-offset_ph = Layer(name = 'offset_ph', voxel_size=voxel_size, rgb = [0.25, 0.25, 0.25])
 
 # create ground:
 ground_level_Z = 0
 ground = Layer(voxel_size=voxel_size, name='Ground')
 ground.array = make_solid_box_z(voxel_size, ground_level_Z)
-# wall = make_solid_box_xxyyzz(voxel_size, 12,12,0,20,0,6)
+# wall = make_solid_box_xxyyzz(voxel_size, 12,12,0,40,0,8)
 # ground.array += wall
 ground.rgb = [0.6,0.6,0.6]
 
 # grounds_offset
+offset_ph = Layer(name = 'offset_ph', voxel_size=voxel_size, rgb = [0.25, 0.25, 0.25])
 offset_ph.decay_linear_value = 1/6
 offset_ph.decay_ratio = 0
 offset_ph.diffusion_ratio = 1/3
 grounds_emission_value = 2
 
-# gravity_option = 'neighbor'
-gravity_option = 'offset'
+
+
 # make agents
 agents = []
 for i in range(agent_count):
@@ -46,12 +48,10 @@ for i in range(agent_count):
     agent.pose = [x,y,1]
     agent.leave_trace = True
     agents.append(agent)
-queen = Agent(
-    space_layer = queen_space, ground_layer = ground)
+# make queen
+queen = Agent(space_layer = queen_space, ground_layer = ground)
 queen.pose = [20,20,1]
-# queen.move_key('left')
 queen.update_space()
-# queen_space.array[10,10,1] = 1
 
 # prep smells
 for i in range(wait):
@@ -77,8 +77,9 @@ for i in range(iterations):
     # print(i)
     for agent in agents:
         pheromones = agent.get_nb_cell_values(smell_layer, agent.pose)
-        random_ph = agent.random_pheromones() * 0
-        agent.follow_pheromones(pheromones + random_ph, offset_limit = offset_ph)
+        random_ph = agent.random_pheromones() * 0.0001
+        up_pref = agent.direction_preference_pheromones() * 0.01
+        agent.follow_pheromones(pheromones + random_ph + up_pref, offset_limit = offset_ph)
         built = agent.construct(smell_layer, construct_limit_1, construct_limit_2)
         if built: 
             x = np.random.randint(0, voxel_size)
