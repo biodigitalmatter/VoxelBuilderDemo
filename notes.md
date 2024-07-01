@@ -4,6 +4,7 @@
 
 ### next todos
 
+- test queen build-pheromon
 - test offset pheromons vs movement_constraints
 - save steps
 - build conditions
