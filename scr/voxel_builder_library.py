@@ -435,8 +435,6 @@ class Layer:
         else: # absolut
             self.array = np.where(self.array != 0, self.array + self.emission_factor, self.array)
     
-    # def self_emission(self):
-    #     self.array += self.emission_array * self.emission_factor
 
     def emissision_intake(self, external_emission_array, factor, proportional = True):
         """updates array values based on a given array
@@ -447,7 +445,14 @@ class Layer:
             self.array = np.where(external_emission_array != 0, self.array + external_emission_array * factor, self.array)
         else: # absolut
             self.array = np.where(external_emission_array != 0, self.array + factor, self.array)
-
+    
+    def block_layers(self, other_layers = []):
+        """acts as a solid obstacle, stopping diffusion of other layers
+        input list of layers"""
+        for i in range(len(other_layers)):
+            layer = other_layers[i]
+            layer.array = np.where(self.array == 1, 0, layer.array)
+        pass
 
     def decay(self):
         if self._decay_random_factor == 0:
