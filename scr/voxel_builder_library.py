@@ -43,6 +43,38 @@ def conditional_fill(array, n, condition = '<', value = 0.5, override_self = Fal
         array = a
     return a
 
+def make_solid_box_z(voxel_size, z_max):
+    n = voxel_size
+    test_i = np.indices((n,n,n))
+    z = test_i[2,:,:,:] <= z_max
+    d = np.zeros((n,n,n))
+    d[z] = 1
+    return d
+
+def make_solid_box_xxz(voxel_size, x_min, x_max, z_max):
+    n = voxel_size
+    test_i = np.indices((n,n,n))
+    x1 = test_i[0,:,:,:] >= x_min
+    x2 = test_i[0,:,:,:] <= x_max
+    z = test_i[2,:,:,:] <= z_max
+    d = np.zeros((n,n,n))
+    d[x2 & x1 & z] = 1
+    return d
+
+def make_solid_box_xxyyzz(voxel_size, x_min, x_max, y_min, y_max, z_min, z_max):
+    """boolean box including limits"""
+    n = voxel_size
+    test_i = np.indices((n,n,n))
+    x1 = test_i[0,:,:,:] >= x_min
+    x2 = test_i[0,:,:,:] <= x_max
+    y1 = test_i[1,:,:,:] >= y_min
+    y2 = test_i[1,:,:,:] <= y_max
+    z1 = test_i[2,:,:,:] >= z_min
+    z2 = test_i[2,:,:,:] <= z_max
+    d = np.zeros((n,n,n))
+    d[x2 & x1 & y1 & y2 & z1 & z2] = 1
+    return d
+
 global direction_dict_np, direction_keys
 
 direction_dict_np = {
@@ -138,10 +170,6 @@ class Layer:
     def decay_ratio(self):
         self._decay_ratio = abs(self._decay_ratio * -1)
         return self._decay_ratio
-
-    @property
-    def decay_linear_value(self):
-        return self._decay_linear_value
 
     @property
     def decay_random_factor(self):
@@ -244,22 +272,16 @@ class Layer:
         self._decay_ratio = value
 
     @decay_linear_value.setter
-    def decay_linear_ratio(self, value):
+    def decay_linear_value(self, value):
         if not isinstance(value, (int, float)):
             raise ValueError("Decay linear ratio must be a number")
-        self._decay_linear_value = value
+        self._decay_linear_value = abs(value * -1)
 
     @decay_random_factor.setter
     def decay_random_factor(self, value):
         if not isinstance(value, (int, float)):
             raise ValueError("Decay random factor must be a number")
         self._decay_random_factor = value
-
-    @decay_linear_value.setter
-    def decay_linear_value(self, value):
-        if not isinstance(value, (int, float)):
-            raise ValueError("Decay linear value must be a number")
-        self._decay_linear_value = value
 
     @axis_order.setter
     def axis_order(self, value):
@@ -403,8 +425,6 @@ class Layer:
         else: # absolut
             self.array = np.where(self.array != 0, self.array + self.emission_factor, self.array)
     
-    # def self_emission(self):
-    #     self.array += self.emission_array * self.emission_factor
 
     def emissision_intake(self, external_emission_array, factor, proportional = True):
         """updates array values based on a given array
@@ -415,7 +435,14 @@ class Layer:
             self.array = np.where(external_emission_array != 0, self.array + external_emission_array * factor, self.array)
         else: # absolut
             self.array = np.where(external_emission_array != 0, self.array + factor, self.array)
-
+    
+    def block_layers(self, other_layers = []):
+        """acts as a solid obstacle, stopping diffusion of other layers
+        input list of layers"""
+        for i in range(len(other_layers)):
+            layer = other_layers[i]
+            layer.array = np.where(self.array == 1, 0, layer.array)
+        pass
 
     def decay(self):
         if self._decay_random_factor == 0:

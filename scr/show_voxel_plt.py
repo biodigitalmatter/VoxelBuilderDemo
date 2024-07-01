@@ -11,7 +11,7 @@ def init_fig(title = 'img', suffix = '', bottom_line = ''):
 
     # style    
     fig.suptitle('%s_%s_%s.png' %(title, timestamp_now, suffix), fontsize = 5)
-    fig.text(0,0, s = str(bottom_line), fontsize = 3.4, verticalalignment = 'baseline' )
+    fig.text(0,0, s = bottom_line, fontsize = 3.4, verticalalignment = 'baseline' )
     
     ax.set_xticks([])
     ax.set_yticks([])
