@@ -497,7 +497,7 @@ class Agent:
         pose = [0,0,0], 
         compass_array = direction_dict_np,
         ground_layer = None, 
-        walk_on_ground = True,
+        limited_to_ground = 'offset_pheromon',
         space_layer = None, 
         track_layer = None,
         leave_trace = False):
@@ -505,7 +505,7 @@ class Agent:
         self.pose = np.asarray(pose)  # [i,j,k]
         self.compass_array = compass_array
         self.compass_keys = list(compass_array.keys())
-        self.limited_to_ground = walk_on_ground
+        self.limited_to_ground = limited_to_ground
         self.leave_trace = leave_trace
         self.space_layer = space_layer
         self.track_layer = track_layer
@@ -554,16 +554,19 @@ class Agent:
             value_list.append(v)
         return np.asarray(value_list)
     
-    def follow_pheromones(self, six_pheromones):
+    def follow_pheromones(self, six_pheromones, offset_layer = None):
         # check ground condition
-        # print('six_pheromones')
-        if self.limited_to_ground:
+        if self.limited_to_ground == 'neighbor':
             exclude_pheromones = self.check_ground(self.ground_layer)
+            six_pheromones[exclude_pheromones] = -1
+        
+        elif self.limited_to_ground == 'offset':
+            nbs_values = self.get_nb_cell_values(offset_layer, self.pose)
+            exclude_pheromones = np.logical_not(nbs_values != 0)
             six_pheromones[exclude_pheromones] = -1
         
         # select best pheromon
         choice = np.argmax(six_pheromones)
-        # print('choice index: %s' %choice)
         # update location in space layer
         if self.leave_trace:
             self.track_layer.set_layer_value_at_index(self.pose, 1)
@@ -598,6 +601,13 @@ class Agent:
                 check_failed.append(False)
             else: check_failed.append(True)
         exclude_pheromones = np.asarray(check_failed)
+        return exclude_pheromones
+
+    def check_offset(self, offset_layer):
+        """        return ground directions as bools"""
+        # get nb cell indicies
+        nbs_values = self.get_nb_cell_values(offset_layer, self.pose)
+        exclude_pheromones = np.logical_not(nbs_values == 0)
         return exclude_pheromones
 
 
