@@ -4,10 +4,10 @@ from show_voxel_plt import *
 
 voxel_size = 20
 agent_count = 2
-iterations = 24
+iterations = 2
 save_ = False
 title_ = 'img'
-note = 'test_emission'
+note = 'wall_1'
 
 agent_space = Layer(voxel_size=voxel_size, rgb=[0.2,0,0.2])
 track_layer = Layer(voxel_size=voxel_size, rgb=[.5,0,0])
@@ -16,10 +16,10 @@ smell_layer = Layer(voxel_size=voxel_size, rgb=[0.001,0.001,0.001], decay_linear
 # create ground:
 ground_level_Z = 1
 ground = Layer(voxel_size=voxel_size, name='Ground')
-i = np.arange(voxel_size)
-underground = i < ground_level_Z
-ground.array[:, :, underground] = 1
-ground.rgb = [0.1,0.5,0.1]
+a = make_solid_box_z(voxel_size, 2)
+b = make_solid_box_xxyyzz(voxel_size, 2,2,0,20,0,12)
+ground.array += a + b
+ground.rgb = [0.5,0.5,0.5]
 
 # make agents
 agents = []
@@ -43,9 +43,9 @@ for i in range(iterations):
         random_pheromones = agent.random_pheromones()
         choice = random_pheromones
         agent.follow_pheromones(choice)
-    smell_layer.emissision_intake(agent_space.array, 1, False)
-    smell_layer.diffuse()
-    smell_layer.decay_linear()
+    # smell_layer.emissision_intake(agent_space.array, 1, False)
+    # smell_layer.diffuse()
+    # smell_layer.decay_linear()
         
 
 # add layers and layer_colors
