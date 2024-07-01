@@ -456,7 +456,8 @@ class Layer:
             self.array -= self.array *  self._decay_ratio
         else:
             randomized_decay = self._decay_ratio * (1 - create_random_array(self._n) * self._decay_random_factor)
-            self.array += self.array * self._decay_ratio * randomized_decay
+            randomized_decay = abs(randomized_decay) * -1
+            self.array += self.array * randomized_decay
 
     def decay_linear(self):
         s,e = self.voxel_crop_range
@@ -499,6 +500,7 @@ class Agent:
         ground_layer = None, 
         limited_to_ground = 'offset_pheromon',
         space_layer = None, 
+        construction_layer = None,
         track_layer = None,
         leave_trace = False):
 
@@ -508,6 +510,7 @@ class Agent:
         self.limited_to_ground = limited_to_ground
         self.leave_trace = leave_trace
         self.space_layer = space_layer
+        self.construction_layer = construction_layer
         self.track_layer = track_layer
         self.ground_layer = ground_layer
         if ground_layer != None:
@@ -554,14 +557,14 @@ class Agent:
             value_list.append(v)
         return np.asarray(value_list)
     
-    def follow_pheromones(self, six_pheromones, offset_layer = None):
+    def follow_pheromones(self, six_pheromones, offset_limit = None):
         # check ground condition
         if self.limited_to_ground == 'neighbor':
             exclude_pheromones = self.check_ground(self.ground_layer)
             six_pheromones[exclude_pheromones] = -1
         
         elif self.limited_to_ground == 'offset':
-            nbs_values = self.get_nb_cell_values(offset_layer, self.pose)
+            nbs_values = self.get_nb_cell_values(offset_limit, self.pose)
             exclude_pheromones = np.logical_not(nbs_values != 0)
             six_pheromones[exclude_pheromones] = -1
         
@@ -575,6 +578,16 @@ class Agent:
         self.space_layer.set_layer_value_at_index(self.pose, 1)
         return choice
     
+    def construct(self, pheromon_layer, limit1, limit2):
+        """agent builds on construction_layer, if pheromon value in cell hits limit
+        return bool"""
+        v = get_layer_value_at_index(pheromon_layer, self.pose)
+        print(v)
+        if limit1 <= v <= limit2:
+            set_value_at_index(self.construction_layer, self.pose, 1)
+            return True
+        else: return False
+
     # def check_ground_around_cell(self, ground_layer, index):
     #     """True is """
     #     nbs_values = self.get_nb_cell_values(ground_layer, index)
