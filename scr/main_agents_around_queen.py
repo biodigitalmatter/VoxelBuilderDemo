@@ -4,16 +4,16 @@ from show_voxel_plt import *
 
 voxel_size = 40
 agent_count = 20
-iterations = 1000
+iterations = 5000
 save_ = True
 title_ = 'img'
 note = 'build_after_queen_ph-tests'
 
-gravity_option = ['nb_check', 'offset_ph', 'cube_corner_nb_check', 'cube_edge_nb_check'][3]
+gravity_option = ['nb_check', 'offset_ph', 'cube_corner_nb_check', 'cube_edge_nb_check'][2]
 
 construction_on = True
-construct_limit_1 = 0.001
-construct_limit_2 = 0.002
+construct_limit_1 = 0.0005
+construct_limit_2 = 0.01
 wait = 50
 
 agent_space = Layer(voxel_size=voxel_size, rgb=[34/255, 116/255, 240/255])
@@ -27,7 +27,14 @@ ground = Layer(voxel_size=voxel_size, name='Ground')
 ground.array = make_solid_box_z(voxel_size, ground_level_Z)
 # wall = make_solid_box_xxyyzz(voxel_size, 12,12,0,40,0,25)
 # ground.array += wall
-ground.rgb = [135/255, 126/255, 119/255]
+ground.rgb = [207/255, 179/255, 171/255]
+
+# grounds_offset
+offset_ph = Layer(name = 'offset_ph', voxel_size=voxel_size)
+offset_ph.decay_linear_value = 1/6
+offset_ph.decay_ratio = 0
+offset_ph.diffusion_ratio = 1/3
+grounds_emission_value = 2
 
 # make agents
 agents = []
@@ -62,10 +69,10 @@ for i in range(iterations):
 
     #follow pheromones
     for agent in agents:
-        queen_pheromones = agent.get_nb_cell_values(smell_layer, agent.pose) * 0.5
+        queen_pheromones = agent.get_nb_cell_values(smell_layer, agent.pose) * 2
         random_ph = agent.random_pheromones() * 0.1
-        up_pref = agent.direction_preference_pheromones(0.4) * 0.5
-        agent.follow_pheromones(random_ph + queen_pheromones + up_pref)
+        up_pref = agent.direction_preference_pheromones(0.9) * 0.5
+        agent.follow_pheromones(random_ph + queen_pheromones + up_pref, offset_ph, False)
         # build
         if construction_on:
             flag = agent.get_build_flag_after_pheromones(smell_layer, construct_limit_1, construct_limit_2 )
@@ -77,10 +84,10 @@ for i in range(iterations):
                 y = np.random.randint(0, voxel_size)
                 # print(x,y)
                 agent.pose = [x,y,1]
-
+print('done')
 # show smell layer in limits
-a5 = smell_layer.array
-smell_layer.array = np.where(construct_limit_1 <= a5, a5, 0)
+# a5 = smell_layer.array
+# smell_layer.array = np.where(construct_limit_1 <= a5, a5, 0)
 # smell_layer.array = np.where(construct_limit_2 >= smell_layer.array, smell_layer.array, 0)
 
 
@@ -98,7 +105,7 @@ a3 = queen_space.array
 
 # show image
 f,a = init_fig(suffix=note)  #bottom_line=Layer.__str__())
-# show_voxel(f,a, a1 + a2 + a3, c1 + c2 + c3, save=True, suffix=note)
+# show_voxel(f,a, a1 + a2 + a3, c1 + c2 + c3, save=save_, suffix=note)
 # show_voxel(f,a, a1 + a2 + a3 + a5, c1 + c2 + c3 + c5, save=True, suffix=note)
-# show_voxel(f,a, a5, c5, save=True, suffix=note + '_smells')
-show_voxel(f,a, a1 + a3, c1 + c3, save=True, suffix=note)
+# show_voxel(f,a, a5, c5, save=save_, suffix=note + '_smells')
+show_voxel(f,a, a1 + a3, c1 + c3, save=save_, suffix=note)
