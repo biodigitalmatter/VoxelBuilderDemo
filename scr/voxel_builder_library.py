@@ -462,6 +462,52 @@ class Layer:
         return self._array
     
 
+    def gravity_shift(self, direction = 4, gravity_ratio = 0.1, reintroduce_on_the_other_end = False):
+        """direction: 0:left, 1:right, 2:front, 3:back, 4:down, 5:up
+        infinitive borders
+        every value of the voxel cube diffuses with its face nb
+        standard finite volume approach (Hirsch, 1988). 
+        diffusion change of voxel_x between voxel_x and y:
+        delta_x = -a(x-y) 
+        where 0 <= a <= 1/6 
+        """
+        
+        shifts = [-1, 1]
+        axes = [0,0,1,1,2,2] 
+        # order: left, right, front
+        # diffuse per six face_neighbors
+        total_diffusions = create_zero_array(self._n)
+        for i in [direction]:
+            # y: shift neighbor
+            y = np.copy(self._array)
+            y = np.roll(y, shifts[i % 2], axis = axes[i])
+            if not reintroduce_on_the_other_end:
+                e = self._n - 1
+                # removing the values from the other end after rolling
+                if i == 0:
+                    y[:][:][e] = 0
+                elif i == 1:
+                    y[:][:][0] = 0
+                elif 2 <= i <= 3:
+                    m = y.transpose((1,0,2))
+                    if i == 2:
+                        m[:][:][e] = 0
+                    elif i == 3:
+                        m[:][:][0] = 0
+                    y = m.transpose((1,0,2))
+                elif 4 <= i <= 5:
+                    m = y.transpose((2,0,1))
+                    if i == 4:
+                        m[:][:][e] = 0
+                    elif i == 5:
+                        m[:][:][0] = 0
+                    y = m.transpose((1,2,0))
+            gravity_ratio = 0.1
+            total_diffusions += gravity_ratio * (self._array - y) / 2
+        self._array -= total_diffusions
+        return self._array
+    
+
     def emission(self, external_emission_array = None, external_emission_factor = 1, proportional = True):
         """updates array values based on self array values
         by an emission factor ( multiply / linear )"""
