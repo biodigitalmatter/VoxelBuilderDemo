@@ -23,9 +23,8 @@ smell_layer = Layer(voxel_size=voxel_size, rgb=[240/255, 220/255, 150/255], diff
 
 # create ground:
 ground_level_Z = 0
-ground = Layer(voxel_size=voxel_size, name='Ground')
 ground.array = make_solid_box_z(voxel_size, ground_level_Z)
-wall = make_solid_box_xxyyzz(voxel_size, 12,12,0,40,0,25)
+wall = make_solid_box_xxyyzz(voxel_size, 12,16,10,40,0,4)
 ground.array += wall
 ground.rgb = [135/255, 126/255, 119/255]
 
@@ -41,10 +40,11 @@ agents = []
 for i in range(agent_count):
     agent = Agent(
         space_layer = agent_space, ground_layer = ground, construction_layer = ground,
-        limited_to_ground = gravity_option, track_layer = track_layer, leave_trace=False)
+        limited_to_ground = gravity_option, track_layer = track_layer, leave_trace=False, save_move_history=True)
     x = np.random.randint(0, voxel_size)
     y = np.random.randint(0, voxel_size)
     agent.pose = [x,y,1]
+    agent.rgb = [1,0,0]
     agent.leave_trace = True
     agents.append(agent)
 
@@ -52,13 +52,14 @@ for i in range(agent_count):
 queen = Agent(space_layer = queen_space, ground_layer = ground)
 queen.pose = [1,1,1]
 queen.update_space()
+queen.rgb = [0.25,0.25,0]
 
 # pre_smells
-for i in range(wait):
-    smell_layer.emission_intake(queen_space.array, 2, False)
-    smell_layer.diffuse()
-    smell_layer.decay()
-    ground.block_layers([smell_layer])
+# for i in range(wait):
+#     smell_layer.emission_intake(queen_space.array, 2, False)
+#     smell_layer.diffuse()
+#     smell_layer.decay()
+#     ground.block_layers([smell_layer])
 
 # run simulation
 for i in range(iterations):
@@ -77,25 +78,32 @@ for i in range(iterations):
     # print(i)
     for agent in agents:
         pheromones = agent.get_nb_cell_values(smell_layer, agent.pose)
-        random_ph = agent.random_pheromones() * 0.01
-        up_pref = agent.direction_preference_pheromones() * 0.05
+        random_ph = agent.random_pheromones() * 0.1
+        up_pref = agent.direction_preference_pheromones(0.9) * 0.15
         # agent.follow_pheromones(pheromones + random_ph + up_pref, offset_limit = offset_ph)
         # agent.follow_pheromones(random_ph + up_pref)
         agent.follow_pheromones(random_ph + up_pref)
         if construction_on:
-            built = agent.construct(smell_layer, construct_limit_1, construct_limit_2)
-            if built: 
-                x = np.random.randint(0, voxel_size)
-                y = np.random.randint(0, voxel_size)
-                # print(x,y)
-                agent.pose = [x,y,1]
+            # build after history
+            flag = agent.get_build_flag_after_history(
+                last_step_NOR = ['up', 'down'], last_step_len = 3,
+                previous_steps_AND = ['up', 'up', 'up'])
+            # build after pheromones
+            # flag = agent.get_build_flag_after_pheromones(smell_layer, construct_limit_1, construct_limit_2)
+            if flag:
+                built = agent.build()
+                #reset_position
+                if built:
+                    x = np.random.randint(0, voxel_size)
+                    y = np.random.randint(0, voxel_size)
+                    agent.pose = [x,y,1]
         
     
     # print(len(agents))
     # make path_pheromone
     # smell_layer.emission_intake(agent_space.array, 1, False)
     
-
+# print(agents[0].move_history)
 
 # add layers and layer_colors
 c1 = ground.color_array

@@ -49,6 +49,21 @@ def get_nb_cell_directions_w_corners():
 
 def get_nb_cell_directions_w_edges():
     # horizontal
+    f = direction_dict_np['front']
+    b = direction_dict_np['back']
+    l = direction_dict_np['left']
+    r = direction_dict_np['right']
+    u = direction_dict_np['up']
+    d = direction_dict_np['down']
+    # first_story in level:
+    story_1 = [f, f + l, f + r, l, r, b, b + l, b + r]
+    story_0 = [i + d for i in [f,b,l,r]]
+    story_2 = [i + u for i in [f,b,l,r]]
+    nbs_w_corners = story_1 + story_0 + story_2 + [u] + [d] + [np.asarray([0,0,0])]
+    return nbs_w_corners
+
+def get_nb_cell_directions_w_edges():
+    # horizontal
     face_nbs = list(direction_dict_np.values())
     nbs_w_edges = face_nbs + [np.asarray([0,0,0])]
     return nbs_w_edges
@@ -500,6 +515,19 @@ class Layer:
         self._color_array = colors
         return self._color_array
 
+    def calculate_color_array_2(self):
+        r,g,b = self.rgb
+        colors = np.where(self.array != 0, 0, 1)
+        colors.reshape(self.array.shape)
+        reds = np.reshape(colors * (r), [self._n, self._n, self._n, 1])
+        greens = np.reshape(colors * (g), [self._n, self._n, self._n, 1])
+        blues = np.reshape(colors * (b), [self._n, self._n, self._n, 1])
+        c = np.concatenate((reds, greens, blues), axis = -1)
+        c = np.minimum(c, 1)
+        c = np.maximum(c, 0)
+        self._color_array = c
+        return self._color_array
+
     def iterate(self, diffusion_limit_by_Hirsh=False, reintroduce_on_the_other_end=False ):
         self.iter_count += 1
         # emission update
@@ -524,7 +552,8 @@ class Agent:
         space_layer = None, 
         construction_layer = None,
         track_layer = None,
-        leave_trace = False):
+        leave_trace = False,
+        save_move_history = True):
 
         self.pose = np.asarray(pose)  # [i,j,k]
         self.compass_array = compass_array
@@ -535,6 +564,8 @@ class Agent:
         self.construction_layer = construction_layer
         self.track_layer = track_layer
         self.ground_layer = ground_layer
+        self.move_history = []
+        self.save_move_history = save_move_history
         if ground_layer != None:
             self.voxel_size = ground_layer.voxel_size
         if self.limited_to_ground == 'cube_corner_nb_check':
@@ -542,24 +573,33 @@ class Agent:
         elif self.limited_to_ground == 'cube_edge_nb_check':
             self.cube_array = get_nb_cell_directions_w_edges()
 
-    def move(self, i, n = 0):
-        """move to a neighbor voxel based on the compas dictonary key index"""
+    def move(self, i, voxel_size = 0):
+        """move to a neighbor voxel based on the compas dictonary key index """
         v = self.compass_array[self.compass_keys[i]]
         self.pose += v
+        # reintroduce agent if n nonzero
+        n = voxel_size
         if n != 0:
             self.pose = np.mod(self.pose, np.asarray([n,n,n]))
+        if self.save_move_history: 
+            self.move_history.append(self.compass_keys[i])
 
-    def move_key(self, key, n=0):
+    def move_key(self, key, voxel_size = 0):
         """move to a neighbor voxel based on the compas dictonary key"""
         v = self.compass_array[key]
         self.pose += v
+        # reintroduce agent if n nonzero
+        n = voxel_size
         if n != 0:
             self.pose = np.mod(self.pose, np.asarray([n,n,n]))
-    def random_move(self):
+        if self.save_move_history: 
+            self.move_history.append(key)
+
+    def random_move(self, voxel_size = 0):
         i = np.random.randint(0,5)
-        all_dir = self.compass_array.keys()
-        v = all_dir[i]
-        self.pose += v
+        keys = self.compass_array.keys()
+        key = keys[i]
+        self.move_key(key, voxel_size)
     
     def update_space(self):
         self.space_layer.set_layer_value_at_index(self.pose, 1)
@@ -567,9 +607,12 @@ class Agent:
     def random_pheromones(self):
         return np.random.random(6)
     
-    def direction_preference_pheromones(self, up = True):
+    def direction_preference_pheromones(self, x = 0.5, up = True):
+        """up = 1
+        side = x
+        down = 0.1"""
         if up:
-            direction_preference = np.asarray([1,0.5,0.1,0.5,0.5,0.5])
+            direction_preference = np.asarray([1, x, 0.1, x, x, x])
         else:
             direction_preference = np.ones(6)
         return direction_preference
@@ -608,9 +651,8 @@ class Agent:
         value_sum = np.sum(v)
         return value_sum
 
-
     def check_ground(self, ground_layer):
-        """        return ground directions as bools
+        """return ground directions as bools
         checks nbs of the nb cells
         if value > 0: return True"""
         # get nb cell indicies
@@ -665,6 +707,7 @@ class Agent:
             six_pheromones[exclude_pheromones] = -1
         
         if np.sum(six_pheromones) == -6:
+            # cant move
             return -1
 
         # select best pheromon
@@ -673,22 +716,45 @@ class Agent:
         if self.leave_trace:
             self.track_layer.set_layer_value_at_index(self.pose, 1)
         self.space_layer.set_layer_value_at_index(self.pose, 0)
-        self.move(choice, n = self.space_layer.voxel_size)
+        self.move(choice, self.space_layer.voxel_size)
         self.space_layer.set_layer_value_at_index(self.pose, 1)
         return choice
     
-    def construct(self, pheromon_layer, limit1, limit2):
+    def get_build_flag_after_pheromones(self, pheromon_layer, limit1, limit2):
         """agent builds on construction_layer, if pheromon value in cell hits limit
         return bool"""
         v = get_layer_value_at_index(pheromon_layer, self.pose)
-        # print(v)
+        # build
         if limit1 <= v <= limit2:
-            try:
-                set_value_at_index(self.construction_layer, self.pose, 1)
-            except:
-                print(self.pose)
             return True
-        else: return False 
+        else: 
+            return False 
+
+    def get_build_flag_after_history(self, last_step_NOR = ['up', 'down'], previous_steps_AND = ['up', 'up', 'up', 'up'], last_step_len = 1):
+        """agent builds on construction_layer, if pheromon value in cell hits limit
+        return bool"""
+        x = -1 * last_step_len
+        h = self.move_history
+        l = len(previous_steps_AND) - x
+        if len(h) < l: return False
+        last_step = h[x]
+        prev_steps = h[-l : x]
+        # print(last_step, prev_steps)
+        if last_step not in set(last_step_NOR) and prev_steps == previous_steps_AND:
+            build_flag = True
+            # print(prev_steps)
+        else:
+            build_flag = False
+        return build_flag
+    
+    def build(self):
+        try:
+            set_value_at_index(self.construction_layer, self.pose, 1)
+            bool_ = True
+        except:
+            print('cant build here:', self.pose)
+            bool_ = False
+        return bool_
 
     def check_offset(self, offset_layer):
         """        return ground directions as bools"""
