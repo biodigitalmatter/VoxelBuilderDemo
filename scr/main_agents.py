@@ -20,7 +20,7 @@ agent_space = Layer(voxel_size=voxel_size, rgb=[34/255, 116/255, 240/255])
 queen_space = Layer(voxel_size=voxel_size, rgb=[203/255, 21/255, 207/255])
 track_layer = Layer(voxel_size=voxel_size, rgb=[147/255, 209/255, 237/255])
 smell_layer = Layer(voxel_size=voxel_size, rgb=[240/255, 220/255, 150/255], diffusion_ratio=1/6, decay_ratio=0.01)
-
+ground = Layer(voxel_size=voxel_size)
 # create ground:
 ground_level_Z = 0
 ground.array = make_solid_box_z(voxel_size, ground_level_Z)
