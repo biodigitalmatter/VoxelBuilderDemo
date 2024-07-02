@@ -3,15 +3,15 @@ from show_voxel_plt import *
 
 
 voxel_size = 30
-agent_count = 2
-iterations = 50
+agent_count = 100
+iterations = 500
 save_ = True
 title_ = 'img'
 note = 'build_after_queen_ph-tests'
 
-gravity_option = ['nb_check', 'offset_ph', 'cube_corner_nb_check', 'cube_edge_nb_check'][2]
+walk_method_option = ['nb_check', 'offset_ph', 'cube_corner_nb_check', 'cube_edge_nb_check'][2]
 
-construction_on = False
+construction_on = True
 # construct_limit_1 = 0.01
 # construct_limit_2 = 0.09
 construct_limit_1 = 0.005
@@ -44,7 +44,7 @@ agents = []
 for i in range(agent_count):
     agent = Agent(
         space_layer = agent_space, ground_layer = ground, construction_layer = ground,
-        limited_to_ground = gravity_option, track_layer = None, leave_trace=False, save_move_history=False)
+        limited_to_ground = walk_method_option, track_layer = None, leave_trace=False, save_move_history=False)
     x = np.random.randint(0, voxel_size)
     y = np.random.randint(0, voxel_size)
     agent.pose = [x,y,1]
@@ -96,9 +96,9 @@ for i in range(iterations):
                 agent.pose = [x,y,1]
 print('done')
 # show smell layer in limits
-a5 = smell_layer.array
-smell_layer.array = np.where(construct_limit_1 <= a5, a5, 0)
-smell_layer.array = np.where(construct_limit_2 >= smell_layer.array, smell_layer.array, 0)
+# a5 = smell_layer.array
+# smell_layer.array = np.where(construct_limit_1 <= a5, a5, 0)
+# smell_layer.array = np.where(construct_limit_2 >= smell_layer.array, smell_layer.array, 0)
 
 
 # add layers and layer_colors
@@ -112,10 +112,10 @@ a2 = agent_space.array
 a3 = queen_space.array
 # a4 = track_layer.array
 a5 = smell_layer.array
-
+a1[:,:,0] = 0
 # show image
 f,a = init_fig(suffix=note)  #bottom_line=Layer.__str__())
 # show_voxel(f,a, a1 + a2 + a3, c1 + c2 + c3, save=save_, suffix=note)
 # show_voxel(f,a, a1 + a2 + a3 + a5, c1 + c2 + c3 + c5, save=True, suffix=note)
-show_voxel(f,a, a5, c5, save=save_, suffix=note + '_smells')
-# show_voxel(f,a, a1 + a3, c1 + c3, save=save_, suffix=note)
+# show_voxel(f,a, a5, c5, save=save_, suffix=note + '_smells')
+show_voxel(f,a, a1 + a3, c1 + c3, save=save_, suffix=note)
