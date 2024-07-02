@@ -5,11 +5,11 @@ from show_voxel_plt import *
 voxel_size = 40
 agent_count = 2
 iterations = 200
-save_ = True
+save_ = False
 title_ = 'img'
-note = 'test_cube27_movement_up_pref'
+note = 'test_cube7_movement_up_pref'
 
-gravity_option = ['nb_check', 'offset_ph', 'cube_nb_check'][2]
+gravity_option = ['nb_check', 'offset_ph', 'cube_corner_nb_check', 'cube_edge_nb_check'][3]
 
 construction_on = False
 construct_limit_1 = 0.001
@@ -80,8 +80,8 @@ for i in range(iterations):
         random_ph = agent.random_pheromones() * 0.01
         up_pref = agent.direction_preference_pheromones() * 0.02
         # agent.follow_pheromones(pheromones + random_ph + up_pref, offset_limit = offset_ph)
-        agent.follow_pheromones(random_ph + up_pref)
-        # agent.follow_pheromones(random_ph)
+        # agent.follow_pheromones(random_ph + up_pref)
+        agent.follow_pheromones(random_ph)
         if construction_on:
             built = agent.construct(smell_layer, construct_limit_1, construct_limit_2)
             if built: 
