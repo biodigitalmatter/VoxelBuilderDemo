@@ -3,15 +3,15 @@ from show_voxel_plt import *
 
 
 voxel_size = 30
-agent_count = 200
-iterations = 5000
+agent_count = 2
+iterations = 50
 save_ = True
 title_ = 'img'
 note = 'build_after_queen_ph-tests'
 
 gravity_option = ['nb_check', 'offset_ph', 'cube_corner_nb_check', 'cube_edge_nb_check'][2]
 
-construction_on = True
+construction_on = False
 # construct_limit_1 = 0.01
 # construct_limit_2 = 0.09
 construct_limit_1 = 0.005
@@ -52,10 +52,11 @@ for i in range(agent_count):
 
 # make queen
 queens = []
-for i in range(3):
+for i in range(1):
     queen = Agent(space_layer = queen_space, ground_layer = ground)
-    x = np.random.randint(0, voxel_size)
-    y = np.random.randint(0, voxel_size)
+    # x = np.random.randint(5, voxel_size - 5)
+    # y = np.random.randint(5, voxel_size - 5)
+    x,y = [15,15]
     agent.pose = [x,y,1]
     queen.pose = [x,y,1]
     queen.update_space()
@@ -72,6 +73,7 @@ for i in range(iterations):
     # queen odor
     smell_layer.emission_intake(queen_space.array, 2, False)
     smell_layer.diffuse()
+    smell_layer.gravity_shift(5, 1)
     smell_layer.decay()
     ground.block_layers([smell_layer])
 
@@ -94,26 +96,26 @@ for i in range(iterations):
                 agent.pose = [x,y,1]
 print('done')
 # show smell layer in limits
-# a5 = smell_layer.array
-# smell_layer.array = np.where(construct_limit_1 <= a5, a5, 0)
-# smell_layer.array = np.where(construct_limit_2 >= smell_layer.array, smell_layer.array, 0)
+a5 = smell_layer.array
+smell_layer.array = np.where(construct_limit_1 <= a5, a5, 0)
+smell_layer.array = np.where(construct_limit_2 >= smell_layer.array, smell_layer.array, 0)
 
 
 # add layers and layer_colors
 c1 = ground.color_array
 c2 = agent_space.color_array
 c3 = queen_space.color_array
-# c5 = smell_layer.color_array_inverse
+c5 = smell_layer.color_array_inverse
 
 a1 = ground.array
 a2 = agent_space.array
 a3 = queen_space.array
 # a4 = track_layer.array
-# a5 = smell_layer.array
+a5 = smell_layer.array
 
 # show image
 f,a = init_fig(suffix=note)  #bottom_line=Layer.__str__())
 # show_voxel(f,a, a1 + a2 + a3, c1 + c2 + c3, save=save_, suffix=note)
 # show_voxel(f,a, a1 + a2 + a3 + a5, c1 + c2 + c3 + c5, save=True, suffix=note)
-# show_voxel(f,a, a5, c5, save=save_, suffix=note + '_smells')
-show_voxel(f,a, a1 + a3, c1 + c3, save=save_, suffix=note)
+show_voxel(f,a, a5, c5, save=save_, suffix=note + '_smells')
+# show_voxel(f,a, a1 + a3, c1 + c3, save=save_, suffix=note)
