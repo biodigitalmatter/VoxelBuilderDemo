@@ -3,8 +3,8 @@ from show_voxel_plt import *
 
 
 voxel_size = 30
-agent_count = 200
-iterations = 10000
+agent_count = 20
+iterations = 5000
 save_ = True
 title_ = 'img'
 note = 'build_after_queen_ph-tests'
@@ -12,8 +12,10 @@ note = 'build_after_queen_ph-tests'
 gravity_option = ['nb_check', 'offset_ph', 'cube_corner_nb_check', 'cube_edge_nb_check'][2]
 
 construction_on = True
-construct_limit_1 = 0.01
-construct_limit_2 = 0.09
+# construct_limit_1 = 0.01
+# construct_limit_2 = 0.09
+construct_limit_1 = 0.005
+construct_limit_2 = 0.02
 wait = 50
 
 agent_space = Layer(voxel_size=voxel_size, rgb=[34/255, 116/255, 240/255])
@@ -48,9 +50,14 @@ for i in range(agent_count):
     agents.append(agent)
 
 # make queen
-queen = Agent(space_layer = queen_space, ground_layer = ground)
-queen.pose = [20,20,2]
-queen.update_space()
+queens = []
+for i in range(3):
+    queen = Agent(space_layer = queen_space, ground_layer = ground)
+    x = np.random.randint(0, voxel_size)
+    y = np.random.randint(0, voxel_size)
+    agent.pose = [x,y,1]
+    queen.pose = [x,y,1]
+    queen.update_space()
 
 # pre_smells
 for i in range(wait):
