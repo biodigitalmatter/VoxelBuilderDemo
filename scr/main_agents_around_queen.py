@@ -3,8 +3,8 @@ from show_voxel_plt import *
 
 
 voxel_size = 30
-agent_count = 20
-iterations = 5000
+agent_count = 200
+iterations = 50
 save_ = True
 title_ = 'img'
 note = 'build_after_queen_ph-tests'
@@ -17,6 +17,7 @@ construction_on = True
 construct_limit_1 = 0.005
 construct_limit_2 = 0.02
 wait = 50
+check_collision = False
 
 agent_space = Layer(voxel_size=voxel_size, rgb=[34/255, 116/255, 240/255])
 queen_space = Layer(voxel_size=voxel_size, rgb=[203/255, 21/255, 207/255])
@@ -79,7 +80,7 @@ for i in range(iterations):
         queen_pheromones = agent.get_nb_cell_values(smell_layer, agent.pose) * 2
         random_ph = agent.random_pheromones() * 0.1
         up_pref = agent.direction_preference_pheromones(0.9) * 0.5
-        agent.follow_pheromones(random_ph + queen_pheromones + up_pref, offset_ph, False)
+        agent.follow_pheromones(random_ph + queen_pheromones + up_pref, offset_ph, check_collision)
         # build
         if construction_on:
             flag = agent.get_build_flag_after_pheromones(smell_layer, construct_limit_1, construct_limit_2 )
