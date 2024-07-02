@@ -1,6 +1,6 @@
 import numpy as np
 # import show_voxel_plt as show
-# from voxel_builder_library import direction_dict_np
+from voxel_builder_library import direction_dict_np, get_nb_cell_directions_w_edges
 
 # def value_at_index(array, index = [0,0,0], value = 1):
 #     i,j,k = index
@@ -64,7 +64,31 @@ z = test_i[0,:,:,:] <= z_max
 # x = np.where(z == True, 1, 0)
 d = np.zeros((4,4,4))
 d[x2 & x1 & z] = 1
-print('x', d)
+# print('x', d)
+
+def get_nb_cell_directions_w_corners():
+    # nb_value_dict = {}
+    # horizontal
+    f = direction_dict_np['front']
+    b = direction_dict_np['back']
+    l = direction_dict_np['left']
+    r = direction_dict_np['right']
+    u = direction_dict_np['up']
+    d = direction_dict_np['down']
+    # first_story in level:
+    story_1 = [f, f + l, f + r, l, r, b, b + l, b + r]
+    story_0 = [i + d for i in story_1]
+    story_2 = [i + u for i in story_1]
+    nbs_w_corners = story_1 + story_0 + story_2 + [u] + [d] + [np.asarray([0,0,0])]
+    return(nbs_w_corners)
+    
+
+a = get_nb_cell_directions_w_edges()
+a = np.asarray(a)
+b = np.asarray([20,0,100])
+c = a + b
+print(len(a))
+print(c)
 
 
 
