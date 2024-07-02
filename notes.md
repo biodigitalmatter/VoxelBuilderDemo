@@ -4,11 +4,11 @@
 
 ### next todos
 
-- test queen build-pheromon
-- test offset pheromons vs movement_constraints
-- save steps
-- build conditions
-- movement attractor pheromons
+- test algoritmhs - parameters
+- agent-collision?
+- dump json
+- create-ptcloud > compas_view
+
 
 ## meeting notes 240626
 
@@ -81,3 +81,13 @@ behaviours strategies interactions whatever
 - novel visualisation
 - openvdb convert (data or code)
 - dump
+
+
+## saved parameters:
+
+<!-- # # grounds_offset
+# offset_ph = Layer(name = 'offset_ph', voxel_size=voxel_size, rgb = [0.25, 0.25, 0.25])
+# offset_ph.decay_linear_value = 1/6
+# offset_ph.decay_ratio = 0
+# offset_ph.diffusion_ratio = 1/3
+# grounds_emission_value = 2 -->
