@@ -691,19 +691,24 @@ class Agent:
         exclude_pheromones = np.asarray(check_failed)
         return exclude_pheromones
     
-    def follow_pheromones(self, six_pheromones, offset_limit = None):
+    def follow_pheromones(self, six_pheromones, offset_limit_layer = None, check_collision = True):
         # check ground condition
         if self.limited_to_ground == 'nb_check':
-            exclude_pheromones = self.check_ground(self.ground_layer)
+            exclude_pheromones = self.check_ground(self.ground_layer + self.space_layer)
             six_pheromones[exclude_pheromones] = -1
         
         elif self.limited_to_ground == 'offset_ph':
-            nbs_values = self.get_nb_cell_values(offset_limit, self.pose)
+            nbs_values = self.get_nb_cell_values(offset_limit_layer, self.pose)
             exclude_pheromones = np.logical_not(nbs_values != 0)
             six_pheromones[exclude_pheromones] = -1
         
         elif self.limited_to_ground == 'cube_corner_nb_check' or self.limited_to_ground == 'cube_edge_nb_check':
             exclude_pheromones = self.check_ground_in_cubes(self.ground_layer)
+            six_pheromones[exclude_pheromones] = -1
+        
+        if check_collision:
+            nb_agents = self.get_nb_cell_values(self.space_layer, self.pose)
+            exclude_pheromones = np.logical_not(nb_agents != 0)
             six_pheromones[exclude_pheromones] = -1
         
         if np.sum(six_pheromones) == -6:
