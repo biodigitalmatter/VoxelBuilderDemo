@@ -5,9 +5,9 @@ from show_voxel_plt import *
 voxel_size = 10
 agent_count = 1
 iterations = 2
-save_ = False
+save_ = True
 title_ = 'img'
-note = 'fixed_colors_inverted_pheromon_colors'
+note = 'fixed_colors_inverted_pheromon_inversecolors'
 
 gravity_option = ['nb_check', 'offset_ph', 'cube_corner_nb_check', 'cube_edge_nb_check'][2]
 
@@ -121,5 +121,5 @@ a5 = smell_layer.array
 
 # show image
 f,a = init_fig(suffix=note)  #bottom_line=Layer.__str__())
-show_voxel(f,a, a1 + a2 + a3 + a4 + a5, c1 + c2 + c3 + c4 + c5, save=True, suffix=note)
+show_voxel(f,a, a1 + a2 + a3 + a4, c1 + c2 + c3 + c4, save=True, suffix=note)
 # show_voxel(f,a, smell_layer.array, c4, save=True, suffix=note)
