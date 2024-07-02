@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 from datetime import datetime
+from numpy import maximum, minimum
 global timestamp_now
 timestamp = datetime.now()
 timestamp_now = timestamp.strftime("%y%m%d_%H%M%S")
@@ -20,6 +21,13 @@ def init_fig(title = 'img', suffix = '', bottom_line = ''):
 
 def show_voxel(fig, ax, voxel_fill_3D, colors_4D = None, show = True, save = False, title = 'img', suffix = ''):
     # plot voxels
+    try:
+        colors_4D = minimum(colors_4D, 1)
+        colors_4D = maximum(colors_4D, 0)
+    except:
+        pass
+    # print('show_colors:')
+    # print(colors_4D)
     ax.voxels(voxel_fill_3D, facecolors = colors_4D)
 
     if save:

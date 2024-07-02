@@ -169,7 +169,12 @@ class Layer:
     
     @property
     def color_array(self):
-        self.calculate_color_array()
+        self.calculate_color_array(False)
+        return self._color_array
+
+    @property
+    def color_array_inverse(self):
+        self.calculate_color_array(True)
         return self._color_array
     
     @property
@@ -482,19 +487,34 @@ class Layer:
         s,e = self.voxel_crop_range
         self._array = self.crop_array(self._array - self.decay_linear_value, s,e)
 
-    def calculate_color_array(self):
+    # # combine the color components
+    # def calculate_color_array2(self):
+    #     colors = np.zeros(self.array.shape + (3,))
+    #     r,g,b = self.rgb
+    #     colors[..., 0] = r
+    #     colors[..., 1] = g
+    #     colors[..., 2] = b
+    #     self._color_array = colors
+    #     # print('colors after calculation:/n',colors)
+    #     return self._color_array
+
+    def calculate_color_array(self, inverse = True):
         r,g,b = self.rgb
-        s, e = self.voxel_crop_range
         colors = np.copy(self.array)
-        colors = (1 - self.crop_array(colors, s,e))
+        if inverse:
+            colors = 1 - colors
+        # colors.reshape(self.array.shape + (3,))
         # colors = self.crop_array(colors, s,e)
+        # colors[..., 0] = r
+        # colors[..., 1] = g
+        # colors[..., 2] = b
         reds = np.reshape(colors * (r), [self._n, self._n, self._n, 1])
         greens = np.reshape(colors * (g), [self._n, self._n, self._n, 1])
         blues = np.reshape(colors * (b), [self._n, self._n, self._n, 1])
-        c = np.concatenate((reds, greens, blues), axis = -1)
-        c = np.minimum(c, 1)
-        c = np.maximum(c, 0)
-        self._color_array = c
+        colors = np.concatenate((reds, greens, blues), axis = 3)
+        # c = np.minimum(c, 1)
+        # c = np.maximum(c, 0)
+        self._color_array = colors
         return self._color_array
 
     def iterate(self, diffusion_limit_by_Hirsh=False, reintroduce_on_the_other_end=False ):
