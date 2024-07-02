@@ -4,7 +4,7 @@ from show_voxel_plt import *
 
 voxel_size = 30
 agent_count = 200
-iterations = 50
+iterations = 5000
 save_ = True
 title_ = 'img'
 note = 'build_after_queen_ph-tests'
