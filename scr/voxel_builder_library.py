@@ -487,33 +487,16 @@ class Layer:
         s,e = self.voxel_crop_range
         self._array = self.crop_array(self._array - self.decay_linear_value, s,e)
 
-    # # combine the color components
-    # def calculate_color_array2(self):
-    #     colors = np.zeros(self.array.shape + (3,))
-    #     r,g,b = self.rgb
-    #     colors[..., 0] = r
-    #     colors[..., 1] = g
-    #     colors[..., 2] = b
-    #     self._color_array = colors
-    #     # print('colors after calculation:/n',colors)
-    #     return self._color_array
-
     def calculate_color_array(self, inverse = True):
         r,g,b = self.rgb
         colors = np.copy(self.array)
         if inverse:
             colors = 1 - colors
-        # colors.reshape(self.array.shape + (3,))
-        # colors = self.crop_array(colors, s,e)
-        # colors[..., 0] = r
-        # colors[..., 1] = g
-        # colors[..., 2] = b
+
         reds = np.reshape(colors * (r), [self._n, self._n, self._n, 1])
         greens = np.reshape(colors * (g), [self._n, self._n, self._n, 1])
         blues = np.reshape(colors * (b), [self._n, self._n, self._n, 1])
         colors = np.concatenate((reds, greens, blues), axis = 3)
-        # c = np.minimum(c, 1)
-        # c = np.maximum(c, 0)
         self._color_array = colors
         return self._color_array
 
@@ -527,10 +510,10 @@ class Layer:
         self.diffuse(diffusion_limit_by_Hirsh, reintroduce_on_the_other_end)
         #emission_out
         self.emmission_out_update()
-     
 
-# there will be objects per agents
-# but there is a layer containing all agents too.
+
+    
+
 
 class Agent:
     def __init__(self, 
