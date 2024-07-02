@@ -45,7 +45,7 @@ def get_nb_cell_directions_w_corners():
     story_0 = [i + d for i in story_1]
     story_2 = [i + u for i in story_1]
     nbs_w_corners = story_1 + story_0 + story_2 + [u] + [d] + [np.asarray([0,0,0])]
-    return(nbs_w_corners)
+    return nbs_w_corners
 
 def get_nb_cell_directions_w_edges():
     # horizontal
@@ -657,7 +657,7 @@ class Agent:
             exclude_pheromones = np.logical_not(nbs_values != 0)
             six_pheromones[exclude_pheromones] = -1
         
-        elif self.limited_to_ground == 'cube_nb_check':
+        elif self.limited_to_ground == 'cube_corner_nb_check' or self.limited_to_ground == 'cube_edge_nb_check':
             exclude_pheromones = self.check_ground_in_cubes(self.ground_layer)
             six_pheromones[exclude_pheromones] = -1
         
