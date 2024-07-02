@@ -2,7 +2,7 @@ from voxel_builder_library import *
 from show_voxel_plt import *
 
 
-voxel_size = 40
+voxel_size = 30
 agent_count = 20
 iterations = 5000
 save_ = True
@@ -12,8 +12,8 @@ note = 'build_after_queen_ph-tests'
 gravity_option = ['nb_check', 'offset_ph', 'cube_corner_nb_check', 'cube_edge_nb_check'][2]
 
 construction_on = True
-construct_limit_1 = 0.0005
-construct_limit_2 = 0.01
+construct_limit_1 = 0.01
+construct_limit_2 = 0.09
 wait = 50
 
 agent_space = Layer(voxel_size=voxel_size, rgb=[34/255, 116/255, 240/255])
