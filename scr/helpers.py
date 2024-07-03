@@ -18,15 +18,16 @@ def convert_array_to_compas_pointcloud(ptcloud_array, order = 'xyz'):
     ptcloud = Pointcloud(points = pts)
     return ptcloud
 
-ptcloud = convert_array_to_compas_pointcloud(array)
+def save_ptcloud(ptcloud, filename):
+    with open(filename, 'w') as file:
+        ptcloud.to_json(file, True)
 
+# TEST
+
+ptcloud = convert_array_to_compas_pointcloud(array)
 # print(ptcloud)
 
 filename = 'scr/data/test_compas_point_cloud.json'
-
-with open(filename, 'w') as file:
-    ptcloud.to_json(file, True)
+# with open(filename, 'w') as file:
+#     ptcloud.to_json(file, True)
     
-
-
-# Pointcloud.from_json(file)
