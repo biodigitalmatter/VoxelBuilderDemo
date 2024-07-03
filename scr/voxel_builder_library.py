@@ -863,7 +863,7 @@ class Agent:
     
     def analyze_move_history(self):
         last_moves = self.move_history[-3:]
-        if 'down' not in set(last_moves) and 'side' not in set(last_moves):
+        if last_moves == ['up', 'up', 'up']:
             self.climb_style = 'climb'
         elif last_moves == ['up', 'up', 'side']:
             self.climb_style = 'top'
@@ -873,6 +873,7 @@ class Agent:
             self.climb_style = 'descend'       
 
     def add_build_probability(self, add = 1, climb = 0, top = 0, walk = 0, descend = 0):
+        print(self.climb_style)
         ' add = 1, climb = 0, top = 0, walk = 0, descend = 0'
         if self.climb_style == 'climb':
             self.build_probability += climb * add

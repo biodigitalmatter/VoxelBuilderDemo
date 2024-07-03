@@ -5,7 +5,7 @@ from show_voxel_plt import timestamp_now
 
 
 voxel_size = 30
-agent_count = 100
+agent_count = 1
 iterations = 200
 save_ = True
 title_ = 'img'
@@ -32,18 +32,18 @@ ground.array += wall
 ground.rgb = [207/255, 179/255, 171/255]
 
 # move_preference settings w pheromon weights
-ground_smell_ph_w = 1
+ground_smell_ph_w = 0
 random_ph_w = 0.2
 up_pref_ph_w = 1
 side_move_pref_ratio = 0.5
 
 # build probability settings
-add_prob = 0.2
+add_prob = 1
 climb = 2
-top = 1.2
-walk = 0
+top = 10
+walk = 0.1
 descend = -0.05
-build_probability_limit = 0.5
+build_probability_limit = 1
 
 # make agents
 agents = []
@@ -142,10 +142,10 @@ if save_:
 # show SCATTER PLOT
 pts_ground = convert_array_to_points(ground.array, False)
 pts_agent_space = convert_array_to_points(agent_space.array, False)
-# arrays_to_show = [pts_ground]
-# colors = [ground.rgb]
-arrays_to_show = [pts_ground, pts_agent_space]
-colors = [ground.rgb, agent_space.rgb]
+arrays_to_show = [pts_ground]
+colors = [ground.rgb]
+# arrays_to_show = [pts_ground, pts_agent_space]
+# colors = [ground.rgb, agent_space.rgb]
 
 scale = voxel_size
 axes = plt.axes(xlim=(0, scale), ylim =  (0, scale), zlim = (0, scale), projection = '3d')
