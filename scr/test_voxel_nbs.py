@@ -90,6 +90,7 @@ c = a + b
 print(len(a))
 print(c)
 
+print([1] * 9)
 
 
 
