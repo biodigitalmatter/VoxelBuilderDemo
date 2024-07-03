@@ -588,6 +588,11 @@ class Layer:
         self.diffuse(diffusion_limit_by_Hirsh, reintroduce_on_the_other_end)
         #emission_out
         self.emmission_out_update()
+    
+    def get_merged_array_with(self, other_layer):
+                a1 = self.array
+                a2 = other_layer.array
+                return a1 + a2
 
 
     
@@ -786,16 +791,16 @@ class Agent:
     
     def follow_pheromones(self, pheromone_cube, check_collision = False):
         # check ground condition
-        if not check_collision:
-            exclude_pheromones = self.get_move_mask_26(self.ground_layer)
-            pheromone_cube[exclude_pheromones] = -1
+        exclude_pheromones = self.get_move_mask_26(self.ground_layer)
+        pheromone_cube[exclude_pheromones] = -1
         
-        elif check_collision:
-            exclude_pheromones = self.get_move_mask_26(self.ground_layer + self.space_layer)
+        if check_collision:
+            # collision_array = self.space_layer.get_merged_array_with(self.ground_layer)
+            exclude_pheromones = self.get_move_mask_26(self.space_layer)
             pheromone_cube[exclude_pheromones] = -1
         
         if np.sum(pheromone_cube) == -26:
-            # cant move
+            print('cant move')
             return False
 
         # select best pheromon

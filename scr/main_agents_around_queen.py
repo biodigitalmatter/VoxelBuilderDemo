@@ -6,12 +6,10 @@ from show_voxel_plt import timestamp_now
 
 voxel_size = 30
 agent_count = 20
-iterations = 800
+iterations = 200
 save_ = True
 title_ = 'img'
-note = 'test_26_nbs'
-
-walk_method_option = ['nb_check', 'offset_ph', 'cube_corner_nb_check', 'cube_edge_nb_check'][2]
+note = 'test_26_nbs_no_collision_a%s_i%s' %(agent_count, iterations)
 
 construction_on = True
 # construct_limit_1 = 0.01
@@ -19,7 +17,7 @@ construction_on = True
 construct_limit_1 = 0.005
 construct_limit_2 = 0.05
 wait = 50
-check_collision = False
+check_collision = False # doesnt work
 
 agent_space = Layer(voxel_size=voxel_size, rgb=[34/255, 116/255, 240/255])
 queen_space = Layer(voxel_size=voxel_size, rgb=[203/255, 21/255, 207/255])
@@ -54,7 +52,7 @@ for i in range(agent_count):
 
 # make queen
 queens = []
-poses = [[20,20], [12,9]]
+poses = [[14,14], [12,10]]
 for i in range(2):
     queen = Agent(space_layer = queen_space, ground_layer = ground)
     x,y = poses[i]
@@ -71,10 +69,12 @@ for i in range(wait):
 
 # run simulation
 for i in range(iterations):
+    if i % 20 == 0:
+        print(i)
     # queen odor
     smell_layer.emission_intake(queen_space.array, 2, False)
     smell_layer.diffuse()
-    smell_layer.gravity_shift(5, 1)
+    smell_layer.gravity_shift(5, 2)
     smell_layer.decay()
     ground.block_layers([smell_layer])
 
@@ -85,7 +85,7 @@ for i in range(iterations):
         random_ph = agent.random_pheromones(26)
         up_pref_ph = agent.direction_preference_26_pheromones(0.8)
         pheromone_cube = random_ph * 2 + queen_ph * 0.1 + up_pref_ph * 0.5
-        moved = agent.follow_pheromones(pheromone_cube)
+        moved = agent.follow_pheromones(pheromone_cube, check_collision)
         if moved:
             # build
             if construction_on:
@@ -120,7 +120,7 @@ a2 = agent_space.array
 a3 = queen_space.array
 # a4 = track_layer.array
 a5 = smell_layer.array
-# a1[:,:,0] = 0
+a1[:,:,0] = 0
 ground.array = a1
 
 time__ = timestamp_now
@@ -150,6 +150,8 @@ if save_:
 pts_ground = convert_array_to_points(ground.array, False)
 pts_agent_space = convert_array_to_points(agent_space.array, False)
 
+# arrays_to_show = [pts_ground]
+# colors = [ground.rgb]
 arrays_to_show = [pts_ground, pts_agent_space]
 colors = [ground.rgb, agent_space.rgb]
 
