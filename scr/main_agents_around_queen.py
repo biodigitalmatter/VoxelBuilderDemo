@@ -4,7 +4,7 @@ from show_voxel_plt import *
 
 voxel_size = 30
 agent_count = 100
-iterations = 500
+iterations = 5000
 save_ = True
 title_ = 'img'
 note = 'build_after_queen_ph-tests'
@@ -15,7 +15,7 @@ construction_on = True
 # construct_limit_1 = 0.01
 # construct_limit_2 = 0.09
 construct_limit_1 = 0.005
-construct_limit_2 = 0.02
+construct_limit_2 = 0.05
 wait = 50
 check_collision = False
 
