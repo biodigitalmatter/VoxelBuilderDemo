@@ -3,11 +3,11 @@ from show_voxel_plt import *
 
 
 voxel_size = 30
-agent_count = 100
+agent_count = 10
 iterations = 5000
 save_ = True
 title_ = 'img'
-note = 'build_after_queen_ph-tests'
+note = 'build_after_queen_ph-tests_from_corner'
 
 walk_method_option = ['nb_check', 'offset_ph', 'cube_corner_nb_check', 'cube_edge_nb_check'][2]
 
@@ -45,8 +45,8 @@ for i in range(agent_count):
     agent = Agent(
         space_layer = agent_space, ground_layer = ground, construction_layer = ground,
         limited_to_ground = walk_method_option, track_layer = None, leave_trace=False, save_move_history=False)
-    x = np.random.randint(0, voxel_size)
-    y = np.random.randint(0, voxel_size)
+    x = np.random.randint(0, voxel_size/10)
+    y = np.random.randint(0, voxel_size/10)
     agent.pose = [x,y,1]
     agents.append(agent)
 
@@ -56,7 +56,7 @@ for i in range(1):
     queen = Agent(space_layer = queen_space, ground_layer = ground)
     # x = np.random.randint(5, voxel_size - 5)
     # y = np.random.randint(5, voxel_size - 5)
-    x,y = [15,15]
+    x,y = [22,22]
     agent.pose = [x,y,1]
     queen.pose = [x,y,1]
     queen.update_space()
