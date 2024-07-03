@@ -759,7 +759,7 @@ class Agent:
         
         if np.sum(six_pheromones) == -6:
             # cant move
-            return -1
+            return False
 
         # select best pheromon
         choice = np.argmax(six_pheromones)
@@ -769,7 +769,7 @@ class Agent:
         self.space_layer.set_layer_value_at_index(self.pose, 0)
         self.move(choice, self.space_layer.voxel_size)
         self.space_layer.set_layer_value_at_index(self.pose, 1)
-        return choice
+        return True
     
     def get_build_flag_after_pheromones(self, pheromon_layer, limit1, limit2):
         """agent builds on construction_layer, if pheromon value in cell hits limit
