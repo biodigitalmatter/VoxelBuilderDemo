@@ -37,6 +37,15 @@ def show_voxel(fig, ax, voxel_fill_3D, colors_4D = None, show = True, save = Fal
     if show:
         plt.show()
 
+def show_scatter(fig, ax, arrays_to_show):
+        # fig = plt.figure()
+        # axes = plt.axes(xlim=(0, scale), ylim =  (0, scale), zlim = (0, scale), projection = '3d')
+        # axes.set_xticks([])
+        # axes.set_yticks([])
+        # axes.set_zticks([])
+        for array in arrays_to_show:
+            p = array.transpose()
+            ax.scatter(p[0, :], p[1, :], p[2, :], marker = 's', s = 2)
 
 def show(fig, ax, layer, save_img = True, show_img = True,  title = 'voxels_test_smells', suffix = '', note = '', discretize_gradient = True):
     if discretize_gradient: layer.grade()
