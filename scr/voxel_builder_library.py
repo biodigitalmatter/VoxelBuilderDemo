@@ -816,26 +816,6 @@ class Agent:
 
 
 
-
-
-# Other helper functions
-
-def convert_to_compas_pointcloud(voxel_array, order = 'xyz'):
-    pass
-
-def overlay_layers(layers, weight_mask):
-    # add several layers
-    pass
-
-def dump_state(state):
-    # Implementation to dump the state of a layer or the entire world
-    pass
-
-def load_as_built(self, as_built_data):
-    # Implementation to load AsBuilt data
-    pass
-
-
 """
 # Examples of layers
 earth = Layer(name="Earth", voxel=np.zeros((10, 10, 10)), diffusion_strength=0.5, color='brown', attraction_strength=0.1)
