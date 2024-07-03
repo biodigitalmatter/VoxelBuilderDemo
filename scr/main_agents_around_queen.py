@@ -5,8 +5,8 @@ from show_voxel_plt import timestamp_now
 
 
 voxel_size = 30
-agent_count = 100
-iterations = 500
+agent_count = 10
+iterations = 1
 save_ = True
 title_ = 'img'
 note = ''
@@ -18,7 +18,7 @@ construction_on = True
 # construct_limit_2 = 0.09
 construct_limit_1 = 0.005
 construct_limit_2 = 0.05
-wait = 50
+wait = 10
 check_collision = False
 
 agent_space = Layer(voxel_size=voxel_size, rgb=[34/255, 116/255, 240/255])
@@ -30,8 +30,8 @@ smell_layer = Layer(voxel_size=voxel_size, rgb=[240/255, 220/255, 150/255], diff
 ground_level_Z = 0
 ground = Layer(voxel_size=voxel_size, name='Ground')
 ground.array = make_solid_box_z(voxel_size, ground_level_Z)
-# wall = make_solid_box_xxyyzz(voxel_size, 12,12,0,40,0,25)
-# ground.array += wall
+wall = make_solid_box_xxyyzz(voxel_size, 10,10,0,40,0,25)
+ground.array += wall
 ground.rgb = [207/255, 179/255, 171/255]
 
 # grounds_offset
@@ -58,7 +58,7 @@ for i in range(1):
     queen = Agent(space_layer = queen_space, ground_layer = ground)
     # x = np.random.randint(5, voxel_size - 5)
     # y = np.random.randint(5, voxel_size - 5)
-    x,y = [15,15]
+    x,y = [15,0]
     agent.pose = [x,y,1]
     queen.pose = [x,y,1]
     queen.update_space()
@@ -116,15 +116,23 @@ a3 = queen_space.array
 a5 = smell_layer.array
 a1[:,:,0] = 0
 
-# save as pointcloud
-filename = 'scr/data/compas_ptclouds/ptcloud_%s_%s.json' %(timestamp_now, note)
-ptcloud = convert_array_to_compas_pointcloud(a1)
-save_ptcloud(ptcloud, filename)
-print('ptcloud saved as %s:' %filename)
+# time__ = timestamp_now
+# # save as pointcloud
+# filename = 'scr/data/compas_pointclouds/ptcloud_%s_%s.json' %(time__, note)
+# ptcloud = convert_array_to_compas_pointcloud(a1)
+# save_ptcloud(ptcloud, filename)
+# print('ptcloud saved as %s:' %filename)
 
-# # show image
-# f,a = init_fig(suffix=note)  #bottom_line=Layer.__str__())
-# # show_voxel(f,a, a1 + a2 + a3, c1 + c2 + c3, save=save_, suffix=note)
-# # show_voxel(f,a, a1 + a2 + a3 + a5, c1 + c2 + c3 + c5, save=True, suffix=note)
-# # show_voxel(f,a, a5, c5, save=save_, suffix=note + '_smells')
+# # save as point_list
+# pts = convert_array_to_points(a1, True)
+# filename = 'scr/data/point_lists/pts_%s_%s.json' %(time__, note)
+# with open(filename, 'w') as file:
+#     json.dump(pts, file)
+# print('ptlist saved as %s:' %filename)
+
+# show image
+f,a = init_fig(suffix=note)  #bottom_line=Layer.__str__())
+# show_voxel(f,a, a1 + a2 + a3, c1 + c2 + c3, save=save_, suffix=note)
+# show_voxel(f,a, a1 + a2 + a3 + a5, c1 + c2 + c3 + c5, save=True, suffix=note)
+show_voxel(f,a, a1 + a5, c1 + c5, save=save_, suffix=note + '_smells')
 # show_voxel(f,a, a1 + a3, c1 + c3, save=save_, suffix=note)
