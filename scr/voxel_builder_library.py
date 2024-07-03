@@ -32,7 +32,8 @@ def get_layer_value_at_index(layer, index = [0,0,0]):
     v = layer.array[i][j][k]
     return v
 
-def get_nb_cell_directions_w_corners():
+def get_cube_array_indices(self_contain = False):
+    """26 nb indicies, ordered: top-middle-bottom"""
     # horizontal
     f = direction_dict_np['front']
     b = direction_dict_np['back']
@@ -41,10 +42,13 @@ def get_nb_cell_directions_w_corners():
     u = direction_dict_np['up']
     d = direction_dict_np['down']
     # first_story in level:
-    story_1 = [f, f + l, f + r, l, r, b, b + l, b + r]
+    story_1 = [ f + l, f, f + r, l, r, b + l, b, b + r]
     story_0 = [i + d for i in story_1]
     story_2 = [i + u for i in story_1]
-    nbs_w_corners = story_1 + story_0 + story_2 + [u] + [d] + [np.asarray([0,0,0])]
+    if self_contain:
+        nbs_w_corners = story_2 + [u] + story_1 + [np.asarray([0,0,0])] + story_0 + [d]
+    else:
+        nbs_w_corners = story_2 + [u] + story_1 + story_0 + [d]
     return nbs_w_corners
 
 def get_nb_cell_directions_w_edges():
@@ -593,8 +597,7 @@ class Agent:
     def __init__(self, 
         pose = [0,0,0], 
         compass_array = direction_dict_np,
-        ground_layer = None, 
-        limited_to_ground = 'offset_pheromon',
+        ground_layer = None,
         space_layer = None, 
         construction_layer = None,
         track_layer = None,
@@ -604,7 +607,7 @@ class Agent:
         self.pose = np.asarray(pose)  # [i,j,k]
         self.compass_array = compass_array
         self.compass_keys = list(compass_array.keys())
-        self.limited_to_ground = limited_to_ground
+        # self.limited_to_ground = limited_to_ground
         self.leave_trace = leave_trace
         self.space_layer = space_layer
         self.construction_layer = construction_layer
@@ -614,10 +617,7 @@ class Agent:
         self.save_move_history = save_move_history
         if ground_layer != None:
             self.voxel_size = ground_layer.voxel_size
-        if self.limited_to_ground == 'cube_corner_nb_check':
-            self.cube_array = get_nb_cell_directions_w_corners()
-        elif self.limited_to_ground == 'cube_edge_nb_check':
-            self.cube_array = get_nb_cell_directions_w_edges()
+        self.cube_array = get_cube_array_indices()
 
     def move(self, i, voxel_size = 0):
         """move to a neighbor voxel based on the compas dictonary key index """
@@ -629,6 +629,16 @@ class Agent:
             self.pose = np.mod(self.pose, np.asarray([n,n,n]))
         if self.save_move_history: 
             self.move_history.append(self.compass_keys[i])
+    
+    def move_26(self, dir, voxel_size = 0):
+        """move to a neighbor voxel based on the compas dictonary key index """
+        self.pose += dir
+        # reintroduce agent if n nonzero
+        n = voxel_size
+        if n != 0:
+            self.pose = np.mod(self.pose, np.asarray([n,n,n]))
+        # if self.save_move_history: 
+        #     self.move_history.append(dir)
 
     def move_key(self, key, voxel_size = 0):
         """move to a neighbor voxel based on the compas dictonary key"""
@@ -650,10 +660,10 @@ class Agent:
     def update_space(self):
         self.space_layer.set_layer_value_at_index(self.pose, 1)
     
-    def random_pheromones(self):
-        return np.random.random(6)
+    def random_pheromones(self, n = 6):
+        return np.random.random(n)
     
-    def direction_preference_pheromones(self, x = 0.5, up = True):
+    def direction_preference_6_pheromones(self, x = 0.5, up = True):
         """up = 1
         side = x
         down = 0.1"""
@@ -663,15 +673,35 @@ class Agent:
             direction_preference = np.ones(6)
         return direction_preference
     
-    def get_nb_cell_indicies(self, pose):
+    def direction_preference_26_pheromones(self, x = 0.5, up = True):
+        """up = 1
+        side = x
+        down = 0.1"""
+        if up:
+            u = [1] * 9
+            m = [x] * 8
+            b = [0.1] * 9
+            direction_preference =  np.asarray(u + m + b)
+        else:
+            direction_preference = np.ones(26)
+        return direction_preference
+    
+    def get_nb_6_cell_indicies(self, pose):
         """returns the list of nb cell indexes"""
         nb_cell_index_list = []
         for key in self.compass_array.keys():
             d = self.compass_array[key]
             nb_cell_index_list.append( d + pose)
         return nb_cell_index_list
+    
+    def get_nb_26_cell_indicies(self, pose):
+        """returns the list of nb cell indexes"""
+        nb_cell_index_list = []
+        for d in self.cube_array:
+            nb_cell_index_list.append(d + pose)
+        return nb_cell_index_list
 
-    def get_nb_cell_values(self, layer, pose = None):
+    def get_nb_6_cell_values(self, layer, pose = None):
         # nb_value_dict = {}
         value_list = []
         for key in self.compass_array.keys():
@@ -681,7 +711,14 @@ class Agent:
             v = get_layer_value_at_index(layer, nb_cell_index)
             value_list.append(v)
         return np.asarray(value_list)
-
+    
+    def get_nb_26_cell_values(self, layer, pose = None):
+        value_list = []
+        for d in self.cube_array:
+            nb_cell_index = d + pose
+            v = get_layer_value_at_index(layer, nb_cell_index)
+            value_list.append(v)
+        return np.asarray(value_list)
 
     def get_cube_nbs_value_sums(self, layer, nb_pose):
         value_sum = 0
@@ -697,12 +734,12 @@ class Agent:
         value_sum = np.sum(v)
         return value_sum
 
-    def check_ground(self, ground_layer):
+    def get_move_mask_6(self, ground_layer):
         """return ground directions as bools
         checks nbs of the nb cells
         if value > 0: return True"""
         # get nb cell indicies
-        nb_cells = self.get_nb_cell_indicies(self.pose)
+        nb_cells = self.get_nb_6_cell_indicies(self.pose)
         cells_to_check = list(nb_cells)
 
         check_failed = []
@@ -719,59 +756,67 @@ class Agent:
         exclude_pheromones = np.asarray(check_failed)
         return exclude_pheromones
     
-    def check_ground_in_cubes(self, ground_layer):
-        """return ground directions as bools
-        checks cube nbs of the nb cells
-        if value > 0: return True"""
+    def get_move_mask_26(self, ground_layer):
+        """return ground direction logical_not mask
+        True if can not move there
+            nb_cell != 0 or nb_value_sum = 0
+        False if can move there:
+            nb_cell == 0 and nb_value_sum > 0
+        """
         # get nb cell indicies
-        nb_cells = self.get_nb_cell_indicies(self.pose)
+        # nb_cells = self.get_nb_6_cell_indicies(self.pose)
+        nb_cells = self.get_nb_26_cell_indicies(self.pose)
         cells_to_check = list(nb_cells)
         check_failed = []
         # iterate through nb cells
         for nb_pose in cells_to_check:
-            nbs_values = self.get_cube_nbs_value_sums(ground_layer, nb_pose)
-            nb_value = get_layer_value_at_index(ground_layer, nb_pose)
-            if np.sum(nbs_values) > 0 and nb_value == 0:
-                check_failed.append(False)
-            else: check_failed.append(True)
+            # check if nb cell is empty
+            nb_value = get_layer_value_at_index(ground_layer, nb_pose) 
+            if nb_value == 0:
+                # check if nb cells have any face_nb cell which is solid
+                nbs_values = self.get_nb_6_cell_values(ground_layer, nb_pose)
+                if np.sum(nbs_values) > 0:
+                    check_failed.append(False)
+                else: 
+                    check_failed.append(True)
+            else:
+                check_failed.append(True)
         exclude_pheromones = np.asarray(check_failed)
         return exclude_pheromones
     
-    def follow_pheromones(self, six_pheromones, offset_limit_layer = None, check_collision = True):
+    def follow_pheromones(self, pheromone_cube, check_collision = False):
         # check ground condition
-        if self.limited_to_ground == 'nb_check':
-            exclude_pheromones = self.check_ground(self.ground_layer + self.space_layer)
-            six_pheromones[exclude_pheromones] = -1
+        if not check_collision:
+            exclude_pheromones = self.get_move_mask_26(self.ground_layer)
+            pheromone_cube[exclude_pheromones] = -1
         
-        elif self.limited_to_ground == 'offset_ph':
-            nbs_values = self.get_nb_cell_values(offset_limit_layer, self.pose)
-            exclude_pheromones = np.logical_not(nbs_values != 0)
-            six_pheromones[exclude_pheromones] = -1
+        elif check_collision:
+            exclude_pheromones = self.get_move_mask_26(self.ground_layer + self.space_layer)
+            pheromone_cube[exclude_pheromones] = -1
         
-        elif self.limited_to_ground == 'cube_corner_nb_check' or self.limited_to_ground == 'cube_edge_nb_check':
-            exclude_pheromones = self.check_ground_in_cubes(self.ground_layer)
-            six_pheromones[exclude_pheromones] = -1
-        
-        if check_collision:
-            nb_agents = self.get_nb_cell_values(self.space_layer, self.pose)
-            exclude_pheromones = np.logical_not(nb_agents != 0)
-            six_pheromones[exclude_pheromones] = -1
-        
-        if np.sum(six_pheromones) == -6:
+        if np.sum(pheromone_cube) == -26:
             # cant move
             return False
 
         # select best pheromon
-        choice = np.argmax(six_pheromones)
-        # update location in space layer
+        choice = np.argmax(pheromone_cube)
+        # print('choice:', choice)
+        move_vector = self.cube_array[choice]
+
+        # update track layer
         if self.leave_trace:
             self.track_layer.set_layer_value_at_index(self.pose, 1)
+        # update location in space layer
         self.space_layer.set_layer_value_at_index(self.pose, 0)
-        self.move(choice, self.space_layer.voxel_size)
+
+        # move
+        self.move_26(move_vector, self.space_layer.voxel_size)
+
+        # update location in space layer
         self.space_layer.set_layer_value_at_index(self.pose, 1)
         return True
     
-    def get_build_flag_after_pheromones(self, pheromon_layer, limit1, limit2):
+    def get_build_flag_by_pheromones(self, pheromon_layer, limit1, limit2):
         """agent builds on construction_layer, if pheromon value in cell hits limit
         return bool"""
         v = get_layer_value_at_index(pheromon_layer, self.pose)
