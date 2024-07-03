@@ -1,5 +1,7 @@
 from voxel_builder_library import *
 from show_voxel_plt import *
+from helpers import *
+from show_voxel_plt import timestamp_now
 
 
 voxel_size = 30
@@ -113,9 +115,16 @@ a3 = queen_space.array
 # a4 = track_layer.array
 a5 = smell_layer.array
 a1[:,:,0] = 0
-# show image
-f,a = init_fig(suffix=note)  #bottom_line=Layer.__str__())
-# show_voxel(f,a, a1 + a2 + a3, c1 + c2 + c3, save=save_, suffix=note)
-# show_voxel(f,a, a1 + a2 + a3 + a5, c1 + c2 + c3 + c5, save=True, suffix=note)
-# show_voxel(f,a, a5, c5, save=save_, suffix=note + '_smells')
-show_voxel(f,a, a1 + a3, c1 + c3, save=save_, suffix=note)
+
+# save as pointcloud
+filename = 'scr/data/compas_ptclouds/ptcloud_%s_%s.json' %(timestamp_now, note)
+ptcloud = convert_array_to_compas_pointcloud(a1)
+save_ptcloud(ptcloud, filename)
+print('ptcloud saved as %s:' %filename)
+
+# # show image
+# f,a = init_fig(suffix=note)  #bottom_line=Layer.__str__())
+# # show_voxel(f,a, a1 + a2 + a3, c1 + c2 + c3, save=save_, suffix=note)
+# # show_voxel(f,a, a1 + a2 + a3 + a5, c1 + c2 + c3 + c5, save=True, suffix=note)
+# # show_voxel(f,a, a5, c5, save=save_, suffix=note + '_smells')
+# show_voxel(f,a, a1 + a3, c1 + c3, save=save_, suffix=note)

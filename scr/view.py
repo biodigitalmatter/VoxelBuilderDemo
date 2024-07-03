@@ -7,10 +7,11 @@ def get_newest_file_in_folder(folder_path):
     try:
         # Get a list of files in the folder
         files = [os.path.join(folder_path, filename) for filename in os.listdir(folder_path)]
-
+        # print(files)
         # Sort the files by change time (modification time) in descending order
-        files.sort(key=lambda x: os.path.getmtime(x), reverse=True)
-
+        # files.sort(key=lambda x: os.path.getmtime(x), reverse=True)
+        print('files in folder:')
+        print(files)
         # Return the newest file
         if files:
             return files[0]
@@ -43,12 +44,10 @@ def get_nth_newest_file_in_folder(folder_path, n):
 Nth = 0
 show = True
 radius = 0.25
+folder_path = os.path.join(os.getcwd(), 'scr/data/compas_ptclouds')
 
-# MAIN
-folder_path = os.path.join(os.getcwd(), 'scr/data')
-# file = get_nth_newest_file_in_folder(folder_path, Nth)
-# file = get_newest_file_in_folder(folder_path)
-file = 'scr/data/test_compas_point_cloud.json'
+file = get_nth_newest_file_in_folder(folder_path, Nth)
+
 try: 
     os.path.isfile(file) # open file
     ptcloud = Pointcloud.from_json(file)
