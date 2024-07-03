@@ -19,9 +19,14 @@ def convert_array_to_compas_pointcloud(ptcloud_array, order = 'xyz'):
     return ptcloud
 
 ptcloud = convert_array_to_compas_pointcloud(array)
-print(ptcloud)
-file = 'test_compas_point_cloud.json'
-ptcloud.to_json(file, True)
+
+# print(ptcloud)
+
+filename = 'scr/data/test_compas_point_cloud.json'
+
+with open(filename, 'w') as file:
+    ptcloud.to_json(file, True)
+    
 
 
 # Pointcloud.from_json(file)
