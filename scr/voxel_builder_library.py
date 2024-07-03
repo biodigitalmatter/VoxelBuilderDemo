@@ -620,9 +620,11 @@ class Agent:
         self.ground_layer = ground_layer
         self.move_history = []
         self.save_move_history = save_move_history
+        self.build_probability = 0
         if ground_layer != None:
             self.voxel_size = ground_layer.voxel_size
         self.cube_array = get_cube_array_indices()
+        self.climb_style = ''
 
     def move(self, i, voxel_size = 0):
         """move to a neighbor voxel based on the compas dictonary key index """
@@ -642,8 +644,13 @@ class Agent:
         n = voxel_size
         if n != 0:
             self.pose = np.mod(self.pose, np.asarray([n,n,n]))
-        # if self.save_move_history: 
-        #     self.move_history.append(dir)
+        if self.save_move_history:
+            if dir[2] == 1:
+                self.move_history.append('up')
+            elif dir[2] == 0:
+                self.move_history.append('side')
+            elif dir[2] == -1:
+                self.move_history.append('down')
 
     def move_key(self, key, voxel_size = 0):
         """move to a neighbor voxel based on the compas dictonary key"""
@@ -821,6 +828,12 @@ class Agent:
         self.space_layer.set_layer_value_at_index(self.pose, 1)
         return True
     
+    def get_build_flag_by_probability(self, limit):
+        if limit < self.build_probability:
+            return True
+        else: 
+            return False
+    
     def get_build_flag_by_pheromones(self, pheromon_layer, limit1, limit2):
         """agent builds on construction_layer, if pheromon value in cell hits limit
         return bool"""
@@ -848,6 +861,30 @@ class Agent:
             build_flag = False
         return build_flag
     
+    def analyze_move_history(self):
+        last_moves = self.move_history[-3:]
+        if 'down' not in set(last_moves) and 'side' not in set(last_moves):
+            self.climb_style = 'climb'
+        elif last_moves == ['up', 'up', 'side']:
+            self.climb_style = 'top'
+        elif last_moves == ['side', 'side', 'side']:
+            self.climb_style = 'walk' 
+        elif last_moves == ['down', 'down', 'down']:
+            self.climb_style = 'descend'       
+
+    def add_build_probability(self, add = 1, climb = 0, top = 0, walk = 0, descend = 0):
+        ' add = 1, climb = 0, top = 0, walk = 0, descend = 0'
+        if self.climb_style == 'climb':
+            self.build_probability += climb * add
+        elif self.climb_style == 'top':
+            self.build_probability += top * add
+        elif self.climb_style == 'walk':
+            self.build_probability += walk * add
+        elif self.climb_style == 'descend':
+            self.build_probability += descend * add
+        print(self.build_probability)
+        pass
+
     def build(self):
         try:
             set_value_at_index(self.construction_layer, self.pose, 1)
