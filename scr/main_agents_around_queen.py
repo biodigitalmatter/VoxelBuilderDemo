@@ -5,11 +5,11 @@ from show_voxel_plt import timestamp_now
 
 
 voxel_size = 30
-agent_count = 10
-iterations = 1
+agent_count = 250
+iterations = 1000
 save_ = True
 title_ = 'img'
-note = ''
+note = 'a25-i1000'
 
 walk_method_option = ['nb_check', 'offset_ph', 'cube_corner_nb_check', 'cube_edge_nb_check'][2]
 
@@ -18,7 +18,7 @@ construction_on = True
 # construct_limit_2 = 0.09
 construct_limit_1 = 0.005
 construct_limit_2 = 0.05
-wait = 10
+wait = 50
 check_collision = False
 
 agent_space = Layer(voxel_size=voxel_size, rgb=[34/255, 116/255, 240/255])
@@ -30,8 +30,8 @@ smell_layer = Layer(voxel_size=voxel_size, rgb=[240/255, 220/255, 150/255], diff
 ground_level_Z = 0
 ground = Layer(voxel_size=voxel_size, name='Ground')
 ground.array = make_solid_box_z(voxel_size, ground_level_Z)
-wall = make_solid_box_xxyyzz(voxel_size, 10,10,0,40,0,25)
-ground.array += wall
+# wall = make_solid_box_xxyyzz(voxel_size, 10,10,0,40,0,25)
+# ground.array += wall
 ground.rgb = [207/255, 179/255, 171/255]
 
 # grounds_offset
@@ -58,7 +58,7 @@ for i in range(1):
     queen = Agent(space_layer = queen_space, ground_layer = ground)
     # x = np.random.randint(5, voxel_size - 5)
     # y = np.random.randint(5, voxel_size - 5)
-    x,y = [15,0]
+    x,y = [15,15]
     agent.pose = [x,y,1]
     queen.pose = [x,y,1]
     queen.update_space()
@@ -115,8 +115,9 @@ a3 = queen_space.array
 # a4 = track_layer.array
 a5 = smell_layer.array
 a1[:,:,0] = 0
+ground.array = a1
 
-# time__ = timestamp_now
+time__ = timestamp_now
 # # save as pointcloud
 # filename = 'scr/data/compas_pointclouds/ptcloud_%s_%s.json' %(time__, note)
 # ptcloud = convert_array_to_compas_pointcloud(a1)
@@ -124,15 +125,35 @@ a1[:,:,0] = 0
 # print('ptcloud saved as %s:' %filename)
 
 # # save as point_list
-# pts = convert_array_to_points(a1, True)
-# filename = 'scr/data/point_lists/pts_%s_%s.json' %(time__, note)
-# with open(filename, 'w') as file:
-#     json.dump(pts, file)
-# print('ptlist saved as %s:' %filename)
+filename = 'scr/data/point_lists/pts_%s_%s.json' %(time__, note)
+with open(filename, 'w') as file:
+    list_to_dump = convert_array_to_points(ground.array, True)
+    json.dump(list_to_dump, file)
+print('\nptlist saved as %s:\n' %filename)
 
-# show image
-f,a = init_fig(suffix=note)  #bottom_line=Layer.__str__())
+
+# show VOXEL image
+# f,a = init_fig(suffix=note)  #bottom_line=Layer.__str__())
 # show_voxel(f,a, a1 + a2 + a3, c1 + c2 + c3, save=save_, suffix=note)
 # show_voxel(f,a, a1 + a2 + a3 + a5, c1 + c2 + c3 + c5, save=True, suffix=note)
-show_voxel(f,a, a1 + a5, c1 + c5, save=save_, suffix=note + '_smells')
+# show_voxel(f,a, a1 + a5, c1 + c5, save=save_, suffix=note + '_smells')
 # show_voxel(f,a, a1 + a3, c1 + c3, save=save_, suffix=note)
+
+# show SCATTER PLOT
+pts_ground = convert_array_to_points(ground.array, False)
+pts_agents = convert_array_to_points(agent_space.array, False)
+
+arrays_to_show = [pts_ground]
+colors = [ground.rgb]
+
+scale = voxel_size
+axes = plt.axes(xlim=(0, scale), ylim =  (0, scale), zlim = (0, scale), projection = '3d')
+axes.set_xticks([])
+axes.set_yticks([])
+axes.set_zticks([])
+for array, color in zip(arrays_to_show, colors):
+    p = array.transpose()
+    axes.scatter(p[0, :], p[1, :], p[2, :], marker = 's', s = 10, facecolor = color)
+plt.savefig('img/%s_%s_%s.png' %(title_, timestamp_now, note), bbox_inches='tight', dpi = 200)
+print('saved')
+plt.show()

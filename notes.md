@@ -1,5 +1,9 @@
 # Notes
 
+## 240703
+
+- build propability
+
 ## 240701
 
 ### next todos
