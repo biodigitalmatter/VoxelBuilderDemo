@@ -873,7 +873,7 @@ class Agent:
             self.climb_style = 'descend'       
 
     def add_build_probability(self, add = 1, climb = 0, top = 0, walk = 0, descend = 0):
-        print(self.climb_style)
+        # print(self.climb_style)
         ' add = 1, climb = 0, top = 0, walk = 0, descend = 0'
         if self.climb_style == 'climb':
             self.build_probability += climb * add
@@ -883,7 +883,7 @@ class Agent:
             self.build_probability += walk * add
         elif self.climb_style == 'descend':
             self.build_probability += descend * add
-        print(self.build_probability)
+        # print(self.build_probability)
         pass
 
     def build(self):
