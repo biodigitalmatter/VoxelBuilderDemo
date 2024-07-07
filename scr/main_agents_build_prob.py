@@ -8,8 +8,8 @@ save_animation = True
 voxel_size = 60
 agent_count = 10
 iterations = 1000
-save_ = True
-save_in_steps = True
+save_ = False
+save_json_in_steps = True
 title_ = 'img'
 note = 'build_probability_a%s_i%s' %(agent_count, iterations)
 time__ = timestamp_now
@@ -63,7 +63,7 @@ for i in range(agent_count):
 
 # make queen
 queens = []
-poses = [[14,14], [12,10]]
+poses = [[40,40], [30,15]]
 for i in range(2):
     queen = Agent(space_layer = queen_space, ground_layer = ground)
     x,y = poses[i]
@@ -74,7 +74,7 @@ for i in range(2):
 for i in range(wait):
     smell_layer.emission_intake(ground.array, 2, False)
     smell_layer.diffuse()
-    smell_layer.gravity_shift(1, 0.1)
+    smell_layer.gravity_shift(5, 0.8)
     smell_layer.decay()
     ground.block_layers([smell_layer])
 
@@ -129,51 +129,48 @@ def animate(frame):
     print('done')
 
     # SHOW
-    a1 = ground.array
+    a1 = ground.array.copy()
     a1[:,:,0] = 0
-    ground.array = a1
-
-
-    
 
     # show SCATTER PLOT
-    pts_ground = convert_array_to_points(ground.array, False)
-    pts_agent_space = convert_array_to_points(agent_space.array, False)
-    arrays_to_show = [pts_ground]
+    pts_built = convert_array_to_points(a1, False)
+    # pts_agent_space = convert_array_to_points(agent_space.array, False)
+    arrays_to_show = [pts_built]
     colors = [ground.rgb]
-    # arrays_to_show = [pts_ground, pts_agent_space]
+    # arrays_to_show = [pts_built, pts_agent_space]
     # colors = [ground.rgb, agent_space.rgb]
     for array, color in zip(arrays_to_show, colors):
         p = array.transpose()
-        axes.scatter(p[0, :], p[1, :], p[2, :], marker = 's', s = 10, facecolor = color)
-    
+        axes.scatter(p[0, :], p[1, :], p[2, :], marker = 's', s = 1, facecolor = color)
+    c = animate.counter
     # # save as point_list
-    if save_in_steps:
-        filename = 'scr/data/point_lists/pts_%s_%s.json' %(time__, note)
-        with open(filename, 'w') as file:
-            list_to_dump = convert_array_to_points(ground.array, True)
-            json.dump(list_to_dump, file)
-        print('\nptlist saved as %s:\n' %filename)
+    if save_json_in_steps:
+        if c % 5 == 0:
+            filename = 'scr/data/point_lists/pts_built_%s_%s_i-%s.json' %(time__, note, c)
+            with open(filename, 'w') as file:
+                list_to_dump = convert_array_to_points(ground.array, True)
+                json.dump(list_to_dump, file)
+            print('\nptlist saved as %s:\n' %filename)
     
     animate.counter += 1
 
 scale = voxel_size
-fig = plt.figure()
+fig = plt.figure(figsize = [4, 4], dpi = 200)
 axes = plt.axes(xlim=(0, scale), ylim =  (0, scale), zlim = (0, scale), projection = '3d')
 axes.set_xticks([])
 axes.set_yticks([])
 axes.set_zticks([])
-a1 = ground.array
-a1[:,:,0] = 0
-ground.array = a1
+# a1 = ground.array
+# a1[:,:,0] = 0
+# ground.array = a1
 p = ground.array.transpose()
 axes.scatter(p[0, :], p[1, :], p[2, :], marker = 's', s = 1, facecolor = ground.rgb)
 
 animate.counter = 0
 anim = animation.FuncAnimation(fig, animate, frames=iterations, interval = 1)
-if save_animation:
-    anim.save('img/gif/%s_%s_%s.gif' %(title_, timestamp_now, note))
-    print('saved_anim')
+# if save_animation:
+#     anim.save('img/gif/%s_%s_%s.gif' %(title_, timestamp_now, note))
+#     print('saved_anim')
 if save_:
     plt.savefig('img/%s_%s_%s.png' %(title_, timestamp_now, note), bbox_inches='tight', dpi = 200)
     print('saved img')
