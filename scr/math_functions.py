@@ -31,5 +31,3 @@ def remap(x, output_domain, input_domain = [0,1]):
     a, b = output_domain
     y = (b - a)/(j - i) * x
     return y
-
-
