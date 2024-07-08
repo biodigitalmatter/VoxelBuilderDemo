@@ -3,30 +3,24 @@ from show_voxel_plt import *
 from helpers import *
 from show_voxel_plt import timestamp_now
 from matplotlib import animation
-save_animation = True
+save_animation = False
 
 voxel_size = 60
 agent_count = 10
 iterations = 1000
 save_ = False
-save_json_in_steps = True
+save_json_in_steps = False
 title_ = 'img'
 note = 'build_probability_a%s_i%s' %(agent_count, iterations)
 time__ = timestamp_now
 
 global smell_layer, ground, agents
 
-construction_on = True
-# construct_limit_1 = 0.01
-# construct_limit_2 = 0.09
-construct_limit_1 = 0.005
-construct_limit_2 = 0.05
-wait = 5
-
 agent_space = Layer(voxel_size=voxel_size, rgb=[34/255, 116/255, 240/255])
 queen_space = Layer(voxel_size=voxel_size, rgb=[203/255, 21/255, 207/255])
 # track_layer = Layer(voxel_size=voxel_size, rgb=[147/255, 209/255, 237/255])
 smell_layer = Layer(voxel_size=voxel_size, rgb=[240/255, 220/255, 150/255], diffusion_ratio=1/6, decay_ratio=0.01)
+wait_to_diffuse = 5
 
 # create ground:
 ground_level_Z = 0
@@ -42,13 +36,25 @@ random_ph_w = 0.2
 up_pref_ph_w = 1
 side_move_pref_ratio = 0.5
 
+# BUILD SETTINGS
+construction_on = True
+# construct_limit_1 = 0.01
+# construct_limit_2 = 0.09
+construct_limit_1 = 0.005
+construct_limit_2 = 0.05
+queen_build_weigth = 1
+
 # build probability settings
-add_prob = 1
-climb = 2
-top = 10
+add_prob = 0.8
+climb = 0.5
+top = 2
 walk = 0.1
 descend = -0.05
 build_probability_limit = 1
+
+build_roof = -1
+build_aside = -1
+build_above = 1
 
 # make agents
 agents = []
@@ -71,7 +77,7 @@ for i in range(2):
     queen.update_space()
 
 # pre_smells
-for i in range(wait):
+for i in range(wait_to_diffuse):
     smell_layer.emission_intake(ground.array, 2, False)
     smell_layer.diffuse()
     smell_layer.gravity_shift(5, 0.8)
@@ -93,27 +99,31 @@ def animate(frame):
     # move and build
     for agent in agents:
         reset_agent = False
-        ground_smell_ph = agent.get_nb_26_cell_values(smell_layer, agent.pose) * ground_smell_ph_w
+        queen_smell_ph = agent.get_nb_26_cell_values(smell_layer, agent.pose) * ground_smell_ph_w
         random_ph = agent.random_pheromones(26) * random_ph_w
         up_pref_ph = agent.direction_preference_26_pheromones(side_move_pref_ratio) * up_pref_ph_w
-        pheromone_cube = random_ph * 2 + ground_smell_ph + up_pref_ph * 0.5
+        pheromone_cube = random_ph * 2 + queen_smell_ph + up_pref_ph * 0.5
         moved = agent.follow_pheromones(pheromone_cube)
 
         # move based on climb style
         if moved:
             # check move style
-            agent.analyze_move_history()
+            # agent.analyze_move_history()
             # add probability per style
-            agent.add_build_probability(add_prob, climb, top, walk, descend)
-
+            agent.add_build_propability_by_pheromone_density(queen_smell_ph, queen_build_weigth, construct_limit_1, construct_limit_2)
+            agent.add_build_probability_by_move_history(add_prob, climb, top, walk, descend)
+            below, aside, above = agent.analyze_position(ground)
+            if below: agent.build_probability += build_roof
+            if aside: agent.build_probability += build_aside
+            if above: agent.build_probability += build_above
             # build
             if construction_on:
                 # flag = agent.get_build_flag_by_pheromones(smell_layer, construct_limit_1, construct_limit_2 )
-                flag = agent.get_build_flag_by_probability(build_probability_limit)
-                # print(flag)
-                if flag:
+                # if flag:
+                if agent.build_probability >= build_probability_limit:
                     built = agent.build()
-                    if built: reset_agent = True
+                    if built: 
+                        reset_agent = True
 
         elif not moved:
             # stuck in position: reset
