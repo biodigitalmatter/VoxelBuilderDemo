@@ -4,15 +4,16 @@ from agent_algorithms import *
 from helpers import *
 from show_voxel_plt import timestamp_now
 from matplotlib import animation
-save_animation = False
+
 
 voxel_size = 60
 agent_count = 10
-iterations = 2
-save_ = False
-save_json = False
+iterations = 100
+save_img = True
+save_animation = True
+save_json = True
 title_ = 'img'
-note = 'build_by_chance_a%s_i%s' %(agent_count, iterations)
+note = 'build_by_chance_v0.2_a%s_i%s' %(agent_count, iterations)
 time__ = timestamp_now
 
 # global sky_ph_layer, ground, agents
@@ -246,7 +247,6 @@ ground.rgb = [207/255, 179/255, 171/255]
 
 # set ground moisture
 clay_moisture_layer.array = ground.array.copy()
-print(clay_moisture_layer.array)
 pheromon_loop(clay_moisture_layer, None, 3)
 pheromon_loop(air_moisture_layer, clay_moisture_layer.array, 3, ground)
 
@@ -335,7 +335,7 @@ anim = animation.FuncAnimation(fig, iterate, frames=iterations, interval = 1)
 if save_animation:
     anim.save('img/gif/%s_%s_%s.gif' %(title_, timestamp_now, note))
     print('animation saved')
-if save_:
+if save_img:
     plt.savefig('img/%s_%s_%s.png' %(title_, timestamp_now, note), bbox_inches='tight', dpi = 200)
     print('image saved')
 
@@ -343,8 +343,8 @@ if save_:
 if save_json:
     filename = 'scr/data/point_lists/pts_%s_%s.json' %(time__, note)
     with open(filename, 'w') as file:
-        # list_to_dump = convert_array_to_points(ground.array, True)
-        list_to_dump = convert_array_to_compas_pointcloud_sorted(clay_moisture_layer.array, clay_moisture_layer.array)
+        list_to_dump = convert_array_to_points(ground.array, True)
+        # list_to_dump = convert_array_to_compas_pointcloud_sorted(clay_moisture_layer.array, clay_moisture_layer.array)
         json.dump(list_to_dump, file)
     print('\npt_list saved as %s:\n' %filename)
 
