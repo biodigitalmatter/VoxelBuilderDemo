@@ -767,6 +767,23 @@ class Agent:
             value_list.append(v)
         return np.asarray(value_list)
 
+    def scan_neighborhood_values(self, array, offset_radius = 1, pose = None, format_values = 0):
+        """takes sub array around pose, in 'offset_radius'
+        format values: returns sum '0', avarage '1', or all_values: '2'"""
+        if pose == None:
+            pose = self.pose
+        x,y,z = pose
+        n = offset_radius
+        v = array[x - n : x + n][y - n : y + n][z - n : z - n]
+        if format_values == 0:
+            return np.sum(v)
+        elif format_values == 1:
+            return np.average(v)
+        elif format_values == 2:
+            return v
+        else: return v
+
+
     def get_cube_nbs_value_sums(self, layer, nb_pose):
         value_sum = 0
         nb_cube_array = self.cube_array + nb_pose
