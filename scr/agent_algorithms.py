@@ -1,5 +1,9 @@
 #pass
 
+# generative behaviours can be stored in these 'algorithm' files, and called from main
+# as preset_variables and preset_functions
+
+
 def build_by_chance(agent, ground, queen_bee_pheromon, air_moisture_layer, sky_ph_layer):
     # build by last move settings
     climb = 0.5
