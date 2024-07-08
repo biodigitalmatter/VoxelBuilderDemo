@@ -1,5 +1,10 @@
 # Notes
 
+## 240708
+
+generative behaviours can be stored in these 'algorithm' files, and called from main
+as preset_variables and preset_functions
+
 ## 240703
 
 - build propability
