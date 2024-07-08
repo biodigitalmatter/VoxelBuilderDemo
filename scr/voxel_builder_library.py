@@ -120,6 +120,20 @@ def make_solid_box_xxyyzz(voxel_size, x_min, x_max, y_min, y_max, z_min, z_max):
     d[x2 & x1 & y1 & y2 & z1 & z2] = 1
     return d
 
+def get_sub_array(self, array, offset_radius, center = None, format_values = None):
+    """gets sub array around center, in 'offset_radius'
+    format values: returns sum '0', avarage '1', or all_values: 'None'"""
+
+    x,y,z = center
+    n = offset_radius
+    v = array[x - n : x + n][y - n : y + n][z - n : z - n]
+    if format_values == 0:
+        return np.sum(v)
+    elif format_values == 1:
+        return np.average(v)
+    else: 
+        return v
+
 global direction_dict_np, direction_keys
 
 direction_dict_np = {
@@ -625,6 +639,8 @@ class Agent:
             self.voxel_size = ground_layer.voxel_size
         self.cube_array = get_cube_array_indices()
         self.climb_style = ''
+        self.build_chance = 0
+        self.erase_chance = 0
 
     @property
     def climb_style(self):
@@ -694,7 +710,7 @@ class Agent:
         if sides > 0:
             aside = True
         else: aside = False
-            
+        self.relative_booleans_bottom_up = [below, aside, above] 
         return below, aside, above
 
 
@@ -719,7 +735,7 @@ class Agent:
         else:
             direction_preference = np.ones(6)
         return direction_preference
-    
+
     def direction_preference_26_pheromones(self, x = 0.5, up = True):
         """up = 1
         side = x
@@ -731,6 +747,17 @@ class Agent:
             direction_preference =  np.asarray(u + m + b)
         else:
             direction_preference = np.ones(26)
+        return direction_preference
+    
+    def direction_preference_26_pheromones_v2(self, up = 1, side = 0.5, down = 0):
+        """up = 1
+        side = x
+        down = 0.1"""
+
+        u = [up] * 9
+        m = [side] * 8
+        b = [down] * 9
+        direction_preference =  np.asarray(u + m + b)
         return direction_preference
     
     def get_nb_6_cell_indicies(self, pose):
@@ -769,7 +796,7 @@ class Agent:
 
     def scan_neighborhood_values(self, array, offset_radius = 1, pose = None, format_values = 0):
         """takes sub array around pose, in 'offset_radius'
-        format values: returns sum '0', avarage '1', or all_values: '2'"""
+        format values: returns sum '0', avarage '1', or all_values: 'None'"""
         if pose == None:
             pose = self.pose
         x,y,z = pose
