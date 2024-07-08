@@ -120,7 +120,7 @@ def make_solid_box_xxyyzz(voxel_size, x_min, x_max, y_min, y_max, z_min, z_max):
     d[x2 & x1 & y1 & y2 & z1 & z2] = 1
     return d
 
-def get_sub_array(self, array, offset_radius, center = None, format_values = None):
+def get_sub_array(array, offset_radius, center = None, format_values = None):
     """gets sub array around center, in 'offset_radius'
     format values: returns sum '0', avarage '1', or all_values: 'None'"""
 
@@ -319,6 +319,29 @@ class Layer:
             raise ValueError("Diffusion ratio must be a number")
         self._diffusion_ratio = value
 
+    @property
+    def gravity_dir(self):
+        return self._gravity_dir
+    
+    @gravity_dir.setter
+    def gravity_dir(self, v):
+        """direction: 0:left, 1:right, 2:front, 3:back, 4:down, 5:up"""
+        if not isinstance(v, (int)) or v > 5 or v < 0:
+            raise ValueError("gravity ratio must be an integrer between 0 and 5")
+        self._gravity_dir = v
+
+    @property
+    def gravity_ratio(self):
+        return self._gravity_ratio
+    
+    @gravity_dir.setter
+    def gravity_ratio(self, v):
+        if not isinstance(v, (int, float)):
+            raise ValueError("gravity ratio must be a number")
+        self._gravity_ratio = v
+    
+  
+
     @diffusion_random_factor.setter
     def diffusion_random_factor(self, value):
         if not isinstance(value, (int, float)):
@@ -356,7 +379,7 @@ class Layer:
     @gradient_resolution.setter
     def gradient_resolution(self, value):
         if not isinstance(value, (int)) or value < 0 :
-            raise ValueError("Gradient resolution must be a nonnegative integrer")
+            raise ValueError("Gradient resolution must be a nonnegative integrer; formula: y = int(1 * x) / x")
         self._gradient_resolution = value
     
     @voxel_crop_range.setter
@@ -480,7 +503,7 @@ class Layer:
         return self._array
     
 
-    def gravity_shift(self, direction = 4, gravity_ratio = 0.1, reintroduce_on_the_other_end = False):
+    def gravity_shift(self, gravity_ratio = 0.1, reintroduce_on_the_other_end = False):
         """direction: 0:left, 1:right, 2:front, 3:back, 4:down, 5:up
         infinitive borders
         every value of the voxel cube diffuses with its face nb
@@ -495,7 +518,7 @@ class Layer:
         # order: left, right, front
         # diffuse per six face_neighbors
         total_diffusions = create_zero_array(self._n)
-        for i in [direction]:
+        for i in [self.gravity_dir]:
             # y: shift neighbor
             y = np.copy(self._array)
             y = np.roll(y, shifts[i % 2], axis = axes[i])
@@ -520,8 +543,7 @@ class Layer:
                     elif i == 5:
                         m[:][:][0] = 0
                     y = m.transpose((1,2,0))
-            gravity_ratio = 0.1
-            total_diffusions += gravity_ratio * (self._array - y) / 2
+            total_diffusions += self.gravity_ratio * (self._array - y) / 2
         self._array -= total_diffusions
         return self._array
     
@@ -638,7 +660,7 @@ class Agent:
         if ground_layer != None:
             self.voxel_size = ground_layer.voxel_size
         self.cube_array = get_cube_array_indices()
-        self.climb_style = ''
+        self._climb_style = ''
         self.build_chance = 0
         self.erase_chance = 0
 
@@ -646,6 +668,12 @@ class Agent:
     def climb_style(self):
         self._climb_style = self.analyze_move_history()
         return self._climb_style
+    
+    @climb_style.setter
+    def name(self, value):
+        if not isinstance(value, str):
+            raise ValueError("Name must be a string")
+        self._climb_style = value
 
     def move(self, i, voxel_size = 0):
         """move to a neighbor voxel based on the compas dictonary key index """
@@ -982,12 +1010,36 @@ class Agent:
         b = self.build_probability
         return b - a
 
-    def build(self):
+    def build(self, layer, pose = None):
+        if pose == None:
+            pose = self.pose
+        else: 
+            pass
         try:
-            set_value_at_index(self.construction_layer, self.pose, 1)
+            set_value_at_index(layer, pose, 1)
             bool_ = True
         except:
-            print('cant build here:', self.pose)
+            print('cant build here:', pose)
+            bool_ = False
+        return bool_
+    
+    def erase(self, layer, pose = None, only_face_nb = True):
+        if pose == None:
+            if only_face_nb:
+                v = self.get_nb_6_cell_values(self.construction_layer, self.pose)
+                vectors = self.get_nb_6_cell_indicies(self.pose)
+                choice = np.argmax(v)
+                move_vector = vectors[choice]    
+            else:
+                v = self.get_nb_26_cell_values()
+                choice = np.argmax(v)
+                move_vector = self.cube_array[choice]
+            pose = self.pose + move_vector
+        try:
+            set_value_at_index(layer, pose, 0)
+            bool_ = True
+        except:
+            print('couldnt erase here:', pose)
             bool_ = False
         return bool_
 
@@ -997,6 +1049,17 @@ class Agent:
         nbs_values = self.get_nb_cell_values(offset_layer, self.pose)
         exclude_pheromones = np.logical_not(nbs_values == 0)
         return exclude_pheromones
+    
+    def check_build_conditions(self, layer, only_face_nbs = True):
+        if only_face_nbs:
+            v = self.get_nb_6_cell_values(layer, self.pose)
+            if np.sum(v) > 0:
+                return True
+        else:
+            if 0 < get_sub_array(layer, 1, self.pose, format_values = 0):
+                return True
+        return False
+        
     
     
 

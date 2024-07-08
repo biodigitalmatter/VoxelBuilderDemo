@@ -16,6 +16,20 @@ def convert_array_to_compas_pointcloud(ptcloud_array, order = 'xyz'):
     ptcloud = Pointcloud(points = pts)
     return ptcloud
 
+def convert_array_to_compas_pointcloud_sorted(ptcloud_array, order_keys = []):
+    a = ptcloud_array
+    indicies = np.indices(a.shape)
+    pt_location = np.logical_not(a == 0)
+    coordinates = []
+    for i in range(3):
+        c = indicies[i][pt_location]
+        coordinates.append(c)
+    pts = np.vstack(coordinates).transpose()
+    sorting_keys = list(a[pt_location])
+    pts.sort(sorting_keys)
+    ptcloud = Pointcloud(points = pts)
+    return ptcloud
+
 def convert_array_to_points(a, list_output = False):
     indicies = np.indices(a.shape)
     pt_location = np.logical_not(a == 0)
