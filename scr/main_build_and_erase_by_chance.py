@@ -10,7 +10,7 @@ voxel_size = 60
 agent_count = 10
 iterations = 2
 save_ = False
-save_json_in_steps = False
+save_json = False
 title_ = 'img'
 note = 'build_by_chance_a%s_i%s' %(agent_count, iterations)
 time__ = timestamp_now
@@ -35,15 +35,17 @@ air_moisture_layer = Layer('air_moisture', voxel_size, rgb = [i/255 for i in rgb
 
 sky_ph_layer.diffusion_ratio = 1/6
 sky_ph_layer.decay_ratio = 0.01
-sky_ph_layer.gradient_resolution = 0.001
+sky_ph_layer.gradient_resolution = 10000
+sky_ph_layer.gravity_dir = 5
+sky_ph_layer.gravity_ratio = 0.8
 
 clay_moisture_layer.diffusion_ratio = 0
-air_moisture_layer.decay_ratio = 1/12
-air_moisture_layer.gradient_resolution = 0.001
+clay_moisture_layer.decay_ratio = 1/24
+clay_moisture_layer.gradient_resolution = 0
 
 air_moisture_layer.diffusion_ratio = 1/12
 air_moisture_layer.decay_ratio = 1/4
-air_moisture_layer.gradient_resolution = 0.001
+air_moisture_layer.gradient_resolution = 10000
 
 # MOVE SETTINGS
 # move_preference settings w pheromon weights
@@ -66,7 +68,7 @@ move_ph_strength_list = [
 move_ph_layers_list = [
     queen_bee_pheromon,
     sky_ph_layer,
-    move_ph_moisture
+    air_moisture_layer
 ]
 
 move_dir_preferences = [
@@ -209,19 +211,29 @@ for i in range(agent_count):
     agent.pose = [x,y,1]
     agents.append(agent)
 
-
-def pheromon_loop(pheromon_layer, emmission_array = None, i = 1, blocking_layer = None, gravity_direction = None, gravity_ratio = None, grade_bool = False):
+def pheromon_loop(pheromon_layer, emmission_array = None, i = 1, blocking_layer = None, gravity_direction = None, gravity_shift_bool = False):
     """gravity direction: 0:left, 1:right, 2:front, 3:back, 4:down, 5:up"""
     for i in range(i):
-        if emmission_array != None:
+        # emmission in
+        if not isinstance(emmission_array, bool):
             pheromon_layer.emission_intake(emmission_array, 2, False)
+
+        # diffuse
         pheromon_layer.diffuse()
-        if gravity_direction != None and gravity_ratio != None:
-            pheromon_layer.gravity_shift(gravity_direction, gravity_ratio)
+
+        # gravity
+        if gravity_shift_bool:
+            pheromon_layer.gravity_shift()
+
+        # decay
         pheromon_layer.decay()
+
+        # collision
         if blocking_layer != None:
             blocking_layer.block_layers([pheromon_layer])
-        if grade_bool:
+        
+        # apply gradient steps
+        if pheromon_layer.gradient_resolution != 0:
             pheromon_layer.grade()
 
 ### CREATE ENVIRONMENT
@@ -234,32 +246,32 @@ ground.rgb = [207/255, 179/255, 171/255]
 
 # set ground moisture
 clay_moisture_layer.array = ground.array.copy()
+print(clay_moisture_layer.array)
 pheromon_loop(clay_moisture_layer, None, 3)
 pheromon_loop(air_moisture_layer, clay_moisture_layer.array, 3, ground)
 
 # make sky
 # sky_ph_layer
-sky_emission = np.zeros(voxel_size, voxel_size, voxel_size)
+sky_emission = np.zeros([voxel_size, voxel_size, voxel_size])
 sky_emission[:][:][voxel_size - 1] = 1
-pheromon_loop(sky_ph_layer, sky_emission, wait_to_diffuse, blocking_layer=ground, gravity_shift_p = [5, 0.8])
+pheromon_loop(sky_ph_layer, sky_emission, wait_to_diffuse, blocking_layer=ground, gravity_shift_bool = True)
 
-
-# run as simulation
-def animate(frame):
+#  RUN SIMULATION
+def iterate(frame):
 # for i in range(iterations):
-    print(animate.counter)
+    print(iterate.counter)
 
-    # diffuse environment's layers
-    pheromon_loop(sky_ph_layer, emmission_array = sky_emission, blocking_layer=ground, gravity_shift_p = [5, 0.8])
+    # 1. diffuse environment's layers
+    pheromon_loop(sky_ph_layer, emmission_array = sky_emission, blocking_layer=ground, gravity_shift_bool = True)
     pheromon_loop(clay_moisture_layer)
     pheromon_loop(air_moisture_layer, emmission_array = clay_moisture_layer.array, blocking_layer = ground)
 
-    # move and build
+    # 2. MOVE and BUILD
     for agent in agents:
         reset_agent = False
+        # move
         moved = move_agent(agent, move_ph_random, move_ph_strength_list, move_ph_layers_list, move_dir_preferences, move_pref_strength)
-
-        # move based on climb style
+        # build
         if moved and construction_on:
             build_chance, erase_chance = build_by_chance(agent, ground, queen_bee_pheromon, air_moisture_layer, sky_ph_layer)
             if stacked_chances:
@@ -271,13 +283,13 @@ def animate(frame):
             # CHECK IF BUILD CONDITIONS are favorable
             build_condition = agent.check_build_conditions(ground)
             if agent.build_chance >= reach_to_build and build_condition == True:
-                done = agent.build()
+                done = agent.build(ground)
+                done2 = agent.build(clay_moisture_layer)
                 if done:
                     reset_agent = True
             elif agent.erase_chance >= reach_to_erase and build_condition == True:
-                # done = agent.erase()
-                # if done:
-                #     reset_agent = True
+                done = agent.erase(ground)
+                done2 = agent.erase(clay_moisture_layer)
                 pass
         
         elif not moved:
@@ -293,31 +305,18 @@ def animate(frame):
 
     print('done')
 
-    # SHOW (without ground layer)
+    # 3. SHOW (without ground layer)
     a1 = ground.array.copy()
     a1[:,:,0] = 0
 
-    # show SCATTER PLOT
+    # scatter plot
     pts_built = convert_array_to_points(a1, False)
-    # pts_agent_space = convert_array_to_points(agent_space.array, False)
     arrays_to_show = [pts_built]
     colors = [ground.rgb]
-    # arrays_to_show = [pts_built, pts_agent_space]
-    # colors = [ground.rgb, agent_space.rgb]
     for array, color in zip(arrays_to_show, colors):
         p = array.transpose()
         axes.scatter(p[0, :], p[1, :], p[2, :], marker = 's', s = 1, facecolor = color)
-    c = animate.counter
-    # # save as point_list
-    if save_json_in_steps:
-        if c % 5 == 0:
-            filename = 'scr/data/point_lists/pts_built_%s_%s_i-%s.json' %(time__, note, c)
-            with open(filename, 'w') as file:
-                list_to_dump = convert_array_to_points(ground.array, True)
-                json.dump(list_to_dump, file)
-            print('\nptlist saved as %s:\n' %filename)
-    
-    animate.counter += 1
+    iterate.counter += 1
 
 scale = voxel_size
 fig = plt.figure(figsize = [4, 4], dpi = 200)
@@ -331,21 +330,22 @@ axes.set_zticks([])
 p = ground.array.transpose()
 axes.scatter(p[0, :], p[1, :], p[2, :], marker = 's', s = 1, facecolor = ground.rgb)
 
-animate.counter = 0
-anim = animation.FuncAnimation(fig, animate, frames=iterations, interval = 1)
-# if save_animation:
-#     anim.save('img/gif/%s_%s_%s.gif' %(title_, timestamp_now, note))
-#     print('saved_anim')
+iterate.counter = 0
+anim = animation.FuncAnimation(fig, iterate, frames=iterations, interval = 1)
+if save_animation:
+    anim.save('img/gif/%s_%s_%s.gif' %(title_, timestamp_now, note))
+    print('animation saved')
 if save_:
     plt.savefig('img/%s_%s_%s.png' %(title_, timestamp_now, note), bbox_inches='tight', dpi = 200)
-    print('saved img')
+    print('image saved')
 
 # # save as point_list
-if save_:
+if save_json:
     filename = 'scr/data/point_lists/pts_%s_%s.json' %(time__, note)
     with open(filename, 'w') as file:
-        list_to_dump = convert_array_to_points(ground.array, True)
+        # list_to_dump = convert_array_to_points(ground.array, True)
+        list_to_dump = convert_array_to_compas_pointcloud_sorted(clay_moisture_layer.array, clay_moisture_layer.array)
         json.dump(list_to_dump, file)
-    print('\nptlist saved as %s:\n' %filename)
+    print('\npt_list saved as %s:\n' %filename)
 
 plt.show()
