@@ -626,6 +626,11 @@ class Agent:
         self.cube_array = get_cube_array_indices()
         self.climb_style = ''
 
+    @property
+    def climb_style(self):
+        self._climb_style = self.analyze_move_history()
+        return self._climb_style
+
     def move(self, i, voxel_size = 0):
         """move to a neighbor voxel based on the compas dictonary key index """
         v = self.compass_array[self.compass_keys[i]]
@@ -662,6 +667,36 @@ class Agent:
             self.pose = np.mod(self.pose, np.asarray([n,n,n]))
         if self.save_move_history: 
             self.move_history.append(key)
+
+    def analyze_position(self, ground_layer):
+        """check if there is sg around the agent
+        return list of bool:
+            [below, aside, above]"""
+        place = self.pose
+        f = direction_dict_np['front']
+        b = direction_dict_np['back']
+        l = direction_dict_np['left']
+        r = direction_dict_np['right']
+        u = direction_dict_np['up']
+        d = direction_dict_np['down']
+
+        above = self.ground_layer.array[place + u] 
+        below = self.ground_layer.array[place + d] 
+        sides = 0
+        for i in [f,b,r,l]:
+            sides += self.ground_layer.array[place + direction_dict_np['right']] 
+        if above > 0:
+            above = True
+        else: above = False
+        if below > 0:
+            below = True
+        else: below = False
+        if sides > 0:
+            aside = True
+        else: aside = False
+            
+        return below, aside, above
+
 
     def random_move(self, voxel_size = 0):
         i = np.random.randint(0,5)
@@ -864,17 +899,24 @@ class Agent:
     def analyze_move_history(self):
         last_moves = self.move_history[-3:]
         if last_moves == ['up', 'up', 'up']:
-            self.climb_style = 'climb'
+            climb_style = 'climb'
         elif last_moves == ['up', 'up', 'side']:
-            self.climb_style = 'top'
+            climb_style = 'top'
         elif last_moves == ['side', 'side', 'side']:
-            self.climb_style = 'walk' 
+            climb_style = 'walk' 
         elif last_moves == ['down', 'down', 'down']:
-            self.climb_style = 'descend'       
+            climb_style = 'descend' 
+        return climb_style      
 
-    def add_build_probability(self, add = 1, climb = 0, top = 0, walk = 0, descend = 0):
-        # print(self.climb_style)
-        ' add = 1, climb = 0, top = 0, walk = 0, descend = 0'
+    def add_build_probability_by_move_history(self, add = 1, climb = 0, top = 0, walk = 0, descend = 0):
+        """add : base value of increase
+        style_weights:
+            climb = 0
+            top = 0
+            walk = 0
+            descend = 0
+            return self.build_probability increase"""
+        a = self.build_probability
         if self.climb_style == 'climb':
             self.build_probability += climb * add
         elif self.climb_style == 'top':
@@ -883,8 +925,18 @@ class Agent:
             self.build_probability += walk * add
         elif self.climb_style == 'descend':
             self.build_probability += descend * add
-        # print(self.build_probability)
-        pass
+        b = self.build_probability
+        return b - a
+
+    def add_build_propability_by_pheromone_density(self, pheromone_layer, weigth = 1, limit_1 = 0, limit_2 = 1):
+        """add weigth * pheromone layer value at pose"""
+        a = self.build_probability
+        pose = self.pose
+        value = pheromone_layer.array[pose]
+        value = min(limit_2, max(value, limit_1))
+        self.build_probability += value * weigth
+        b = self.build_probability
+        return b - a
 
     def build(self):
         try:
@@ -901,6 +953,8 @@ class Agent:
         nbs_values = self.get_nb_cell_values(offset_layer, self.pose)
         exclude_pheromones = np.logical_not(nbs_values == 0)
         return exclude_pheromones
+    
+    
 
 
 
