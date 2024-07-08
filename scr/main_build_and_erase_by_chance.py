@@ -8,34 +8,44 @@ save_animation = False
 
 voxel_size = 60
 agent_count = 10
-iterations = 1000
+iterations = 2
 save_ = False
 save_json_in_steps = False
 title_ = 'img'
 note = 'build_by_chance_a%s_i%s' %(agent_count, iterations)
 time__ = timestamp_now
 
-global sky_layer, ground, agents
-sky_color = [29, 77, 222]
-agent_color = [34,116,240]
-wet_layer_color = [167, 217, 213]
+# global sky_ph_layer, ground, agents
 
+### LAYERS OF THE ENVIRONMENT
+rgb_sky = [29, 77, 222]
+rgb_agents = [34,116,240]
+rgb_clay_moisture = [167, 217, 213]
+rgb_air_moisture = [200, 204, 219]
+rgb_ground = [207, 179, 171]
+wait_to_diffuse = 10
 
-agent_space = Layer(voxel_size=voxel_size, rgb=[34/255, 116/255, 240/255])
+ground = Layer(voxel_size=voxel_size, name='ground', rgb = [i/255 for i in rgb_ground])
+agent_space = Layer('agent_space', voxel_size = voxel_size, rgb = [i/255 for i in rgb_agents])
 # queen_bee_space = Layer(voxel_size=voxel_size, rgb=[203/255, 21/255, 207/255])
-sky_layer = Layer('sky_layere', voxel_size=voxel_size, rgb = [i/255 for i in sky_color], diffusion_ratio=1/6, decay_ratio=0.01)
-clay_moisture_layer = Layer('clay_moisture', voxel_size, rgb = [i/255 for i in [167, 217, 213]],)
-air_moisture_layer = Layer('air_moisture', voxel_size)
-wait_to_diffuse = 5
+queen_bee_pheromon = Layer('queen_bee_pheromon', voxel_size=voxel_size, rgb = [i/255 for i in rgb_sky])
+sky_ph_layer = Layer('sky_ph_layer', voxel_size=voxel_size, rgb = [i/255 for i in rgb_sky])
+clay_moisture_layer = Layer('clay_moisture', voxel_size, rgb = [i/255 for i in rgb_clay_moisture])
+air_moisture_layer = Layer('air_moisture', voxel_size, rgb = [i/255 for i in rgb_air_moisture])
 
-# create ground:
-ground_level_Z = 0
-ground = Layer(voxel_size=voxel_size, name='Ground')
-ground.array = make_solid_box_z(voxel_size, ground_level_Z)
-wall = make_solid_box_xxyyzz(voxel_size, 20,23,20,23,0,3)
-ground.array += wall
-ground.rgb = [207/255, 179/255, 171/255]
+sky_ph_layer.diffusion_ratio = 1/6
+sky_ph_layer.decay_ratio = 0.01
+sky_ph_layer.gradient_resolution = 0.001
 
+clay_moisture_layer.diffusion_ratio = 0
+air_moisture_layer.decay_ratio = 1/12
+air_moisture_layer.gradient_resolution = 0.001
+
+air_moisture_layer.diffusion_ratio = 1/12
+air_moisture_layer.decay_ratio = 1/4
+air_moisture_layer.gradient_resolution = 0.001
+
+# MOVE SETTINGS
 # move_preference settings w pheromon weights
 ground_smell_ph_w = 0
 random_ph_w = 0.2
@@ -47,41 +57,62 @@ move_prefer_to_down = -0.2
 
 # BUILD SETTINGS
 construction_on = True
-# construct_limit_1 = 0.01
-# construct_limit_2 = 0.09
-construct_limit_1 = 0.005
-construct_limit_2 = 0.05
-build_by_queen_bee_parameter = 0
+reach_to_build = 2
 
-# build probability settings
-add_prob = 0.8
+# build by last move settings
 climb = 0.5
 top = 2
 walk = 0.1
 descend = -0.05
-build_probability_limit = 1
-build_by_track_parameter = 0
+build_strength__last_move = 0
+def build_by_last_move(
+        agent, 
+        build_strength__last_move = 0, 
+        climb = 0.5,
+        top = 2,
+        walk = 0.1,
+        descend = -0.05,):
+    pass
 
 # build by relative position
-build_roof = -1
+build_below = -1
 build_aside = -1
 build_above = 1
-build_by_relative_position_parameter = 0
+build_strength__relative_position = 0
+def build_by_relative_position(
+        agent,
+        build_strength = 1,
+        build_below = -1,
+        build_aside = -1,
+        build_above = 1,):
+    pass
 
-# build by density : sky
-erase_if_higher_than = 12
-build_if_lower_than = 3
-build_by_density_parameter = 1
+# build by density : ground
+# NOTE this could be directional scanning
+erase_if_over__ground = 20
+build_if_below__ground = 5
+build_strength__ground = 0
+def build_or_erase_by_density(
+        agent, 
+        layer,
+        radius,
+        erase_if_over = 20,
+        build_if_below = 5,
+        build_strength = 1):
+    pass
 
-# build by density : air_moisture
-erase_if_higher_than = 12
-build_if_lower_than = 3
-build_by_density_parameter = 1
-
-# build by density : sky_layer
-erase_if_higher_than = 12
-build_if_lower_than = 3
-build_by_density_parameter = 1
+# build by pheromone density
+build_if_over__queen_bee = 0.005
+build_if_below__queen_bee = 0.05
+build_strength__queen_bee_ph = 0
+def build_by_density(
+        agent, 
+        layer,
+        radius,
+        build_if_over = 20,
+        build_if_below = 5,
+        build_strength = 1):
+    pass
 
 # make agents
 agents = []
@@ -95,24 +126,40 @@ for i in range(agent_count):
     agents.append(agent)
 
 
-
-def pheromon_loop(pheromon_layer, emmission_array, i, blocking_layer = None, gravity_direction = None, gravity_ratio = None):
+def pheromon_loop(pheromon_layer, emmission_array = None, i = 1, blocking_layer = None, gravity_direction = None, gravity_ratio = None, grade_bool = False):
     """gravity direction: 0:left, 1:right, 2:front, 3:back, 4:down, 5:up"""
     for i in range(i):
-        pheromon_layer.emission_intake(emmission_array, 2, False)
+        if emmission_array != None:
+            pheromon_layer.emission_intake(emmission_array, 2, False)
         pheromon_layer.diffuse()
         if gravity_direction != None and gravity_ratio != None:
             pheromon_layer.gravity_shift(gravity_direction, gravity_ratio)
         pheromon_layer.decay()
         if blocking_layer != None:
             blocking_layer.block_layers([pheromon_layer])
+        if grade_bool:
+            pheromon_layer.grade()
 
-# sky_layer
+### CREATE ENVIRONMENT
+# make ground
+ground_level_Z = 0
+ground.array = make_solid_box_z(voxel_size, ground_level_Z)
+# wall = make_solid_box_xxyyzz(voxel_size, 20,23,20,23,0,3)
+# ground.array += wall
+ground.rgb = [207/255, 179/255, 171/255]
+
+# set ground moisture
+clay_moisture_layer.array = ground.array.copy()
+pheromon_loop(clay_moisture_layer, None, 3)
+pheromon_loop(air_moisture_layer, )
+
+# make sky
+# sky_ph_layer
 sky_emission = np.zeros(voxel_size, voxel_size, voxel_size)
 sky_emission[:][:][voxel_size - 1] = 1
-pheromon_loop(sky_layer, sky_emission, wait_to_diffuse, blocking_layer=ground, gravity_shift_p = [5, 0.8])
-# grounds smell
-pheromon_loop(ground, ground.array)
+pheromon_loop(sky_ph_layer, sky_emission, wait_to_diffuse, blocking_layer=ground, gravity_shift_p = [5, 0.8])
+
+
 
 # run as simulation
 def animate(frame):
@@ -120,13 +167,13 @@ def animate(frame):
     print(animate.counter)
 
     # diffuse layers
-    pheromon_loop(sky_layer, wait_to_diffuse, blocking_layer=ground)
+    pheromon_loop(sky_ph_layer, blocking_layer=ground)
 
 
     # move and build
     for agent in agents:
         reset_agent = False
-        queen_smell_ph = agent.get_nb_26_cell_values(sky_layer, agent.pose) * ground_smell_ph_w
+        queen_smell_ph = agent.get_nb_26_cell_values(sky_ph_layer, agent.pose) * ground_smell_ph_w
         random_ph = agent.random_pheromones(26) * random_ph_w
         up_pref_ph = agent.direction_preference_26_pheromones(move_prefer_to_side) * move_prefer_to_up
         pheromone_cube = random_ph * 2 + queen_smell_ph + up_pref_ph * 0.5
@@ -137,21 +184,25 @@ def animate(frame):
             # check move style
             # agent.analyze_move_history()
             # add probability per style
-            agent.add_build_propability_by_pheromone_density(queen_smell_ph, queen_build_weigth, construct_limit_1, construct_limit_2)
+            agent.add_build_propability_by_pheromone_density(
+                queen_smell_ph, 
+                build_strength__queen_bee_ph, 
+                build_min_ph_density__queen_bee, 
+                build_max_ph_density__queen_bee)
             agent.add_build_probability_by_move_history(add_prob, climb, top, walk, descend)
             below, aside, above = agent.analyze_position(ground)
-            if below: agent.build_probability += build_roof
+            if below: agent.build_probability += build_below
             if aside: agent.build_probability += build_aside
             if above: agent.build_probability += build_above
             # build
             if construction_on:
-                # flag = agent.get_build_flag_by_pheromones(sky_layer, construct_limit_1, construct_limit_2 )
-                # if flag:
-                if agent.build_probability >= build_probability_limit:
+                # CHECK IF BUILD CONDITIONS are favorable
+                build_condition = agent.check_build_conditions(ground)
+                if agent.build_probability >= build_probability_limit and build_condition == True:
                     built = agent.build()
-                    if built: 
+                    if built:
                         reset_agent = True
-
+        
         elif not moved:
             # stuck in position: reset
             reset_agent = True
@@ -165,7 +216,7 @@ def animate(frame):
 
     print('done')
 
-    # SHOW
+    # SHOW (without ground layer)
     a1 = ground.array.copy()
     a1[:,:,0] = 0
 
