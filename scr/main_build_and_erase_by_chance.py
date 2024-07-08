@@ -8,7 +8,7 @@ from matplotlib import animation
 
 voxel_size = 60
 agent_count = 10
-iterations = 100
+iterations = 400
 save_img = True
 save_animation = True
 save_json = True
@@ -342,9 +342,11 @@ if save_img:
 # # save as point_list
 if save_json:
     filename = 'scr/data/point_lists/pts_%s_%s.json' %(time__, note)
+    # filename_sorted = 'scr/data/point_lists_sorted/pts_%s_%s.json' %(time__, note)
     with open(filename, 'w') as file:
         list_to_dump = convert_array_to_points(ground.array, True)
-        # list_to_dump = convert_array_to_compas_pointcloud_sorted(clay_moisture_layer.array, clay_moisture_layer.array)
+        a,b = convert_array_to_pts_sorted(clay_moisture_layer.array, True)
+        # list_to_dump = {'a' : a, 'b' : b}
         json.dump(list_to_dump, file)
     print('\npt_list saved as %s:\n' %filename)
 
