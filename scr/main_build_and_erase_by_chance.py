@@ -6,14 +6,15 @@ from show_voxel_plt import timestamp_now
 from matplotlib import animation
 
 
-voxel_size = 60
+voxel_size = 10
 agent_count = 10
-iterations = 400
+iterations = 30
+
 save_img = True
 save_animation = True
 save_json = True
 title_ = 'img'
-note = 'build_by_chance_v0.2_a%s_i%s' %(agent_count, iterations)
+note = 'test_save_sorted_json_claylayer_v0.2_a%s_i%s' %(agent_count, iterations)
 time__ = timestamp_now
 
 # global sky_ph_layer, ground, agents
@@ -332,6 +333,7 @@ axes.scatter(p[0, :], p[1, :], p[2, :], marker = 's', s = 1, facecolor = ground.
 
 iterate.counter = 0
 anim = animation.FuncAnimation(fig, iterate, frames=iterations, interval = 1)
+
 if save_animation:
     anim.save('img/gif/%s_%s_%s.gif' %(title_, timestamp_now, note))
     print('animation saved')
@@ -341,13 +343,14 @@ if save_img:
 
 # # save as point_list
 if save_json:
-    filename = 'scr/data/point_lists/pts_%s_%s.json' %(time__, note)
-    # filename_sorted = 'scr/data/point_lists_sorted/pts_%s_%s.json' %(time__, note)
+    # filename = 'scr/data/point_lists/pts_%s_%s.json' %(time__, note)
+    filename = 'scr/data/point_lists_sorted/pts_%s_%s.json' %(time__, note)
     with open(filename, 'w') as file:
-        list_to_dump = convert_array_to_points(ground.array, True)
-        a,b = convert_array_to_pts_sorted(clay_moisture_layer.array, True)
-        # list_to_dump = {'a' : a, 'b' : b}
-        json.dump(list_to_dump, file)
+        # list_to_dump = convert_array_to_points(ground.array, True)
+        # list_to_dump = convert_array_to_pts_sorted(clay_moisture_layer.array)
+
+        list_to_dump = convert_array_to_pts_sorted(ground.array)
+        # json.dump(list_to_dump, file)
     print('\npt_list saved as %s:\n' %filename)
 
 plt.show()
