@@ -9,16 +9,17 @@ from agent_algorithms_setup_2 import *
 # from agent_algorithms import *
 
 
-iterations = 400
+iterations = 3000
 
 note = 'setup_2'
 time__ = timestamp_now
 _save = True
-save_per_nth = 50
+save_json_every_nth = 50
+plot = False
 
 # SETUP ENVIRONMENT
 voxel_size, agent_count, ground, queen_bee_pheromon, sky_ph_layer, sky_emission_layer, clay_moisture_layer, air_moisture_layer, agent_space = layer_env_setup(iterations)
-
+print(voxel_size)
 # MAKE AGENTS
 agents = []
 for i in range(agent_count):
@@ -31,9 +32,10 @@ for i in range(agent_count):
     agents.append(agent)
 
 # SIMULATION FUNCTION
+
 def simulate(frame):
 # for i in range(iterations):
-    print('simulate.counter', simulate.counter)
+    # print('simulate.counter', simulate.counter)
 
     # 1. diffuse environment's layers
     pheromon_loop(sky_ph_layer, emmission_array = sky_emission_layer, blocking_layer=ground, gravity_shift_bool = True)
@@ -56,29 +58,30 @@ def simulate(frame):
     clay_moisture_layer.decay_linear()
 
     # 3. SHOW without ground layer
-    a1 = ground.array.copy()
-    a1[:,:,0] = 0
+    if plot:
+        a1 = ground.array.copy()
+        a1[:,:,0] = 0
 
-    # scatter plot
-    pts_built = convert_array_to_points(a1, False)
-    # pts_built_2 = convert_array_to_points(agent_space.array, False)
+        # scatter plot
+        pts_built = convert_array_to_points(a1, False)
+        # pts_built_2 = convert_array_to_points(agent_space.array, False)
 
-    arrays_to_show = [pts_built]
-    colors = [ground.rgb]
-    for array, color in zip(arrays_to_show, colors):
-        p = array.transpose()
-        axes.scatter(p[0, :], p[1, :], p[2, :], marker = 's', s = 1, facecolor = color)
+        arrays_to_show = [pts_built]
+        colors = [ground.rgb]
+        for array, color in zip(arrays_to_show, colors):
+            p = array.transpose()
+            axes.scatter(p[0, :], p[1, :], p[2, :], marker = 's', s = 1, facecolor = color)
     simulate.counter += 1
 
-    if save_json and simulate.counter % save_per_nth == 0:
+    if _save and simulate.counter % save_json_every_nth == 0:
         filename = 'scr/data/point_lists_sorted/pts_%s_%s.json' %(time__, note)
         with open(filename, 'w') as file:
             list_to_dump = convert_array_to_pts_sorted(clay_moisture_layer.array, multiply=1000)
             json.dump(list_to_dump, file)
         print('\npt_list saved as %s:\n' %filename)
-
+simulate.counter = 0
 ### PLOTTING
-plot = True
+
 if plot: 
     scale = voxel_size
     fig = plt.figure(figsize = [4, 4], dpi = 200)
@@ -121,3 +124,8 @@ if plot:
         print('\npt_list saved as %s:\n' %filename)
 
     plt.show()
+
+else:
+    for i in range(iterations):
+        print(i)
+        simulate(None)
