@@ -25,11 +25,17 @@ def set_value_at_index(layer, index = [0,0,0], value = 1):
     layer.array[i][j][k] = value
     return layer
 
-def get_layer_value_at_index(layer, index = [0,0,0]):
+def get_layer_value_at_index(layer, index = [0,0,0], reintroduce = True):
     # print('get value at index', index)
-    index2 = np.mod(index, layer.voxel_size)
+    if reintroduce:
+        index2 = np.mod(index, layer.voxel_size)
+    else:
+        index2 = index
     i,j,k = index2
-    v = layer.array[i][j][k]
+    try:
+        v = layer.array[i][j][k]
+    except:
+        v = 0
     return v
 
 def get_cube_array_indices(self_contain = False):
@@ -711,7 +717,7 @@ class Agent:
         n = voxel_size
         if keep_in_range_z:
             self.pose[2] = min(n, max(self.pose[2], 0))
-        if reintroduce:
+        if reintroduce and voxel_size != 0:
             self.pose = np.mod(self.pose, np.asarray([n,n,n]))
         if self.save_move_history:
             if dir[2] == 1:
@@ -749,7 +755,7 @@ class Agent:
         below = values.pop(1)
         sides = sum(values)
 
-        print(above, below, sides)
+        # print(above, below, sides)
         # self.compass_array.keys()
         # above = layer.array[place + u]
         # print(above)
@@ -843,14 +849,14 @@ class Agent:
             nb_cell_index_list.append(d + pose)
         return nb_cell_index_list
 
-    def get_nb_6_cell_values(self, layer, pose = None):
+    def get_nb_6_cell_values(self, layer, pose = None, reintroduce=True):
         # nb_value_dict = {}
         value_list = []
         for key in self.compass_array.keys():
             d = self.compass_array[key]
             nb_cell_index = d + pose
             # dont check index in boundary
-            v = get_layer_value_at_index(layer, nb_cell_index)
+            v = get_layer_value_at_index(layer, nb_cell_index, reintroduce)
             value_list.append(v)
         return np.asarray(value_list)
     
@@ -1130,25 +1136,30 @@ class Agent:
 
 
         if only_face_nb:
-            v = self.get_nb_6_cell_values(self.ground_layer, self.pose)
-            vectors = self.get_nb_6_cell_indicies(self.pose)
-            
+            v = self.get_nb_6_cell_values(self.ground_layer, self.pose, reintroduce=False)
+            places = self.get_nb_6_cell_indicies(self.pose)
+            places = np.asarray(places)
             choice = np.argmax(v)
-            place = vectors[choice]    
+            place = places[choice]    
         else:
             v = self.get_nb_26_cell_values()
             choice = np.argmax(v)
             cube = self.get_nb_26_cell_indicies(self.pose)
             vector = cube[choice]
             place = self.pose + vector
-        
-        
+       
         try:
             set_value_at_index(layer, place, 0)
             bool_ = True
         except Exception as e:
             print(e)
             print('cant erase this:', place)
+            print(places)
+            print(choice)
+            print(v)
+            x,y,z = place
+            a = self.ground_layer.array[x][y][z]
+            print(a)
             
             bool_ = False
         return bool_
