@@ -1,8 +1,14 @@
 #pass
 from voxel_builder_library import pheromon_loop, Agent, Layer, make_solid_box_z
-from voxel_builder_library import get_chances__by_last_move, get_chances_by_relative_position, get_chances_by_density
+# from voxel_builder_library import get_chance_by_climb_style, get_chance_by_relative_position, get_chances_by_density
 import numpy as np
 
+"""
+DESIGN INTENTION
+simple testing
+move: aiming to the sky
+build: erase overly dense, build if low
+"""
 # generative behaviours can be stored in these 'algorithm' files, and called from main
 # as preset_variables and preset_functions
 # MOVE SETTINGS
@@ -11,11 +17,18 @@ import numpy as np
 queen_bee_pheromon, sky_ph_layer, air_moisture_layer = ['','','']
 
 # overal settings
-voxel_size = 10
+voxel_size = 15
 agent_count = 10
-wait_to_diffuse = 10
+wait_to_diffuse = 1
 
-def layer_env_setup_default(iterations):
+# BUILD OVERALL SETTINGS
+reach_to_build = 5
+reach_to_erase = 5
+stacked_chances = True
+go_home_after_build = True
+
+
+def layer_env_setup(iterations):
     """
     creates the simulation environment setup
     with preset values in the definition
@@ -79,7 +92,7 @@ def layer_env_setup_default(iterations):
     return voxel_size, agent_count, ground, queen_bee_pheromon, sky_ph_layer, sky_emission_layer, clay_moisture_layer, air_moisture_layer, agent_space
 
 
-def move_agent_default(
+def move_agent(
         agent,        
         queen_bee_pheromon = None,
         sky_ph_layer = None,
@@ -111,12 +124,12 @@ def move_agent_default(
 
     move_ph_sky = 1
 
-    move_ph_moisture = 0.2
+    move_ph_moisture = 0
 
     move_dir_prefer_to_side = 0.5
     move_dir_prefer_to_up = 1
     move_dir_prefer_to_down = -0.2
-    move_dir_prefer_strength = 0.1
+    move_dir_prefer_strength = 0
 
     check_collision = False
 
@@ -153,14 +166,7 @@ def move_agent_default(
     moved = agent.follow_pheromones(cube, check_collision)
     return moved
 
-
-# BUILD OVERALL SETTINGS
-reach_to_build = 2
-reach_to_erase = 0.5
-stacked_chances = True
-go_home_after_build = True
-
-def calculate_build_chances_default(agent, ground, queen_bee_pheromon = None, air_moisture_layer = None, sky_ph_layer = None):
+def calculate_build_chances(agent, ground, queen_bee_pheromon = None, air_moisture_layer = None, sky_ph_layer = None):
     """PLACEHOLDER NOT REMOVED!
     build_chance, erase_chance = [0.2,0]
     function operating with Agent and Layer class objects
@@ -171,10 +177,12 @@ def calculate_build_chances_default(agent, ground, queen_bee_pheromon = None, ai
     """
 
 
-    # PLACEHOLDER chance settings
-    """dont forget to delete :D"""
-    build_chance = 0.2
-    erase_chance = 0
+    # # PLACEHOLDER chance settings
+    # """dont forget to delete :D"""
+    # build_chance = 0.2
+    # erase_chance = 0
+    build_chance = agent.build_chance
+    erase_chance = agent.erase_chance
 
     # LAST MOVE CHANCE
     climb = 0.5
@@ -183,7 +191,7 @@ def calculate_build_chances_default(agent, ground, queen_bee_pheromon = None, ai
     descend = -0.05
     build_strength__last_move = 0
 
-    # REALTICVE POSITION
+    # RELATIVE POSITION
     build_below = -1
     build_aside = -1
     build_above = 1
@@ -192,11 +200,11 @@ def calculate_build_chances_default(agent, ground, queen_bee_pheromon = None, ai
     # DENSITY OF BUILT SURROUNDING
     # NOTE this could be directional scanning perhaps
     erase_if_below__built_density = 27
-    erase_if_over__built_density = 20
-    build_if_below__built_density = 5
+    erase_if_over__built_density = 15
+    build_if_below__built_density = 10
     build_if_over__built_density = 0
     density_scan_radius__built_density = 1
-    build_strength__built_density = 0
+    build_strength__built_density = 2
 
     # DENSITY OF QUEEN BEE PHEROMONES
     build_if_over__queen_bee = 0.005
@@ -216,32 +224,24 @@ def calculate_build_chances_default(agent, ground, queen_bee_pheromon = None, ai
     build_strength__sky_ph = 0
     density_scan_radius__sky_ph = 0
 
-    
-
-
-    c, e = get_chances__by_last_move(
-        agent, 
+    c = agent.get_chance_by_climb_style( 
         climb,
         top,
         walk,
         descend,
         build_strength__last_move)
     build_chance += c
-    erase_chance += e
 
-    c, e = get_chances_by_relative_position(
-        agent,
+    c = agent.get_chance_by_relative_position(
         ground,
         build_below,
         build_aside,
         build_above,
         build_strength__relative_position)
     build_chance += c
-    erase_chance += e
 
     # ground surrrounding
-    c, e = get_chances_by_density(
-        agent, 
+    c, e = agent.get_chances_by_density( 
         ground,
         density_scan_radius__built_density,        
         build_if_over__built_density,
@@ -253,8 +253,7 @@ def calculate_build_chances_default(agent, ground, queen_bee_pheromon = None, ai
     erase_chance += e
 
     # queen bee
-    c, e = get_chances_by_density(
-        agent, 
+    c, e = agent.get_chances_by_density(
         queen_bee_pheromon,
         density_scan_radius__queen_bee_ph,
         build_if_over__queen_bee,
@@ -264,8 +263,7 @@ def calculate_build_chances_default(agent, ground, queen_bee_pheromon = None, ai
     erase_chance += e
 
     # air_moisture
-    c, e = get_chances_by_density(
-        agent, 
+    c, e = agent.get_chances_by_density(
         air_moisture_layer,
         density_scan_radius__air_moisture,
         build_if_over__air_moisture,
@@ -276,8 +274,7 @@ def calculate_build_chances_default(agent, ground, queen_bee_pheromon = None, ai
     erase_chance += e
 
     # sky_density
-    c, e = get_chances_by_density(
-        agent, 
+    c, e = agent.get_chances_by_density( 
         sky_ph_layer,
         build_if_over__sky_ph,
         build_if_below__sky_ph,
@@ -288,7 +285,7 @@ def calculate_build_chances_default(agent, ground, queen_bee_pheromon = None, ai
 
     return build_chance, erase_chance
 
-def build_default(agent, build_chance, erase_chance, ground, clay_moisture_layer):
+def build(agent, build_chance, erase_chance, ground, clay_moisture_layer):
     """agent builds on construction_layer, if pheromon value in cell hits limit
     chances are either momentary values or stacked by history
     return bool"""
@@ -301,6 +298,8 @@ def build_default(agent, build_chance, erase_chance, ground, clay_moisture_layer
         agent.erase_chance = erase_chance
 
     # CHECK IF BUILD CONDITIONS are favorable
+    built = False
+    erased = False
     build_condition = agent.check_build_conditions(ground)
     if agent.build_chance >= reach_to_build and build_condition == True:
         built = agent.build(ground)
@@ -311,11 +310,10 @@ def build_default(agent, build_chance, erase_chance, ground, clay_moisture_layer
     elif agent.erase_chance >= reach_to_erase and build_condition == True:
         erased = agent.erase(ground)
         erased2 = agent.erase(clay_moisture_layer)
-    else: 
-        built = False
-        erased = False
+    # else: 
+    #     built = False
+    #     erased = False
     return built, erased
-
 
 def reset_agent(agent, voxel_size):
     x = np.random.randint(0, voxel_size)
