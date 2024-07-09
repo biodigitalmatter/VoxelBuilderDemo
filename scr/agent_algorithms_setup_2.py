@@ -17,7 +17,7 @@ build: erase overly dense, build if low
 queen_bee_pheromon, sky_ph_layer, air_moisture_layer = ['','','']
 
 # overal settings
-voxel_size = 15
+voxel_size = 60
 agent_count = 15
 wait_to_diffuse = 1
 
