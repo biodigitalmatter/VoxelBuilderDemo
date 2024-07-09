@@ -11,9 +11,9 @@ from matplotlib import animation
 
 
 iterations = 30
-save_img = True
-save_animation = True
-save_json = True
+save_img = False
+save_animation = False
+save_json = False
 note = 'test_work_w_agent_algorithms'
 time__ = timestamp_now
 
@@ -46,7 +46,7 @@ def simulate(frame):
         moved = move_agent(agent, queen_bee_pheromon, sky_ph_layer, air_moisture_layer)
         # BUILD
         if moved:
-            build_chance, erase_chance = calculate_chances(agent, ground, clay_moisture_layer, queen_bee_pheromon, air_moisture_layer, sky_ph_layer)
+            build_chance, erase_chance = calculate_chances(agent, ground, queen_bee_pheromon, air_moisture_layer, sky_ph_layer)
             
             built, erased = build(agent, build_chance, erase_chance, ground, clay_moisture_layer)
         elif not moved or built and go_home_after_build:
@@ -61,8 +61,10 @@ def simulate(frame):
 
     # scatter plot
     pts_built = convert_array_to_points(a1, False)
-    arrays_to_show = [pts_built]
-    colors = [ground.rgb]
+    pts_built_2 = convert_array_to_points(agent_space.array, False)
+
+    arrays_to_show = [pts_built, pts_built_2]
+    colors = [ground.rgb, agent_space.rgb]
     for array, color in zip(arrays_to_show, colors):
         p = array.transpose()
         axes.scatter(p[0, :], p[1, :], p[2, :], marker = 's', s = 1, facecolor = color)
