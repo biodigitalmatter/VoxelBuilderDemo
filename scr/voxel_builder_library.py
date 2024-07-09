@@ -661,8 +661,8 @@ class Agent:
             self.voxel_size = ground_layer.voxel_size
         self.cube_array = get_cube_array_indices()
         self._climb_style = ''
-        self.build_chance = 0
-        self.erase_chance = 0
+        self._build_chance = 0
+        self._erase_chance = 0
 
     @property
     def climb_style(self):
@@ -670,10 +670,30 @@ class Agent:
         return self._climb_style
     
     @climb_style.setter
-    def name(self, value):
+    def climb_style(self, value):
         if not isinstance(value, str):
             raise ValueError("Name must be a string")
         self._climb_style = value
+    
+    @property
+    def build_chance(self):
+        return self._build_chance
+    
+    @build_chance.setter
+    def build_chance(self, value):
+        if not isinstance(value, float):
+            raise ValueError("Chance must be a number")
+        self._build_chance = value
+    
+    @property
+    def erase_chance(self):
+        return self._erase_chance
+    
+    @erase_chance.setter
+    def erase_chance(self, value):
+        if not isinstance(value, float):
+            raise ValueError("Chance must be a number")
+        self._erase_chance = value
 
     def move(self, i, voxel_size = 0):
         """move to a neighbor voxel based on the compas dictonary key index """
@@ -1059,11 +1079,95 @@ class Agent:
             if 0 < get_sub_array(layer, 1, self.pose, format_values = 0):
                 return True
         return False
+    
+
+    def work(self, build_chance, erase_chance, ground, clay_moisture_layer, go_home_after_build, reach_to_build, reach_to_erase, stacked_chances = True):
+        """build or erase a ground voxel based on the combined chance outputs of different chance_analyses
+    returns built_bool, erased_bool
+        """
+        if stacked_chances:
+            self.build_chance += build_chance
+            self.erase_chance += erase_chance
+        else:
+            self.build_chance = build_chance
+            self.erase_chance = erase_chance
+        # CHECK IF BUILD CONDITIONS are favorable
+        build_condition = self.check_build_conditions(ground)
+        if self.build_chance >= reach_to_build and build_condition == True:
+            built = self.build(ground)
+            self.build(clay_moisture_layer)
+            if built and go_home_after_build:
+                self.reset_bool = True
+                clay_moisture_layer.decay_linear()
+        elif self.erase_chance >= reach_to_erase and build_condition == True:
+            erased = self.erase(ground)
+            self.erase(clay_moisture_layer)
+        return built, erased
+
+def pheromon_loop(pheromon_layer, emmission_array = None, i = 1, blocking_layer = None, gravity_shift_bool = False, diffuse_bool = True, decay = True, decay_linear = False):
+    """gravity direction: 0:left, 1:right, 2:front, 3:back, 4:down, 5:up"""
+    for i in range(i):
+        # emmission in
+        if not isinstance(emmission_array, bool):
+            pheromon_layer.emission_intake(emmission_array, 2, False)
+
+        # diffuse
+        if diffuse_bool:
+            pheromon_layer.diffuse()
+
+        # gravity
+        if gravity_shift_bool:
+            pheromon_layer.gravity_shift()
+
+        # decay
+        if decay_linear:
+            pheromon_layer.decay_linear()
+        elif decay:
+            pheromon_layer.decay()
+
+        # collision
+        if blocking_layer != None:
+            blocking_layer.block_layers([pheromon_layer])
         
-    
-    
+        # apply gradient steps
+        if pheromon_layer.gradient_resolution != 0:
+            pheromon_layer.grade()
+
+def get_chances__by_last_move(
+        agent, 
+        climb = 0.5,
+        top = 2,
+        walk = 0.1,
+        descend = -0.05,
+        build_strength__last_move = 0):
+    build_chance = 1
+    erase_chance = 0
+    return build_chance, erase_chance
+
+def get_chances_by_relative_position(
+        agent,
+        layer,
+        build_below = -1,
+        build_aside = -1,
+        build_above = 1,
+        build_strength = 1):
+    build_chance = 1
+    erase_chance = 0
+    return build_chance, erase_chance
 
 
+def get_chances_by_density(
+        agent, 
+        layer,
+        radius,        
+        build_if_over = 0,
+        build_if_below = 5,
+        erase_if_over = 27,
+        erase_if_below = 0,
+        build_strength = 1):
+    build_chance = 1
+    erase_chance = 0
+    return build_chance, erase_chance
 
 """
 # Examples of layers
