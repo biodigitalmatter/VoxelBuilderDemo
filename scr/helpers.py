@@ -29,7 +29,7 @@ def convert_array_to_compas_pointcloud_sorted(ptcloud_array):
     ptcloud = Pointcloud(points = pts)
     return ptcloud, values
 
-def convert_array_to_pts_sorted(ptcloud_array, list_output = False):
+def convert_array_to_pts_sorted(ptcloud_array, return_values = True):
     a = ptcloud_array
     indicies = np.indices(a.shape)
     pt_location = np.logical_not(a == 0)
@@ -37,12 +37,28 @@ def convert_array_to_pts_sorted(ptcloud_array, list_output = False):
     for i in range(3):
         c = indicies[i][pt_location]
         coordinates.append(c)
-    if list_output:
-        pts = np.vstack(coordinates).transpose().tolist()
+
+    pts = np.vstack(coordinates).transpose().tolist()
+    values = a[pt_location].tolist()
+    # sort:
+    pts = pts
+    values = values
+
+    # Pair the elements using zip
+    paired_lists = list(zip(values, pts))
+
+    # Sort the paired lists based on the first element of the pairs (values values)
+    sorted_paired_lists = sorted(paired_lists, key=lambda x: x[0])
+
+    # Extract the sorted nested list
+    
+    if return_values:
+        sortedpts = [element[1] for element in sorted_paired_lists]
+        values = [element[0] for element in sorted_paired_lists]
+        list_to_dump = {'pt_list' : sortedpts, 'values' : values}
     else:
-        pts = np.vstack(coordinates).transpose()
-    values = list(a[pt_location])
-    return pts, values
+        list_to_dump = {'pt_list' : sortedpts, 'values' : []}
+    return list_to_dump
 
 def convert_array_to_points(a, list_output = False):
     indicies = np.indices(a.shape)
