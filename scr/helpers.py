@@ -29,7 +29,7 @@ def convert_array_to_compas_pointcloud_sorted(ptcloud_array):
     ptcloud = Pointcloud(points = pts)
     return ptcloud, values
 
-def convert_array_to_pts_sorted(ptcloud_array, return_values = True):
+def convert_array_to_pts_sorted(ptcloud_array, return_values = True, multiply = 1):
     a = ptcloud_array
     indicies = np.indices(a.shape)
     pt_location = np.logical_not(a == 0)
@@ -54,7 +54,7 @@ def convert_array_to_pts_sorted(ptcloud_array, return_values = True):
     
     if return_values:
         sortedpts = [element[1] for element in sorted_paired_lists]
-        values = [element[0] for element in sorted_paired_lists]
+        values = [element[0] * multiply for element in sorted_paired_lists]
         list_to_dump = {'pt_list' : sortedpts, 'values' : values}
     else:
         list_to_dump = {'pt_list' : sortedpts, 'values' : []}

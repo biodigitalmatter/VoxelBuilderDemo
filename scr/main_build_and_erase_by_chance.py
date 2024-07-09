@@ -41,13 +41,15 @@ sky_ph_layer.gradient_resolution = 10000
 sky_ph_layer.gravity_dir = 5
 sky_ph_layer.gravity_ratio = 0.8
 
-clay_moisture_layer.diffusion_ratio = 0
-clay_moisture_layer.decay_ratio = 1/24
-clay_moisture_layer.gradient_resolution = 0
+ground.decay_linear_value = 1 / iterations / 10
+clay_moisture_layer.decay_linear_value = 1 / iterations / agent_count / 2
+print(clay_moisture_layer.decay_linear_value)
+print(ground.decay_linear_value)
 
 air_moisture_layer.diffusion_ratio = 1/12
 air_moisture_layer.decay_ratio = 1/4
 air_moisture_layer.gradient_resolution = 10000
+
 
 # MOVE SETTINGS
 # move_preference settings w pheromon weights
@@ -213,7 +215,7 @@ for i in range(agent_count):
     agent.pose = [x,y,1]
     agents.append(agent)
 
-def pheromon_loop(pheromon_layer, emmission_array = None, i = 1, blocking_layer = None, gravity_direction = None, gravity_shift_bool = False):
+def pheromon_loop(pheromon_layer, emmission_array = None, i = 1, blocking_layer = None, gravity_shift_bool = False, diffuse_bool = True, decay = True, decay_linear = False):
     """gravity direction: 0:left, 1:right, 2:front, 3:back, 4:down, 5:up"""
     for i in range(i):
         # emmission in
@@ -221,14 +223,18 @@ def pheromon_loop(pheromon_layer, emmission_array = None, i = 1, blocking_layer 
             pheromon_layer.emission_intake(emmission_array, 2, False)
 
         # diffuse
-        pheromon_layer.diffuse()
+        if diffuse_bool:
+            pheromon_layer.diffuse()
 
         # gravity
         if gravity_shift_bool:
             pheromon_layer.gravity_shift()
 
         # decay
-        pheromon_layer.decay()
+        if decay_linear:
+            pheromon_layer.decay_linear()
+        elif decay:
+            pheromon_layer.decay()
 
         # collision
         if blocking_layer != None:
@@ -248,7 +254,6 @@ ground.rgb = [207/255, 179/255, 171/255]
 
 # set ground moisture
 clay_moisture_layer.array = ground.array.copy()
-pheromon_loop(clay_moisture_layer, None, 3)
 pheromon_loop(air_moisture_layer, clay_moisture_layer.array, 3, ground)
 
 # make sky
@@ -264,7 +269,6 @@ def iterate(frame):
 
     # 1. diffuse environment's layers
     pheromon_loop(sky_ph_layer, emmission_array = sky_emission, blocking_layer=ground, gravity_shift_bool = True)
-    pheromon_loop(clay_moisture_layer)
     pheromon_loop(air_moisture_layer, emmission_array = clay_moisture_layer.array, blocking_layer = ground)
 
     # 2. MOVE and BUILD
@@ -284,19 +288,17 @@ def iterate(frame):
             # CHECK IF BUILD CONDITIONS are favorable
             build_condition = agent.check_build_conditions(ground)
             if agent.build_chance >= reach_to_build and build_condition == True:
-                done = agent.build(ground)
-                done2 = agent.build(clay_moisture_layer)
-                if done:
+                built = agent.build(ground)
+                built2 = agent.build(clay_moisture_layer)
+                if built:
                     reset_agent = True
+                    clay_moisture_layer.decay_linear()
             elif agent.erase_chance >= reach_to_erase and build_condition == True:
-                done = agent.erase(ground)
-                done2 = agent.erase(clay_moisture_layer)
-                pass
-        
+                erased = agent.erase(ground)
+                erased2 = agent.erase(clay_moisture_layer)
         elif not moved:
             # stuck in position: reset
             reset_agent = True
-        
         if reset_agent:
             x = np.random.randint(0, voxel_size)
             y = np.random.randint(0, voxel_size)
@@ -304,7 +306,8 @@ def iterate(frame):
             agent.build_probability = 0
             agent.move_history = []
 
-    print('done')
+    print('agents_done')
+    ground.decay_linear()
 
     # 3. SHOW (without ground layer)
     a1 = ground.array.copy()
@@ -344,13 +347,14 @@ if save_img:
 # # save as point_list
 if save_json:
     # filename = 'scr/data/point_lists/pts_%s_%s.json' %(time__, note)
-    filename = 'scr/data/point_lists_sorted/pts_%s_%s.json' %(time__, note)
+    filename = 'scr/data/point_lists_sorted/pts_%s_%s_CLAY_w_decay.json' %(time__, note)
     with open(filename, 'w') as file:
         # list_to_dump = convert_array_to_points(ground.array, True)
-        # list_to_dump = convert_array_to_pts_sorted(clay_moisture_layer.array)
+        # list_to_dump = convert_array_to_pts_sorted(ground.array)
+        list_to_dump = convert_array_to_pts_sorted(clay_moisture_layer.array, multiply=1000)
 
-        list_to_dump = convert_array_to_pts_sorted(ground.array)
-        # json.dump(list_to_dump, file)
+        # list_to_dump = convert_array_to_pts_sorted(ground.array)
+        json.dump(list_to_dump, file)
     print('\npt_list saved as %s:\n' %filename)
 
 plt.show()
