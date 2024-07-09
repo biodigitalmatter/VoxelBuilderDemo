@@ -1,21 +1,18 @@
 from voxel_builder_library import *
 from show_voxel_plt import *
-from agent_algorithms import calculate_build_chances_default as calculate_chances
-from agent_algorithms import move_agent_default as move_agent
-from agent_algorithms import layer_env_setup_default as layer_env_setup
-from agent_algorithms import build_default as build
-from agent_algorithms import *
 from helpers import *
 from show_voxel_plt import timestamp_now
 from matplotlib import animation
 
+# import presets from here
+from agent_algorithms import *
 
-iterations = 30
-save_img = False
-save_animation = False
-save_json = False
+
+iterations = 200
+
 note = 'test_work_w_agent_algorithms'
 time__ = timestamp_now
+_save = True
 
 # SETUP ENVIRONMENT
 voxel_size, agent_count, ground, queen_bee_pheromon, sky_ph_layer, sky_emission_layer, clay_moisture_layer, air_moisture_layer, agent_space = layer_env_setup(iterations)
@@ -24,7 +21,7 @@ voxel_size, agent_count, ground, queen_bee_pheromon, sky_ph_layer, sky_emission_
 agents = []
 for i in range(agent_count):
     agent = Agent(
-        space_layer = agent_space, ground_layer = ground, construction_layer = ground,
+        space_layer = agent_space, ground_layer = ground,
         track_layer = None, leave_trace=False, save_move_history=True)
     x = np.random.randint(0, voxel_size)
     y = np.random.randint(0, voxel_size)
@@ -34,7 +31,7 @@ for i in range(agent_count):
 # SIMULATION FUNCTION
 def simulate(frame):
 # for i in range(iterations):
-    print(simulate.counter)
+    print('simulate.counter', simulate.counter)
 
     # 1. diffuse environment's layers
     pheromon_loop(sky_ph_layer, emmission_array = sky_emission_layer, blocking_layer=ground, gravity_shift_bool = True)
@@ -42,15 +39,24 @@ def simulate(frame):
 
     # 2. MOVE and BUILD
     for agent in agents:
+        print('agent chances: ', agent.build_chance, agent.erase_chance)
+        print('pose:', agent.pose)
         # MOVE
         moved = move_agent(agent, queen_bee_pheromon, sky_ph_layer, air_moisture_layer)
         # BUILD
         if moved:
-            build_chance, erase_chance = calculate_chances(agent, ground, queen_bee_pheromon, air_moisture_layer, sky_ph_layer)
+            build_chance, erase_chance = calculate_build_chances(agent, ground, queen_bee_pheromon, air_moisture_layer, sky_ph_layer)
             
             built, erased = build(agent, build_chance, erase_chance, ground, clay_moisture_layer)
-        elif not moved or built and go_home_after_build:
-            reset_agent(agent, voxel_size)
+            if erased:
+                print('erase here:', agent.pose)
+
+            if built and go_home_after_build:
+                print('built here:', agent.pose)
+                reset_agent(agent, voxel_size)
+        else:
+            if go_home_after_build:
+                reset_agent(agent, voxel_size)
 
     print('agents_done')
     ground.decay_linear()
@@ -61,10 +67,10 @@ def simulate(frame):
 
     # scatter plot
     pts_built = convert_array_to_points(a1, False)
-    pts_built_2 = convert_array_to_points(agent_space.array, False)
+    # pts_built_2 = convert_array_to_points(agent_space.array, False)
 
-    arrays_to_show = [pts_built, pts_built_2]
-    colors = [ground.rgb, agent_space.rgb]
+    arrays_to_show = [pts_built]
+    colors = [ground.rgb]
     for array, color in zip(arrays_to_show, colors):
         p = array.transpose()
         axes.scatter(p[0, :], p[1, :], p[2, :], marker = 's', s = 1, facecolor = color)
@@ -88,6 +94,10 @@ anim = animation.FuncAnimation(fig, simulate, frames=iterations, interval = 1)
 suffix = '%s_a%s_i%s' %(note, agent_count, iterations)
 
 ### SAVE
+save_img = _save
+save_animation = _save
+save_json = _save
+
 if save_animation:
     anim.save('img/gif/gif_%s_%s.gif' %(timestamp_now, suffix))
     print('animation saved')
