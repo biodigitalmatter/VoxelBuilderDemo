@@ -5,19 +5,21 @@ from show_voxel_plt import timestamp_now
 from matplotlib import animation
 
 # import presets from here
-from agent_algorithms import *
+from agent_algorithms_setup_2 import *
+# from agent_algorithms import *
 
 
-iterations = 200
+iterations = 400
 
-note = 'test_work_w_agent_algorithms'
+note = 'setup_2'
 time__ = timestamp_now
 _save = True
+save_per_nth = 50
 
 # SETUP ENVIRONMENT
 voxel_size, agent_count, ground, queen_bee_pheromon, sky_ph_layer, sky_emission_layer, clay_moisture_layer, air_moisture_layer, agent_space = layer_env_setup(iterations)
 
-# make agents
+# MAKE AGENTS
 agents = []
 for i in range(agent_count):
     agent = Agent(
@@ -39,27 +41,19 @@ def simulate(frame):
 
     # 2. MOVE and BUILD
     for agent in agents:
-        print('agent chances: ', agent.build_chance, agent.erase_chance)
-        print('pose:', agent.pose)
         # MOVE
         moved = move_agent(agent, queen_bee_pheromon, sky_ph_layer, air_moisture_layer)
         # BUILD
         if moved:
             build_chance, erase_chance = calculate_build_chances(agent, ground, queen_bee_pheromon, air_moisture_layer, sky_ph_layer)
-            
-            built, erased = build(agent, build_chance, erase_chance, ground, clay_moisture_layer)
-            if erased:
-                print('erase here:', agent.pose)
-
+            built, erased = build(agent, build_chance, erase_chance, ground, clay_moisture_layer, False)
             if built and go_home_after_build:
-                print('built here:', agent.pose)
                 reset_agent(agent, voxel_size)
         else:
             if go_home_after_build:
                 reset_agent(agent, voxel_size)
 
-    print('agents_done')
-    ground.decay_linear()
+    clay_moisture_layer.decay_linear()
 
     # 3. SHOW without ground layer
     a1 = ground.array.copy()
@@ -76,45 +70,54 @@ def simulate(frame):
         axes.scatter(p[0, :], p[1, :], p[2, :], marker = 's', s = 1, facecolor = color)
     simulate.counter += 1
 
+    if save_json and simulate.counter % save_per_nth == 0:
+        filename = 'scr/data/point_lists_sorted/pts_%s_%s.json' %(time__, note)
+        with open(filename, 'w') as file:
+            list_to_dump = convert_array_to_pts_sorted(clay_moisture_layer.array, multiply=1000)
+            json.dump(list_to_dump, file)
+        print('\npt_list saved as %s:\n' %filename)
+
 ### PLOTTING
-scale = voxel_size
-fig = plt.figure(figsize = [4, 4], dpi = 200)
-axes = plt.axes(xlim=(0, scale), ylim =  (0, scale), zlim = (0, scale), projection = '3d')
-axes.set_xticks([])
-axes.set_yticks([])
-axes.set_zticks([])
-# a1 = ground.array
-# a1[:,:,0] = 0
-# ground.array = a1
-p = ground.array.transpose()
-axes.scatter(p[0, :], p[1, :], p[2, :], marker = 's', s = 1, facecolor = ground.rgb)
+plot = True
+if plot: 
+    scale = voxel_size
+    fig = plt.figure(figsize = [4, 4], dpi = 200)
+    axes = plt.axes(xlim=(0, scale), ylim =  (0, scale), zlim = (0, scale), projection = '3d')
+    axes.set_xticks([])
+    axes.set_yticks([])
+    axes.set_zticks([])
+    # a1 = ground.array
+    # a1[:,:,0] = 0
+    # ground.array = a1
+    p = ground.array.transpose()
+    axes.scatter(p[0, :], p[1, :], p[2, :], marker = 's', s = 1, facecolor = ground.rgb)
 
-simulate.counter = 0
-anim = animation.FuncAnimation(fig, simulate, frames=iterations, interval = 1)
-suffix = '%s_a%s_i%s' %(note, agent_count, iterations)
+    simulate.counter = 0
+    anim = animation.FuncAnimation(fig, simulate, frames=iterations, interval = 1)
+    suffix = '%s_a%s_i%s' %(note, agent_count, iterations)
 
-### SAVE
-save_img = _save
-save_animation = _save
-save_json = _save
+    ### SAVE
+    save_img = _save
+    save_animation = _save
+    save_json = _save
 
-if save_animation:
-    anim.save('img/gif/gif_%s_%s.gif' %(timestamp_now, suffix))
-    print('animation saved')
-if save_img:
-    plt.savefig('img/img_%s_%s.png' %(timestamp_now, suffix), bbox_inches='tight', dpi = 200)
-    print('image saved')
+    if save_animation:
+        anim.save('img/gif/gif_%s_%s.gif' %(timestamp_now, suffix))
+        print('animation saved')
+    if save_img:
+        plt.savefig('img/img_%s_%s.png' %(timestamp_now, suffix), bbox_inches='tight', dpi = 200)
+        print('image saved')
 
-if save_json:
-    # filename = 'scr/data/point_lists/pts_%s_%s.json' %(time__, note)
-    filename = 'scr/data/point_lists_sorted/pts_%s_%s_CLAY_w_decay.json' %(time__, note)
-    with open(filename, 'w') as file:
-        # list_to_dump = convert_array_to_points(ground.array, True)
-        # list_to_dump = convert_array_to_pts_sorted(ground.array)
-        list_to_dump = convert_array_to_pts_sorted(clay_moisture_layer.array, multiply=1000)
+    if save_json:
+        # filename = 'scr/data/point_lists/pts_%s_%s.json' %(time__, note)
+        filename = 'scr/data/point_lists_sorted/pts_%s_%s.json' %(time__, note)
+        with open(filename, 'w') as file:
+            # list_to_dump = convert_array_to_points(ground.array, True)
+            # list_to_dump = convert_array_to_pts_sorted(ground.array)
+            list_to_dump = convert_array_to_pts_sorted(clay_moisture_layer.array, multiply=1000)
 
-        # list_to_dump = convert_array_to_pts_sorted(ground.array)
-        json.dump(list_to_dump, file)
-    print('\npt_list saved as %s:\n' %filename)
+            # list_to_dump = convert_array_to_pts_sorted(ground.array)
+            json.dump(list_to_dump, file)
+        print('\npt_list saved as %s:\n' %filename)
 
-plt.show()
+    plt.show()
