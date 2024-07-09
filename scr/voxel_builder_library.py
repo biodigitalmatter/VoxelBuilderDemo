@@ -681,7 +681,7 @@ class Agent:
     
     @build_chance.setter
     def build_chance(self, value):
-        if not isinstance(value, float):
+        if not isinstance(value, (float, int)):
             raise ValueError("Chance must be a number")
         self._build_chance = value
     
@@ -691,7 +691,7 @@ class Agent:
     
     @erase_chance.setter
     def erase_chance(self, value):
-        if not isinstance(value, float):
+        if not isinstance(value, (float, int)):
             raise ValueError("Chance must be a number")
         self._erase_chance = value
 
@@ -1140,7 +1140,7 @@ def get_chances__by_last_move(
         walk = 0.1,
         descend = -0.05,
         build_strength__last_move = 0):
-    build_chance = 1
+    build_chance = 0
     erase_chance = 0
     return build_chance, erase_chance
 
@@ -1151,7 +1151,7 @@ def get_chances_by_relative_position(
         build_aside = -1,
         build_above = 1,
         build_strength = 1):
-    build_chance = 1
+    build_chance = 0
     erase_chance = 0
     return build_chance, erase_chance
 
@@ -1165,7 +1165,7 @@ def get_chances_by_density(
         erase_if_over = 27,
         erase_if_below = 0,
         build_strength = 1):
-    build_chance = 1
+    build_chance = 0
     erase_chance = 0
     return build_chance, erase_chance
 

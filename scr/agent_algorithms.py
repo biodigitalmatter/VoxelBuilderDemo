@@ -10,6 +10,10 @@ import numpy as np
 
 queen_bee_pheromon, sky_ph_layer, air_moisture_layer = ['','','']
 
+# overal settings
+voxel_size = 10
+agent_count = 10
+wait_to_diffuse = 10
 
 def layer_env_setup_default(iterations):
     """
@@ -27,10 +31,7 @@ def layer_env_setup_default(iterations):
     rgb_air_moisture = [200, 204, 219]
     rgb_ground = [207, 179, 171]
 
-    # overal settings
-    voxel_size = 10
-    agent_count = 10
-    wait_to_diffuse = 10
+
 
     ground = Layer(voxel_size=voxel_size, name='ground', rgb = [i/255 for i in rgb_ground])
     agent_space = Layer('agent_space', voxel_size = voxel_size, rgb = [i/255 for i in rgb_agents])
@@ -72,7 +73,7 @@ def layer_env_setup_default(iterations):
     # sky_ph_layer
     sky_emission_layer = Layer('sky_emmision', voxel_size=voxel_size, rgb = [i/255 for i in rgb_sky])
     sky_emission_layer.array = np.zeros([voxel_size, voxel_size, voxel_size])
-    sky_emission_layer.aray[:][:][voxel_size - 1] = 1
+    sky_emission_layer.array[:][:][voxel_size - 1] = 1
     pheromon_loop(sky_ph_layer, sky_emission_layer.array, wait_to_diffuse, blocking_layer=ground, gravity_shift_bool = True)
 
     return voxel_size, agent_count, ground, queen_bee_pheromon, sky_ph_layer, sky_emission_layer, clay_moisture_layer, air_moisture_layer, agent_space
@@ -287,11 +288,12 @@ def calculate_build_chances_default(agent, ground, queen_bee_pheromon = None, ai
 
     return build_chance, erase_chance
 
-def build_default(agent, build_chance, erase_chance, ground, clay_moisture_layer, go_home_after_build, reach_to_build, reach_to_erase, stacked_chances):
+def build_default(agent, build_chance, erase_chance, ground, clay_moisture_layer):
     """agent builds on construction_layer, if pheromon value in cell hits limit
     chances are either momentary values or stacked by history
     return bool"""
     if stacked_chances:
+        print(erase_chance)
         agent.build_chance += build_chance
         agent.erase_chance += erase_chance
     else:
@@ -309,7 +311,9 @@ def build_default(agent, build_chance, erase_chance, ground, clay_moisture_layer
     elif agent.erase_chance >= reach_to_erase and build_condition == True:
         erased = agent.erase(ground)
         erased2 = agent.erase(clay_moisture_layer)
-
+    else: 
+        built = False
+        erased = False
     return built, erased
 
 
