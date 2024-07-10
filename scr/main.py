@@ -7,7 +7,7 @@ from class_agent import Agent
 from class_layer import Layer
 
 # import presets from here
-from agent_algorithms_setup_3 import *
+from agent_algorithms_setup_3_default import *
 # from agent_algorithms import *
 
 
@@ -17,6 +17,7 @@ time__ = timestamp_now
 _save = True
 save_json_every_nth = 100
 plot = False
+trim_floor = True
 
 # SETUP ENVIRONMENT
 settings, layers, clay_moisture_layer= layer_env_setup(iterations)
@@ -71,18 +72,25 @@ def simulate(frame):
     if _save:
         suffix = '%s_a%s_i%s' %(note, agent_count, iterations)
         if simulate.counter % save_json_every_nth == 0:
+            if trim_floor:
+                # trim floor
+                a1 = clay_moisture_layer.array.copy()
+                a1[:,:,0] = 0
+            else:
+                a1 = clay_moisture_layer.array.copy()
             # save points
-            list_to_dump = convert_array_to_pts_sorted(clay_moisture_layer.array)
+            sortedpts, values = sort_pts_by_values(a1, multiply=100)
+            list_to_dump = {'pt_list' : sortedpts, 'values' : values}
             filename = 'data/json/points_values/pts_%s_%s.json' %(time__, suffix)
             with open(filename, 'w') as file:
                 json.dump(list_to_dump, file)
             print('\npt_list saved as %s:\n' %filename)
             
             # save compas pointcloud and values
-            sorted_pts, values = sort_pts_by_values(clay_moisture_layer.array, multiply=100)
+        
             filename = 'data/json/compas_pointclouds/ptcloud_%s_%s.json' %(time__, suffix)
             with open(filename, 'w') as file:
-                pointcloud = Pointcloud(sorted_pts)
+                pointcloud = Pointcloud(sortedpts)
                 pointcloud.to_json(file)
             
             # save values
