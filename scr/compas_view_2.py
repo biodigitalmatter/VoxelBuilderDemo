@@ -46,13 +46,12 @@ def get_nth_newest_file_in_folder(folder_path, n):
 # params
 Nth = 0
 show = True
-radius = 1.2
-folder_path = os.path.join(os.getcwd(), 'scr/data/compas_pointclouds')
-
-file = get_nth_newest_file_in_folder(folder_path, Nth)
-print(file)
+radius = 1
+folder_path = os.path.join(os.getcwd(), 'data/json/compas_pointclouds')
 
 # LOAD JSON
+file = get_nth_newest_file_in_folder(folder_path, Nth)
+print(file)
 try: 
     os.path.isfile(file) # open file
     ptcloud = Pointcloud.from_json(file)
@@ -62,8 +61,6 @@ try:
 
 except Exception as e:
     print(f"Error: {e}")
-
-
 
 # # CREATE BASIC SHAPE - BOX
 world_xy = Frame.worldXY()
@@ -97,7 +94,7 @@ for pt in pts:
     move = Transformation(matrix_from_frame_to_frame(world_xy, frame_to))
     shape2.transform(move)
     # objs.append(shape2)
-    viewer.add(shape2)
+    viewer.add(shape2, opacity=1)
     # green = Color.green()
     # green = Color(135/255, 150/255, 100/255)
 

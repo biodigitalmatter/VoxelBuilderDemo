@@ -16,28 +16,40 @@ def convert_array_to_compas_pointcloud(ptcloud_array, order = 'xyz'):
     ptcloud = Pointcloud(points = pts)
     return ptcloud
 
-def convert_array_to_compas_pointcloud_sorted(ptcloud_array):
-    a = ptcloud_array
+# def convert_array_to_compas_pointcloud_sorted(ptcloud_array):
+#     a = ptcloud_array
+#     indicies = np.indices(a.shape)
+#     pt_location = np.logical_not(a == 0)
+#     coordinates = []
+#     for i in range(3):
+#         c = indicies[i][pt_location]
+#         coordinates.append(c)
+#     pts = np.vstack(coordinates).transpose()
+#     values = list(a[pt_location])
+#     ptcloud = Pointcloud(points = pts)
+#     return ptcloud, values
+
+def convert_array_to_pts_sorted(array, return_values = True, multiply = 1):
+    # Sort 
+    sortedpts, values = sort_pts_by_values(array, multiply)
+    # prep dict
+    
+    if return_values:
+        list_to_dump = {'pt_list' : sortedpts, 'values' : values}
+    else:
+        list_to_dump = {'pt_list' : sortedpts, 'values' : []}
+    return list_to_dump
+
+def sort_pts_by_values(array, multiply = 1):
+    """returns sortedpts, values
+    """ 
+    a = array
     indicies = np.indices(a.shape)
     pt_location = np.logical_not(a == 0)
     coordinates = []
     for i in range(3):
         c = indicies[i][pt_location]
         coordinates.append(c)
-    pts = np.vstack(coordinates).transpose()
-    values = list(a[pt_location])
-    ptcloud = Pointcloud(points = pts)
-    return ptcloud, values
-
-def convert_array_to_pts_sorted(ptcloud_array, return_values = True, multiply = 1):
-    a = ptcloud_array
-    indicies = np.indices(a.shape)
-    pt_location = np.logical_not(a == 0)
-    coordinates = []
-    for i in range(3):
-        c = indicies[i][pt_location]
-        coordinates.append(c)
-
     pts = np.vstack(coordinates).transpose().tolist()
     values = a[pt_location].tolist()
     # sort:
@@ -52,13 +64,11 @@ def convert_array_to_pts_sorted(ptcloud_array, return_values = True, multiply = 
 
     # Extract the sorted nested list
     
-    if return_values:
-        sortedpts = [element[1] for element in sorted_paired_lists]
-        values = [element[0] * multiply for element in sorted_paired_lists]
-        list_to_dump = {'pt_list' : sortedpts, 'values' : values}
-    else:
-        list_to_dump = {'pt_list' : sortedpts, 'values' : []}
-    return list_to_dump
+
+    sortedpts = [element[1] for element in sorted_paired_lists]
+    values = [element[0] * multiply for element in sorted_paired_lists]
+    output = [sortedpts, values]
+    return output
 
 def convert_array_to_points(a, list_output = False):
     indicies = np.indices(a.shape)
