@@ -7,11 +7,11 @@ from class_agent import Agent
 from class_layer import Layer
 
 # import presets from here
-from agent_algorithms_setup_4_higher import *
+from agent_algorithms_setup_4b import *
 
 
 iterations = 1000
-note = 'setup_4_no_dir_pref'
+note = 'setup_4b'
 time__ = timestamp_now
 _save = True
 save_json_every_nth = 200
