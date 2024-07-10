@@ -1,5 +1,7 @@
 #pass
-from voxel_builder_library import pheromon_loop, Agent, Layer, make_solid_box_z
+from voxel_builder_library import pheromon_loop, make_solid_box_z
+from class_agent import Agent
+from class_layer import Layer
 # from voxel_builder_library import get_chance_by_climb_style, get_chance_by_relative_position, get_chances_by_density
 import numpy as np
 

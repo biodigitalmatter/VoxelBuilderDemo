@@ -3,13 +3,15 @@ from show_voxel_plt import *
 from helpers import *
 from show_voxel_plt import timestamp_now
 from matplotlib import animation
+from class_agent import Agent
+from class_layer import Layer
 
 # import presets from here
 from agent_algorithms_setup_2 import *
 # from agent_algorithms import *
 
 
-iterations = 300
+iterations = 200
 
 note = 'setup_2'
 time__ = timestamp_now
@@ -71,61 +73,72 @@ def simulate(frame):
         for array, color in zip(arrays_to_show, colors):
             p = array.transpose()
             axes.scatter(p[0, :], p[1, :], p[2, :], marker = 's', s = 1, facecolor = color)
+    
     simulate.counter += 1
+    
+    # 4. DUMP JSON
+    if _save:
+        suffix = '%s_a%s_i%s' %(note, agent_count, iterations)
+        if simulate.counter % save_json_every_nth == 0:
+            # save points
+            list_to_dump = convert_array_to_pts_sorted(clay_moisture_layer.array)
+            filename = 'data/json/points_values/pts_%s_%s.json' %(time__, suffix)
+            with open(filename, 'w') as file:
+                json.dump(list_to_dump, file)
+            print('\npt_list saved as %s:\n' %filename)
+            
+            # save compas pointcloud and values
+            sorted_pts, values = sort_pts_by_values(clay_moisture_layer.array, multiply=100)
+            filename = 'data/json/compas_pointclouds/ptcloud_%s_%s.json' %(time__, suffix)
+            with open(filename, 'w') as file:
+                pointcloud = Pointcloud(sorted_pts)
+                pointcloud.to_json(file)
+            
+            # save values
+            filename = 'data/json/values/values_%s_%s.json' %(time__, suffix)
+            with open(filename, 'w') as file:
+                json.dump(values, file)
 
-    if _save and simulate.counter % save_json_every_nth == 0:
-        filename = 'scr/data/point_lists_sorted/pts_%s_%s.json' %(time__, note)
-        with open(filename, 'w') as file:
-            list_to_dump = convert_array_to_pts_sorted(clay_moisture_layer.array, multiply=1000)
-            json.dump(list_to_dump, file)
-        print('\npt_list saved as %s:\n' %filename)
+            print('\ncompas_pointcloud saved as %s:\n' %filename)
+
+        
 simulate.counter = 0
 ### PLOTTING
 
-if plot: 
-    scale = voxel_size
-    fig = plt.figure(figsize = [4, 4], dpi = 200)
-    axes = plt.axes(xlim=(0, scale), ylim =  (0, scale), zlim = (0, scale), projection = '3d')
-    axes.set_xticks([])
-    axes.set_yticks([])
-    axes.set_zticks([])
-    # a1 = ground.array
-    # a1[:,:,0] = 0
-    # ground.array = a1
-    p = ground.array.transpose()
-    axes.scatter(p[0, :], p[1, :], p[2, :], marker = 's', s = 1, facecolor = ground.rgb)
+# RUN
+if __name__ == '__main__':
+    if plot: 
+        scale = voxel_size
+        fig = plt.figure(figsize = [4, 4], dpi = 200)
+        axes = plt.axes(xlim=(0, scale), ylim =  (0, scale), zlim = (0, scale), projection = '3d')
+        axes.set_xticks([])
+        axes.set_yticks([])
+        axes.set_zticks([])
+        # a1 = ground.array
+        # a1[:,:,0] = 0
+        # ground.array = a1
+        p = ground.array.transpose()
+        axes.scatter(p[0, :], p[1, :], p[2, :], marker = 's', s = 1, facecolor = ground.rgb)
 
-    simulate.counter = 0
-    anim = animation.FuncAnimation(fig, simulate, frames=iterations, interval = 1)
-    suffix = '%s_a%s_i%s' %(note, agent_count, iterations)
+        simulate.counter = 0
+        anim = animation.FuncAnimation(fig, simulate, frames=iterations, interval = 1)
+        suffix = '%s_a%s_i%s' %(note, agent_count, iterations)
 
-    ### SAVE
-    save_img = _save
-    save_animation = _save
-    save_json = _save
+        ### SAVE
+        save_img = _save
+        save_animation = _save
+        save_json = _save
 
-    if save_animation:
-        anim.save('img/gif/gif_%s_%s.gif' %(timestamp_now, suffix))
-        print('animation saved')
-    if save_img:
-        plt.savefig('img/img_%s_%s.png' %(timestamp_now, suffix), bbox_inches='tight', dpi = 200)
-        print('image saved')
+        if save_animation:
+            anim.save('img/gif/gif_%s_%s.gif' %(timestamp_now, suffix))
+            print('animation saved')
+        if save_img:
+            plt.savefig('img/img_%s_%s.png' %(timestamp_now, suffix), bbox_inches='tight', dpi = 200)
+            print('image saved')
 
-    if save_json:
-        # filename = 'scr/data/point_lists/pts_%s_%s.json' %(time__, note)
-        filename = 'scr/data/point_lists_sorted/pts_%s_%s.json' %(time__, note)
-        with open(filename, 'w') as file:
-            # list_to_dump = convert_array_to_points(ground.array, True)
-            # list_to_dump = convert_array_to_pts_sorted(ground.array)
-            list_to_dump = convert_array_to_pts_sorted(clay_moisture_layer.array, multiply=1000)
+        plt.show()
 
-            # list_to_dump = convert_array_to_pts_sorted(ground.array)
-            json.dump(list_to_dump, file)
-        print('\npt_list saved as %s:\n' %filename)
-
-    plt.show()
-
-else:
-    for i in range(iterations):
-        print(i)
-        simulate(None)
+    else:
+        for i in range(iterations):
+            print(i)
+            simulate(None)

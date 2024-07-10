@@ -1,5 +1,7 @@
 #pass
-from voxel_builder_library import pheromon_loop, Agent, Layer, make_solid_box_z
+from voxel_builder_library import pheromon_loop, make_solid_box_z
+from class_agent import Agent
+from class_layer import Layer
 # from voxel_builder_library import get_chance_by_climb_style, get_chance_by_relative_position, get_chances_by_density
 import numpy as np
 
@@ -17,7 +19,7 @@ build: erase overly dense, build if low
 queen_bee_pheromon, sky_ph_layer, air_moisture_layer = ['','','']
 
 # overal settings
-voxel_size = 60
+voxel_size = 40
 agent_count = 15
 wait_to_diffuse = 1
 
