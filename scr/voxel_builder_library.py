@@ -1,5 +1,5 @@
 import numpy as np
-
+from math_functions import *
 # parameters backup::
 # # grounds_offset
 # offset_pheromone.decay_linear_value = 1/6
@@ -25,11 +25,17 @@ def set_value_at_index(layer, index = [0,0,0], value = 1):
     layer.array[i][j][k] = value
     return layer
 
-def get_layer_value_at_index(layer, index = [0,0,0]):
+def get_layer_value_at_index(layer, index = [0,0,0], reintroduce = True):
     # print('get value at index', index)
-    index2 = np.mod(index, layer.voxel_size)
+    if reintroduce:
+        index2 = np.mod(index, layer.voxel_size)
+    else:
+        index2 = index
     i,j,k = index2
-    v = layer.array[i][j][k]
+    try:
+        v = layer.array[i][j][k]
+    except:
+        v = 0
     return v
 
 def get_cube_array_indices(self_contain = False):
@@ -639,8 +645,7 @@ class Agent:
         pose = [0,0,0], 
         compass_array = direction_dict_np,
         ground_layer = None,
-        space_layer = None, 
-        construction_layer = None,
+        space_layer = None,
         track_layer = None,
         leave_trace = False,
         save_move_history = True):
@@ -651,7 +656,6 @@ class Agent:
         # self.limited_to_ground = limited_to_ground
         self.leave_trace = leave_trace
         self.space_layer = space_layer
-        self.construction_layer = construction_layer
         self.track_layer = track_layer
         self.ground_layer = ground_layer
         self.move_history = []
@@ -661,8 +665,8 @@ class Agent:
             self.voxel_size = ground_layer.voxel_size
         self.cube_array = get_cube_array_indices()
         self._climb_style = ''
-        self.build_chance = 0
-        self.erase_chance = 0
+        self._build_chance = 0
+        self._erase_chance = 0
 
     @property
     def climb_style(self):
@@ -670,10 +674,30 @@ class Agent:
         return self._climb_style
     
     @climb_style.setter
-    def name(self, value):
+    def climb_style(self, value):
         if not isinstance(value, str):
             raise ValueError("Name must be a string")
         self._climb_style = value
+    
+    @property
+    def build_chance(self):
+        return self._build_chance
+    
+    @build_chance.setter
+    def build_chance(self, value):
+        if not isinstance(value, (float, int)):
+            raise ValueError("Chance must be a number")
+        self._build_chance = value
+    
+    @property
+    def erase_chance(self):
+        return self._erase_chance
+    
+    @erase_chance.setter
+    def erase_chance(self, value):
+        if not isinstance(value, (float, int)):
+            raise ValueError("Chance must be a number")
+        self._erase_chance = value
 
     def move(self, i, voxel_size = 0):
         """move to a neighbor voxel based on the compas dictonary key index """
@@ -686,12 +710,14 @@ class Agent:
         if self.save_move_history: 
             self.move_history.append(self.compass_keys[i])
     
-    def move_26(self, dir, voxel_size = 0):
-        """move to a neighbor voxel based on the compas dictonary key index """
+    def move_26(self, dir, voxel_size = 0, keep_in_range_z = True, reintroduce = True):
+        """move to a neighbor voxel based on dir vector """
         self.pose += dir
         # reintroduce agent if n nonzero
         n = voxel_size
-        if n != 0:
+        if keep_in_range_z:
+            self.pose[2] = min(n, max(self.pose[2], 0))
+        if reintroduce and voxel_size != 0:
             self.pose = np.mod(self.pose, np.asarray([n,n,n]))
         if self.save_move_history:
             if dir[2] == 1:
@@ -712,34 +738,54 @@ class Agent:
         if self.save_move_history: 
             self.move_history.append(key)
 
-    def analyze_position(self, ground_layer):
+    def analyze_relative_position(self, layer):
         """check if there is sg around the agent
         return list of bool:
             [below, aside, above]"""
-        place = self.pose
-        f = direction_dict_np['front']
-        b = direction_dict_np['back']
-        l = direction_dict_np['left']
-        r = direction_dict_np['right']
-        u = direction_dict_np['up']
-        d = direction_dict_np['down']
+        # place = self.pose
+        # f = direction_dict_np['front']
+        # b = direction_dict_np['back']
+        # l = direction_dict_np['left']
+        # r = direction_dict_np['right']
+        # u = direction_dict_np['up']
+        # d = direction_dict_np['down']
+        values = self.get_nb_6_cell_values(layer, self.pose)
+        values = values.tolist()
+        above = values.pop(0)
+        below = values.pop(1)
+        sides = sum(values)
 
-        above = self.ground_layer.array[place + u] 
-        below = self.ground_layer.array[place + d] 
-        sides = 0
-        for i in [f,b,r,l]:
-            sides += self.ground_layer.array[place + direction_dict_np['right']] 
+        # print(above, below, sides)
+        # self.compass_array.keys()
+        # above = layer.array[place + u]
+        # print(above)
+        # below = layer.array[place + d] 
+        # sides = 0
+        # for i in [f,b,r,l]:
+        #     sides += layer.array[place + direction_dict_np['right']] 
+        # sides = np.sum(sides)
+        if sides > 0:
+            aside = True
+        else: 
+            aside = False
         if above > 0:
             above = True
-        else: above = False
+        else: 
+            above = False
         if below > 0:
             below = True
         else: below = False
-        if sides > 0:
-            aside = True
-        else: aside = False
         self.relative_booleans_bottom_up = [below, aside, above] 
         return below, aside, above
+    
+    direction_dict_np = {
+    'up' : np.asarray([0,0,1]),
+    'left' : np.asarray([-1,0,0]),
+    'down' : np.asarray([0,0,-1]),
+    'right' : np.asarray([1,0,0]),
+    'front' : np.asarray([0,-1,0]),
+    'back' : np.asarray([0,1,0])
+}
 
 
     def random_move(self, voxel_size = 0):
@@ -803,14 +849,14 @@ class Agent:
             nb_cell_index_list.append(d + pose)
         return nb_cell_index_list
 
-    def get_nb_6_cell_values(self, layer, pose = None):
+    def get_nb_6_cell_values(self, layer, pose = None, reintroduce=True):
         # nb_value_dict = {}
         value_list = []
         for key in self.compass_array.keys():
             d = self.compass_array[key]
             nb_cell_index = d + pose
             # dont check index in boundary
-            v = get_layer_value_at_index(layer, nb_cell_index)
+            v = get_layer_value_at_index(layer, nb_cell_index, reintroduce)
             value_list.append(v)
         return np.asarray(value_list)
     
@@ -825,7 +871,7 @@ class Agent:
     def scan_neighborhood_values(self, array, offset_radius = 1, pose = None, format_values = 0):
         """takes sub array around pose, in 'offset_radius'
         format values: returns sum '0', avarage '1', or all_values: 'None'"""
-        if pose == None:
+        if isinstance(pose, bool):
             pose = self.pose
         x,y,z = pose
         n = offset_radius
@@ -999,47 +1045,122 @@ class Agent:
             self.build_probability += descend * add
         b = self.build_probability
         return b - a
+    
+    def get_chances_by_density(
+            self, 
+            pheromone_layer,
+            radius,        
+            build_if_over = 0,
+            build_if_below = 5,
+            erase_if_over = 27,
+            erase_if_below = 0,
+            build_strength = 1):
+        """
+        returns build_chance, erase_chance
+        if layer nb value sum is between 
+        """
+        v = self.get_nb_26_cell_values(pheromone_layer, self.pose)
+        v = np.sum(v)
+        # v = self.scan_neighborhood_values(pheromone_layer.array, radius, self.pose, format_values=0)
 
-    def add_build_propability_by_pheromone_density(self, pheromone_layer, weigth = 1, limit_1 = 0, limit_2 = 1):
-        """add weigth * pheromone layer value at pose"""
-        a = self.build_probability
-        pose = self.pose
-        value = pheromone_layer.array[pose]
-        value = min(limit_2, max(value, limit_1))
-        self.build_probability += value * weigth
-        b = self.build_probability
-        return b - a
+        
+        if build_if_over < v < build_if_below:
+            build_chance = build_strength
+        else:
+            build_chance = 0
+        if erase_if_over < v < erase_if_below:
+            erase_chance = 0
+        else:
+            erase_chance = build_strength
+        
+        return build_chance, erase_chance
+
+    def get_chance_by_relative_position(
+            self,
+            layer,
+            build_below = -1,
+            build_aside = -1,
+            build_above = 1,
+            build_strength = 1):
+        b, s, t = self.analyze_relative_position(layer)
+        build_chance = (build_below * b + build_aside * s + build_above * t) * build_strength
+        return build_chance
+    
+    def get_chance_by_climb_style(
+            self, 
+            climb = 0.5,
+            top = 2,
+            walk = 0.1,
+            descend = -0.05,
+            chance_weight = 1):
+        "chance is returned based on the direction values and chance_weight"
+
+        last_moves = self.move_history[-3:]
+        if last_moves == ['up', 'up', 'up']:
+            # climb_style = 'climb'
+            build_chance = climb
+        elif last_moves == ['up', 'up', 'side']:
+            # climb_style = 'top'
+            build_chance = top
+        elif last_moves == ['side', 'side', 'side']:
+            # climb_style = 'walk' 
+            build_chance = walk
+        elif last_moves == ['down', 'down', 'down']:
+            # climb_style = 'descend' 
+            build_chance = descend
+        else:
+            build_chance = 0
+
+        build_chance *= chance_weight
+
+        return build_chance
+
 
     def build(self, layer, pose = None):
-        if pose == None:
-            pose = self.pose
-        else: 
-            pass
+        # if pose == None:
+        #     pose = self.pose
+        # else: 
+        #     pass
+        # if n != 0:
+        #     self.pose = np.mod(self.pose, np.asarray([n,n,n]))
         try:
-            set_value_at_index(layer, pose, 1)
+            set_value_at_index(layer, self.pose, 1)
             bool_ = True
-        except:
-            print('cant build here:', pose)
+        except Exception as e:
+            print(e)
+            print('cant build here:', self.pose)
             bool_ = False
         return bool_
     
-    def erase(self, layer, pose = None, only_face_nb = True):
-        if pose == None:
-            if only_face_nb:
-                v = self.get_nb_6_cell_values(self.construction_layer, self.pose)
-                vectors = self.get_nb_6_cell_indicies(self.pose)
-                choice = np.argmax(v)
-                move_vector = vectors[choice]    
-            else:
-                v = self.get_nb_26_cell_values()
-                choice = np.argmax(v)
-                move_vector = self.cube_array[choice]
-            pose = self.pose + move_vector
+    def erase(self, layer, only_face_nb = True):
+
+
+        if only_face_nb:
+            v = self.get_nb_6_cell_values(self.ground_layer, self.pose, reintroduce=False)
+            places = self.get_nb_6_cell_indicies(self.pose)
+            places = np.asarray(places)
+            choice = np.argmax(v)
+            place = places[choice]    
+        else:
+            v = self.get_nb_26_cell_values()
+            choice = np.argmax(v)
+            cube = self.get_nb_26_cell_indicies(self.pose)
+            vector = cube[choice]
+            place = self.pose + vector
+       
         try:
-            set_value_at_index(layer, pose, 0)
+            set_value_at_index(layer, place, 0)
             bool_ = True
-        except:
-            print('couldnt erase here:', pose)
+        except Exception as e:
+            print(e)
+            print('cant erase this:', place)
+            print(places)
+            print(choice)
+            print(v)
+            x,y,z = place
+            a = self.ground_layer.array[x][y][z]
+            print(a)
+            
             bool_ = False
         return bool_
 
@@ -1059,11 +1180,124 @@ class Agent:
             if 0 < get_sub_array(layer, 1, self.pose, format_values = 0):
                 return True
         return False
+    
+
+    def work(self, build_chance, erase_chance, ground, clay_moisture_layer, go_home_after_build, reach_to_build, reach_to_erase, stacked_chances = True):
+        """build or erase a ground voxel based on the combined chance outputs of different chance_analyses
+    returns built_bool, erased_bool
+        """
+        if stacked_chances:
+            self.build_chance += build_chance
+            self.erase_chance += erase_chance
+        else:
+            self.build_chance = build_chance
+            self.erase_chance = erase_chance
+        # CHECK IF BUILD CONDITIONS are favorable
+        build_condition = self.check_build_conditions(ground)
+        if self.build_chance >= reach_to_build and build_condition == True:
+            built = self.build(ground)
+            self.build(clay_moisture_layer)
+            if built and go_home_after_build:
+                self.reset_bool = True
+                clay_moisture_layer.decay_linear()
+        elif self.erase_chance >= reach_to_erase and build_condition == True:
+            erased = self.erase(ground)
+            self.erase(clay_moisture_layer)
+        return built, erased
+
+def pheromon_loop(pheromon_layer, emmission_array = None, i = 1, blocking_layer = None, gravity_shift_bool = False, diffuse_bool = True, decay = True, decay_linear = False):
+    """gravity direction: 0:left, 1:right, 2:front, 3:back, 4:down, 5:up"""
+    for i in range(i):
+        # emmission in
+        if not isinstance(emmission_array, bool):
+            pheromon_layer.emission_intake(emmission_array, 2, False)
+
+        # diffuse
+        if diffuse_bool:
+            pheromon_layer.diffuse()
+
+        # gravity
+        if gravity_shift_bool:
+            pheromon_layer.gravity_shift()
+
+        # decay
+        if decay_linear:
+            pheromon_layer.decay_linear()
+        elif decay:
+            pheromon_layer.decay()
+
+        # collision
+        if blocking_layer != None:
+            blocking_layer.block_layers([pheromon_layer])
         
-    
-    
+        # apply gradient steps
+        if pheromon_layer.gradient_resolution != 0:
+            pheromon_layer.grade()
 
+# def get_chance_by_climb_style(
+#         agent, 
+#         climb = 0.5,
+#         top = 2,
+#         walk = 0.1,
+#         descend = -0.05,
+#         chance_weight = 1):
+#     "chance is updated based on the direction values and chance_weight"
 
+#     last_moves = agent.move_history[-3:]
+#     if last_moves == ['up', 'up', 'up']:
+#         # climb_style = 'climb'
+#         build_chance = climb
+#     elif last_moves == ['up', 'up', 'side']:
+#         # climb_style = 'top'
+#         build_chance = top
+#     elif last_moves == ['side', 'side', 'side']:
+#         # climb_style = 'walk' 
+#         build_chance = walk
+#     elif last_moves == ['down', 'down', 'down']:
+#         # climb_style = 'descend' 
+#         build_chance = descend
+
+#     build_chance *= chance_weight
+
+#     return build_chance
+
+# def get_chance_by_relative_position(
+#         agent,
+#         layer,
+#         build_below = -1,
+#         build_aside = -1,
+#         build_above = 1,
+#         build_strength = 1):
+#     b, s, t = agent.analyze_relative_position(layer)
+#     build_chance = (build_below * b + build_aside * s + build_above * t) * build_strength
+#     return build_chance
+
+# def get_chances_by_density(
+#         agent, 
+#         pheromone_layer,
+#         radius,        
+#         build_if_over = 0,
+#         build_if_below = 5,
+#         erase_if_over = 27,
+#         erase_if_below = 0,
+#         build_strength = 1):
+#     """
+#     returns build_chance, erase_chance
+#     if layer nb value sum is between 
+#     """
+#     v = agent.scan_neighborhood_values(pheromone_layer, radius, agent.pose, format_values=0)
+
+    
+#     if build_if_over < v < build_if_below:
+#         build_chance = build_strength
+#     else:
+#         build_chance = 0
+#     if erase_if_over < v < erase_if_below:
+#         erase_chance = 0
+#     else:
+#         erase_chance = build_strength
+    
+#     return build_chance, erase_chance
 
 """
 # Examples of layers
