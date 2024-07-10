@@ -16,7 +16,10 @@ def create_random_array(n):
 def set_value_at_index(layer, index = [0,0,0], value = 1):
     # print('set value at index', index)
     i,j,k = index
-    layer.array[i][j][k] = value
+    try:
+        layer.array[i][j][k] = value
+    except Exception as e:
+        print('set value error:%s' %e)
     return layer
 
 def get_layer_value_at_index(layer, index = [0,0,0], reintroduce = True):
