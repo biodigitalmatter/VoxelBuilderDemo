@@ -9,12 +9,18 @@ import numpy as np
 DESIGN INTENTION
 1. sky ph as attractor volume and build boundary
 2. control build by ground density and 
+
+
+parameter changes
+reach to build >> 6
+dont reset
 """
 # generative behaviours can be stored in these 'algorithm' files, and called from main
 # as preset_variables and preset_functions
 # MOVE SETTINGS
 # move_dir_preference settings w pheromon weights
-
+"""    layers = [agent_space, air_moisture_layer, build_boundary_pheromon, clay_moisture_layer,  ground, queen_bee_pheromon, sky_ph_layer]
+"""
 
 # overal settings
 voxel_size = 40
@@ -22,10 +28,10 @@ agent_count = 15
 wait_to_diffuse = 1
 
 # BUILD OVERALL SETTINGS
-reach_to_build = 2
+reach_to_build = 6
 reach_to_erase = 2
 stacked_chances = True
-go_home_after_build = True
+reset_after_build = False
 
 # make boundary
 global margin_ratio
@@ -176,8 +182,8 @@ def move_agent(agent, layers):
 
     move_dir_prefer_to_side = 0.5
     move_dir_prefer_to_up = 1
-    move_dir_prefer_to_down = -0.2
-    move_dir_prefer_strength = 0
+    move_dir_prefer_to_down = 1
+    move_dir_prefer_strength = 3
 
     check_collision = False
 
@@ -224,7 +230,7 @@ def calculate_build_chances(agent, layers):
     returns build_chance, erase_chance
     """
 
-    sky_ph_layer = layers[6]
+    boundary = layers[2]
     ground = layers[4]
 
     build_chance = agent.build_chance
@@ -250,14 +256,14 @@ def calculate_build_chances(agent, layers):
     build_chance += c
     erase_chance += e
 
-    # sky_density
+    # boundary
     c, e = agent.get_chances_by_density(
-            sky_ph_layer,      
-            build_if_over = 4,
+            boundary,      
+            build_if_over = 9,
             build_if_below = 30,
-            erase_if_over = 30,
-            erase_if_below = 0,
-            build_strength = 1.2)
+            erase_if_over = 0,
+            erase_if_below = 8,
+            build_strength = 1)
     build_chance += c
     erase_chance += e
 
@@ -284,7 +290,7 @@ def build(agent, layers, build_chance, erase_chance, decay_clay = False):
     if agent.build_chance >= reach_to_build and build_condition == True:
         built = agent.build(ground)
         built2 = agent.build(clay_moisture_layer)
-        if built and go_home_after_build:
+        if built and reset_after_build:
             reset_agent = True
             if decay_clay:
                 clay_moisture_layer.decay_linear()
