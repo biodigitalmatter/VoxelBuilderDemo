@@ -1,5 +1,7 @@
 from voxel_builder_library import *
 from show_voxel_plt import *
+from class_agent import Agent
+from class_layer import Layer
 
 
 voxel_size = 10

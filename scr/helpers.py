@@ -81,39 +81,3 @@ def save_array(array, filename):
 def save_ptcloud(ptcloud, filename):
     with open(filename, 'w') as file:
         ptcloud.to_json(file, True)
-
-# # TEST
-
-# array = np.zeros([4,4,4])
-# array[:,:2,:1] = 1
-# print(array)
-# array.tofile('scr/data/test_save_as_file.json')
-
-# # save compas.Pointcloud
-# ptcloud = convert_array_to_compas_pointcloud(array)
-# filename_ptcloud = 'scr/data/compas_ptclouds/test_compas_point_cloud.json'
-# save_ptcloud(ptcloud, filename_ptcloud)
-# # read
-# with open(filename_ptcloud, 'r') as file:
-#     # ptcloud_imported = json.load(file)
-#     pointcloud_imported = Pointcloud.from_json(file)
-# print('imported Pointcloud object:\n', pointcloud_imported)
-
-# # save point array
-# pt_array = convert_array_to_points(array)
-# filename_pt_array = 'scr/data/test_save_point_array.json'
-# save_array(pt_array, filename_pt_array)
-# # read
-# with open(filename_pt_array, 'r') as file:
-#     point_list_imported = json.load(file)
-# print('imported point list:\n', point_list_imported)
-
-# # save pure numpy array:
-# filename_np_array = 'scr/data/test_np_array.json'
-# save_array(array, filename_np_array)
-# # read
-# with open(filename_np_array, 'r') as file:
-#     array_imported = json.load(file)
-# print('imported numpy array:\n', array_imported)
-
-    

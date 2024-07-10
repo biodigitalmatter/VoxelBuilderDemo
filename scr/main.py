@@ -9,7 +9,7 @@ from agent_algorithms_setup_2 import *
 # from agent_algorithms import *
 
 
-iterations = 3000
+iterations = 300
 
 note = 'setup_2'
 time__ = timestamp_now
