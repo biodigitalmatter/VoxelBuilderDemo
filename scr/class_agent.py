@@ -281,12 +281,14 @@ class Agent:
         exclude_pheromones = np.asarray(check_failed)
         return exclude_pheromones
     
-    def get_move_mask_26(self, ground_layer):
+    def get_move_mask_26(self, ground_layer, fly = False):
         """return ground direction logical_not mask
         True if can not move there
             nb_cell != 0 or nb_value_sum = 0
         False if can move there:
             nb_cell == 0 and nb_value_sum > 0
+
+        if fly == True, cells do not have to be neighbors of solid
         """
         # get nb cell indicies
         # nb_cells = self.get_nb_6_cell_indicies(self.pose)
@@ -297,26 +299,30 @@ class Agent:
         for nb_pose in cells_to_check:
             # check if nb cell is empty
             nb_value = get_layer_value_at_index(ground_layer, nb_pose) 
+            
             if nb_value == 0:
-                # check if nb cells have any face_nb cell which is solid
-                nbs_values = self.get_nb_6_cell_values(ground_layer, nb_pose)
-                if np.sum(nbs_values) > 0:
+                if not fly:
+                    # check if nb cells have any face_nb cell which is solid
+                    nbs_values = self.get_nb_6_cell_values(ground_layer, nb_pose)
+                    if np.sum(nbs_values) > 0:
+                        check_failed.append(False)
+                    else: 
+                        check_failed.append(True)
+                else:
                     check_failed.append(False)
-                else: 
-                    check_failed.append(True)
             else:
                 check_failed.append(True)
         exclude_pheromones = np.asarray(check_failed)
         return exclude_pheromones
     
-    def follow_pheromones(self, pheromone_cube, check_collision = False):
+    def follow_pheromones(self, pheromone_cube, check_collision = False, fly = False):
         # check ground condition
-        exclude_pheromones = self.get_move_mask_26(self.ground_layer)
+        exclude_pheromones = self.get_move_mask_26(self.ground_layer, fly)
         pheromone_cube[exclude_pheromones] = -1
         
         if check_collision:
             # collision_array = self.space_layer.get_merged_array_with(self.ground_layer)
-            exclude_pheromones = self.get_move_mask_26(self.space_layer)
+            exclude_pheromones = self.get_move_mask_26(self.space_layer, fly)
             pheromone_cube[exclude_pheromones] = -1
         
         if np.sum(pheromone_cube) == -26:
