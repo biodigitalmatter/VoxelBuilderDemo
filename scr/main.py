@@ -7,31 +7,23 @@ from class_agent import Agent
 from class_layer import Layer
 
 # import presets from here
-from agent_algorithms_setup_2 import *
+from agent_algorithms_setup_3 import *
 # from agent_algorithms import *
 
 
-iterations = 200
-
-note = 'setup_2'
+iterations = 300
+note = 'setup_3'
 time__ = timestamp_now
 _save = True
-save_json_every_nth = 50
+save_json_every_nth = 100
 plot = False
 
 # SETUP ENVIRONMENT
-voxel_size, agent_count, ground, queen_bee_pheromon, sky_ph_layer, sky_emission_layer, clay_moisture_layer, air_moisture_layer, agent_space = layer_env_setup(iterations)
+settings, layers, clay_moisture_layer= layer_env_setup(iterations)
 print(voxel_size)
+
 # MAKE AGENTS
-agents = []
-for i in range(agent_count):
-    agent = Agent(
-        space_layer = agent_space, ground_layer = ground,
-        track_layer = None, leave_trace=False, save_move_history=True)
-    x = np.random.randint(0, voxel_size)
-    y = np.random.randint(0, voxel_size)
-    agent.pose = [x,y,1]
-    agents.append(agent)
+agents = setup_agents(layers)
 
 # SIMULATION FUNCTION
 
@@ -40,28 +32,27 @@ def simulate(frame):
     # print('simulate.counter', simulate.counter)
 
     # 1. diffuse environment's layers
-    pheromon_loop(sky_ph_layer, emmission_array = sky_emission_layer, blocking_layer=ground, gravity_shift_bool = True)
-    pheromon_loop(air_moisture_layer, emmission_array = clay_moisture_layer.array, blocking_layer = ground)
+    diffuse_environment(layers)
 
     # 2. MOVE and BUILD
     for agent in agents:
         # MOVE
-        moved = move_agent(agent, queen_bee_pheromon, sky_ph_layer, air_moisture_layer)
+        moved = move_agent(agent, layers)
         # BUILD
         if moved:
-            build_chance, erase_chance = calculate_build_chances(agent, ground, queen_bee_pheromon, air_moisture_layer, sky_ph_layer)
-            built, erased = build(agent, build_chance, erase_chance, ground, clay_moisture_layer, False)
+            build_chance, erase_chance = calculate_build_chances(agent, layers)
+            built, erased = build(agent, layers, build_chance, erase_chance, False)
             if built and go_home_after_build:
                 reset_agent(agent, voxel_size)
         else:
             if go_home_after_build:
                 reset_agent(agent, voxel_size)
+    # 2.b clay dries
+    
 
-    clay_moisture_layer.decay_linear()
-
-    # 3. SHOW without ground layer
+    # 3. make frame plot
     if plot:
-        a1 = ground.array.copy()
+        a1 = clay_moisture_layer.array.copy()
         a1[:,:,0] = 0
 
         # scatter plot
@@ -69,7 +60,7 @@ def simulate(frame):
         # pts_built_2 = convert_array_to_points(agent_space.array, False)
 
         arrays_to_show = [pts_built]
-        colors = [ground.rgb]
+        colors = [clay_moisture_layer.rgb]
         for array, color in zip(arrays_to_show, colors):
             p = array.transpose()
             axes.scatter(p[0, :], p[1, :], p[2, :], marker = 's', s = 1, facecolor = color)
@@ -114,11 +105,11 @@ if __name__ == '__main__':
         axes.set_xticks([])
         axes.set_yticks([])
         axes.set_zticks([])
-        # a1 = ground.array
+        # a1 = clay_moisture_layer.array
         # a1[:,:,0] = 0
-        # ground.array = a1
-        p = ground.array.transpose()
-        axes.scatter(p[0, :], p[1, :], p[2, :], marker = 's', s = 1, facecolor = ground.rgb)
+        # clay_moisture_layer.array = a1
+        p = clay_moisture_layer.array.transpose()
+        axes.scatter(p[0, :], p[1, :], p[2, :], marker = 's', s = 1, facecolor = clay_moisture_layer.rgb)
 
         simulate.counter = 0
         anim = animation.FuncAnimation(fig, simulate, frames=iterations, interval = 1)

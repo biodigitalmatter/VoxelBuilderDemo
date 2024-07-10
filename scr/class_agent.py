@@ -408,8 +408,7 @@ class Agent:
     
     def get_chances_by_density(
             self, 
-            pheromone_layer,
-            radius,        
+            pheromone_layer,       
             build_if_over = 0,
             build_if_below = 5,
             erase_if_over = 27,
