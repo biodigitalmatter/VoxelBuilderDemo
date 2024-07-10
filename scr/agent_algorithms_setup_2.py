@@ -17,13 +17,13 @@ build: erase overly dense, build if low
 queen_bee_pheromon, sky_ph_layer, air_moisture_layer = ['','','']
 
 # overal settings
-voxel_size = 15
-agent_count = 10
+voxel_size = 60
+agent_count = 15
 wait_to_diffuse = 1
 
 # BUILD OVERALL SETTINGS
 reach_to_build = 5
-reach_to_erase = 5
+reach_to_erase = 2
 stacked_chances = True
 go_home_after_build = True
 
@@ -62,8 +62,8 @@ def layer_env_setup(iterations):
 
     ground.decay_linear_value = 1 / iterations / 10
     clay_moisture_layer.decay_linear_value = 1 / iterations / agent_count / 2
-    print(clay_moisture_layer.decay_linear_value)
-    print(ground.decay_linear_value)
+    # print(clay_moisture_layer.decay_linear_value)
+    # print(ground.decay_linear_value)
 
     air_moisture_layer.diffusion_ratio = 1/12
     air_moisture_layer.decay_ratio = 1/4
@@ -285,12 +285,12 @@ def calculate_build_chances(agent, ground, queen_bee_pheromon = None, air_moistu
 
     return build_chance, erase_chance
 
-def build(agent, build_chance, erase_chance, ground, clay_moisture_layer):
+def build(agent, build_chance, erase_chance, ground, clay_moisture_layer, decay_clay = False):
     """agent builds on construction_layer, if pheromon value in cell hits limit
     chances are either momentary values or stacked by history
     return bool"""
     if stacked_chances:
-        print(erase_chance)
+        # print(erase_chance)
         agent.build_chance += build_chance
         agent.erase_chance += erase_chance
     else:
@@ -306,7 +306,8 @@ def build(agent, build_chance, erase_chance, ground, clay_moisture_layer):
         built2 = agent.build(clay_moisture_layer)
         if built and go_home_after_build:
             reset_agent = True
-            clay_moisture_layer.decay_linear()
+            if decay_clay:
+                clay_moisture_layer.decay_linear()
     elif agent.erase_chance >= reach_to_erase and build_condition == True:
         erased = agent.erase(ground)
         erased2 = agent.erase(clay_moisture_layer)
