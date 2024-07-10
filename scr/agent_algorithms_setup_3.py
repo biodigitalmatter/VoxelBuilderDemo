@@ -15,18 +15,27 @@ DESIGN INTENTION
 # MOVE SETTINGS
 # move_dir_preference settings w pheromon weights
 
-queen_bee_pheromon, sky_ph_layer, air_moisture_layer = ['','','']
 
 # overal settings
-voxel_size = 40
+voxel_size = 50
 agent_count = 15
 wait_to_diffuse = 1
 
 # BUILD OVERALL SETTINGS
-reach_to_build = 5
+reach_to_build = 2
 reach_to_erase = 2
 stacked_chances = True
 go_home_after_build = True
+
+# make boundary
+global margin_ratio
+margin_ratio = 4
+def margin_boundaries(size, parts):
+    """return margin start and end integrers"""
+    n = parts
+    boundary_a = int(1 / n * size)
+    boundary_b = int((1 - 1 / n) * size)
+    return boundary_a, boundary_b
 
 
 def layer_env_setup(iterations):
@@ -34,9 +43,9 @@ def layer_env_setup(iterations):
     creates the simulation environment setup
     with preset values in the definition
     
-    return
-    voxel_size, agent_count, ground, queen_bee_pheromon, sky_ph_layer, sky_emission_layer, clay_moisture_layer, air_moisture_layer, agent_space
-
+    returns: [settings, layers, clai_moisture_layer]
+    layers = [agent_space, air_moisture_layer, build_boundary_pheromon, clay_moisture_layer,  ground, queen_bee_pheromon, sky_ph_layer]
+    settings = [agent_count, voxel_size]
     """
     ### LAYERS OF THE ENVIRONMENT
     rgb_sky = [29, 77, 222]
@@ -83,21 +92,58 @@ def layer_env_setup(iterations):
     clay_moisture_layer.array = ground.array.copy()
     pheromon_loop(air_moisture_layer, clay_moisture_layer.array, 3, ground)
 
-    # make sky
-    # sky_ph_layer
-    sky_emission_layer = Layer('sky_emmision', voxel_size=voxel_size, rgb = [i/255 for i in rgb_sky])
-    sky_emission_layer.array = np.zeros([voxel_size, voxel_size, voxel_size])
-    sky_emission_layer.array[:][:][voxel_size - 1] = 1
-    pheromon_loop(sky_ph_layer, sky_emission_layer.array, wait_to_diffuse, blocking_layer=ground, gravity_shift_bool = True)
+    # make boundary
+    a, b = margin_boundaries(voxel_size, margin_ratio)
 
-    return voxel_size, agent_count, ground, queen_bee_pheromon, sky_ph_layer, sky_emission_layer, clay_moisture_layer, air_moisture_layer, agent_space
+    build_boundary_pheromon = Layer('build_boundary_ph', voxel_size=voxel_size, rgb = [i/255 for i in rgb_sky])
+    build_boundary_pheromon.array = np.zeros([voxel_size, voxel_size, voxel_size])
+    build_boundary_pheromon.array[a:b][a:b][0:voxel_size - 1] = 1
+    
+    # pheromon_loop(sky_ph_layer, build_boundary_pheromon.array, wait_to_diffuse, blocking_layer=ground, gravity_shift_bool = True)
+
+    # WRAP ENVIRONMENT
+    layers = [agent_space, air_moisture_layer, build_boundary_pheromon, clay_moisture_layer,  ground, queen_bee_pheromon, sky_ph_layer]
+    settings = [agent_count, voxel_size]
+    return settings, layers, clay_moisture_layer
+
+def diffuse_environment(layers):
+
+    agent_space, air_moisture_layer, build_boundary_pheromon, clay_moisture_layer,  ground, queen_bee_pheromon, sky_ph_layer = layers
+
+    pheromon_loop(sky_ph_layer, emmission_array = build_boundary_pheromon, blocking_layer=ground, gravity_shift_bool = True)
+    pheromon_loop(air_moisture_layer, emmission_array = clay_moisture_layer.array, blocking_layer = ground)
+    pass
+
+def setup_agents(layers):
+    agent_space = layers[0]
+    ground = layers[4]
+    agents = []
+    for i in range(agent_count):
+        # create object
+        agent = Agent(
+            space_layer = agent_space, ground_layer = ground,
+            track_layer = None, leave_trace=False, save_move_history=True)
+        
+        # drop in the middle
+        reset_agent(agent, voxel_size)
+
+        agents.append(agent)
+    return agents
+
+def reset_agent(agent, voxel_size):
+    # centered setup
+    a, b = margin_boundaries(voxel_size, margin_ratio + 2)
+    
+    x = np.random.randint(a, b)
+    y = np.random.randint(a, b)
+    agent.pose = [x,y,1]
+
+    agent.build_chance = 0
+    agent.erase_chance = 0
+    agent.move_history = []
 
 
-def move_agent(
-        agent,        
-        queen_bee_pheromon = None,
-        sky_ph_layer = None,
-        air_moisture_layer = None):
+def move_agent(agent, layers):
     """move agents in a direction, based on several pheromons weighted in different ratios.
     1. random direction pheromon
     2. queen_bee_pheromon = None : Layer class object,
@@ -117,6 +163,7 @@ def move_agent(
 
 
     """
+    agent_space, air_moisture_layer, build_boundary_pheromon, clay_moisture_layer,  ground, queen_bee_pheromon, sky_ph_layer = layers
 
     # PRESETS
     move_ph_random = 0.2
@@ -167,7 +214,7 @@ def move_agent(
     moved = agent.follow_pheromones(cube, check_collision)
     return moved
 
-def calculate_build_chances(agent, ground, queen_bee_pheromon = None, air_moisture_layer = None, sky_ph_layer = None):
+def calculate_build_chances(agent, layers):
     """PLACEHOLDER NOT REMOVED!
     build_chance, erase_chance = [0.2,0]
     function operating with Agent and Layer class objects
@@ -177,116 +224,48 @@ def calculate_build_chances(agent, ground, queen_bee_pheromon = None, air_moistu
     returns build_chance, erase_chance
     """
 
+    sky_ph_layer = layers[6]
+    ground = layers[4]
 
-    # # PLACEHOLDER chance settings
-    # """dont forget to delete :D"""
-    # build_chance = 0.2
-    # erase_chance = 0
     build_chance = agent.build_chance
     erase_chance = agent.erase_chance
 
-    # LAST MOVE CHANCE
-    climb = 0.5
-    top = 2
-    walk = 0.1
-    descend = -0.05
-    build_strength__last_move = 0
-
     # RELATIVE POSITION
-    build_below = -1
-    build_aside = -1
-    build_above = 1
-    build_strength__relative_position = 0
-
-    # DENSITY OF BUILT SURROUNDING
-    # NOTE this could be directional scanning perhaps
-    erase_if_below__built_density = 27
-    erase_if_over__built_density = 15
-    build_if_below__built_density = 10
-    build_if_over__built_density = 0
-    density_scan_radius__built_density = 1
-    build_strength__built_density = 2
-
-    # DENSITY OF QUEEN BEE PHEROMONES
-    build_if_over__queen_bee = 0.005
-    build_if_below__queen_bee = 0.05
-    build_strength__queen_bee_ph = 0
-    density_scan_radius__queen_bee_ph = 0
-
-    # DENSITY OF AIR MOISTURE
-    build_if_over__air_moisture = 0.005
-    build_if_below__air_moisture = 0.05
-    build_strength__air_moisture = 0
-    density_scan_radius__air_moisture = 0
-
-    # DENSITY OF SKY PH
-    build_if_over__sky_ph = 0.005
-    build_if_below__sky_ph = 0.05
-    build_strength__sky_ph = 0
-    density_scan_radius__sky_ph = 0
-
-    c = agent.get_chance_by_climb_style( 
-        climb,
-        top,
-        walk,
-        descend,
-        build_strength__last_move)
-    build_chance += c
-
     c = agent.get_chance_by_relative_position(
         ground,
-        build_below,
-        build_aside,
-        build_above,
-        build_strength__relative_position)
+        build_below = 2,
+        build_aside = 1,
+        build_above = 1,
+        build_strength = 0.1)
     build_chance += c
 
-    # ground surrrounding
-    c, e = agent.get_chances_by_density( 
-        ground,
-        density_scan_radius__built_density,        
-        build_if_over__built_density,
-        build_if_below__built_density,
-        erase_if_over__built_density,
-        erase_if_below__built_density,
-        build_strength = build_strength__built_density)
-    build_chance += c
-    erase_chance += e
-
-    # queen bee
+    # surrrounding ground_density
     c, e = agent.get_chances_by_density(
-        queen_bee_pheromon,
-        density_scan_radius__queen_bee_ph,
-        build_if_over__queen_bee,
-        build_if_below__queen_bee,
-        build_strength__queen_bee_ph)
-    build_chance += c
-    erase_chance += e
-
-    # air_moisture
-    c, e = agent.get_chances_by_density(
-        air_moisture_layer,
-        density_scan_radius__air_moisture,
-        build_if_over__air_moisture,
-        build_if_below__air_moisture,
-        build_strength__air_moisture,
-        )
+            ground,      
+            build_if_over = 0,
+            build_if_below = 15,
+            erase_if_over = 21,
+            erase_if_below = 30,
+            build_strength = 1)
     build_chance += c
     erase_chance += e
 
     # sky_density
-    c, e = agent.get_chances_by_density( 
-        sky_ph_layer,
-        build_if_over__sky_ph,
-        build_if_below__sky_ph,
-        build_strength__sky_ph,
-        density_scan_radius__sky_ph)
+    c, e = agent.get_chances_by_density(
+            sky_ph_layer,      
+            build_if_over = 4,
+            build_if_below = 30,
+            erase_if_over = 30,
+            erase_if_below = 0,
+            build_strength = 1.2)
     build_chance += c
     erase_chance += e
 
     return build_chance, erase_chance
 
-def build(agent, build_chance, erase_chance, ground, clay_moisture_layer, decay_clay = False):
+def build(agent, layers, build_chance, erase_chance, decay_clay = False):
+    ground = layers[4]
+    clay_moisture_layer = layers[3]
     """agent builds on construction_layer, if pheromon value in cell hits limit
     chances are either momentary values or stacked by history
     return bool"""
@@ -316,11 +295,3 @@ def build(agent, build_chance, erase_chance, ground, clay_moisture_layer, decay_
     #     built = False
     #     erased = False
     return built, erased
-
-def reset_agent(agent, voxel_size):
-    x = np.random.randint(0, voxel_size)
-    y = np.random.randint(0, voxel_size)
-    agent.pose = [x,y,1]
-    agent.build_chance = 0
-    agent.erase_chance = 0
-    agent.move_history = []
