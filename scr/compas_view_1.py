@@ -59,7 +59,7 @@ try:
 
         viewer = App(width=600, height=600)
         viewer.view.camera.rx = -60
-        viewer.view.camera.rz = 30
+        viewer.view.camera.rz = 100
         viewer.view.camera.ty = -2
         viewer.view.camera.distance = 20
 
