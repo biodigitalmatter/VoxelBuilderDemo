@@ -43,8 +43,8 @@ def get_nth_newest_file_in_folder(folder_path, n):
 # params
 Nth = 0
 show = True
-radius = 0.25
-folder_path = os.path.join(os.getcwd(), 'scr/data/compas_pointclouds')
+radius = 1
+folder_path = os.path.join(os.getcwd(), 'data/json/compas_pointclouds')
 
 file = get_nth_newest_file_in_folder(folder_path, Nth)
 
