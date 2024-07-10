@@ -1,5 +1,13 @@
 # Notes
 
+## 100724
+
+1. sky ph as attractor volume and build boundary
+2. where should agents enter: zone, or agents fall / agents fly
+3. agents dont reset
+4. build by ground distance pheromon
+5. split loaded json data in gh
+
 ## 240708
 
 generative behaviours can be stored in these 'algorithm' files, and called from main
