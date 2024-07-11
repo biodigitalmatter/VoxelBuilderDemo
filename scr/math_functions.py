@@ -31,3 +31,10 @@ def remap(x, output_domain, input_domain = [0,1]):
     a, b = output_domain
     y = (b - a)/(j - i) * x
     return y
+
+def margin_boundaries(size, n):
+    """return margin start and end integrers
+    margin size = 1/n """
+    boundary_a = int(1 / n * size)
+    boundary_b = int((1 - 1 / n) * size)
+    return boundary_a, boundary_b

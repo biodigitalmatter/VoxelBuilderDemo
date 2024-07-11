@@ -7,11 +7,11 @@ from class_agent import Agent
 from class_layer import Layer
 
 # import presets from here
-from agent_algorithms_setup_4b import *
+from scr.agent_algorithms.simple_goals_fill_edges_1 import *
 
 
 iterations = 1000
-note = 'setup_4b'
+note = 'sg_fill_corner_1'
 time__ = timestamp_now
 _save = True
 save_json_every_nth = 200
@@ -19,7 +19,7 @@ plot = False
 trim_floor = False
 
 # SETUP ENVIRONMENT
-settings, layers, clay_moisture_layer= layer_env_setup(iterations)
+settings, layers, clay_layer= layer_env_setup(iterations)
 print(voxel_size)
 
 # MAKE AGENTS
@@ -52,7 +52,7 @@ def simulate(frame):
 
     # 3. make frame for animation
     if save_animation:
-        a1 = clay_moisture_layer.array.copy()
+        a1 = clay_layer.array.copy()
         a1[:,:,0] = 0
 
         # scatter plot
@@ -60,7 +60,7 @@ def simulate(frame):
         # pts_built_2 = convert_array_to_points(agent_space.array, False)
 
         arrays_to_show = [pts_built]
-        colors = [clay_moisture_layer.rgb]
+        colors = [clay_layer.rgb]
         for array, color in zip(arrays_to_show, colors):
             p = array.transpose()
             axes.scatter(p[0, :], p[1, :], p[2, :], marker = 's', s = 1, facecolor = color)
@@ -73,10 +73,10 @@ def simulate(frame):
         if simulate.counter % save_json_every_nth == 0:
             if trim_floor:
                 # trim floor
-                a1 = clay_moisture_layer.array.copy()
+                a1 = clay_layer.array.copy()
                 a1[:,:,0] = 0
             else:
-                a1 = clay_moisture_layer.array.copy()
+                a1 = clay_layer.array.copy()
             # save points
             sortedpts, values = sort_pts_by_values(a1, multiply=100)
             list_to_dump = {'pt_list' : sortedpts, 'values' : values}
@@ -116,11 +116,11 @@ if __name__ == '__main__':
         axes.set_xticks([])
         axes.set_yticks([])
         axes.set_zticks([])
-        # a1 = clay_moisture_layer.array
+        # a1 = clay_layer.array
         # a1[:,:,0] = 0
-        # clay_moisture_layer.array = a1
-        p = clay_moisture_layer.array.transpose()
-        axes.scatter(p[0, :], p[1, :], p[2, :], marker = 's', s = 1, facecolor = clay_moisture_layer.rgb)
+        # clay_layer.array = a1
+        p = clay_layer.array.transpose()
+        axes.scatter(p[0, :], p[1, :], p[2, :], marker = 's', s = 1, facecolor = clay_layer.rgb)
 
         suffix = '%s_a%s_i%s' %(note, agent_count, iterations)
 
@@ -149,7 +149,7 @@ if __name__ == '__main__':
             axes.set_yticks([])
             axes.set_zticks([])
             
-            a1 = clay_moisture_layer.array.copy()
+            a1 = clay_layer.array.copy()
             a1[:,:,0] = 0
 
             # scatter plot
@@ -157,7 +157,7 @@ if __name__ == '__main__':
             # pts_built_2 = convert_array_to_points(agent_space.array, False)
 
             arrays_to_show = [pts_built]
-            colors = [clay_moisture_layer.rgb]
+            colors = [clay_layer.rgb]
             for array, color in zip(arrays_to_show, colors):
                 p = array.transpose()
                 axes.scatter(p[0, :], p[1, :], p[2, :], marker = 's', s = 1, facecolor = color)

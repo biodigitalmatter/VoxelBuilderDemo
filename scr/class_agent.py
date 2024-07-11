@@ -138,14 +138,7 @@ class Agent:
         self.relative_booleans_bottom_up = [below, aside, above] 
         return below, aside, above
     
-    direction_dict_np = {
-    'up' : np.asarray([0,0,1]),
-    'left' : np.asarray([-1,0,0]),
-    'down' : np.asarray([0,0,-1]),
-    'right' : np.asarray([1,0,0]),
-    'front' : np.asarray([0,-1,0]),
-    'back' : np.asarray([0,1,0])
-}
+
 
 
     def random_move(self, voxel_size = 0):
@@ -569,3 +562,13 @@ class Agent:
             erased = self.erase(ground)
             self.erase(clay_moisture_layer)
         return built, erased
+
+
+direction_dict_np = {
+    'up' : np.asarray([0,0,1]),
+    'left' : np.asarray([-1,0,0]),
+    'down' : np.asarray([0,0,-1]),
+    'right' : np.asarray([1,0,0]),
+    'front' : np.asarray([0,-1,0]),
+    'back' : np.asarray([0,1,0])
+}
