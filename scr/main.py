@@ -17,7 +17,7 @@ _save = True
 save_json_every_nth = 100
 trim_floor = False
 
-run_animation = False
+run_animation = True
 save_animation = False
 # SETUP ENVIRONMENT
 settings, layers, _ = layer_env_setup(iterations)
@@ -93,6 +93,7 @@ def scatter_plot(axes, layers):
         pts = convert_array_to_points(layer.array, False)
         p = pts.transpose()
         axes.scatter(p[0, :], p[1, :], p[2, :], marker = 's', s = 1, facecolor = color)
+
         
 simulate.counter = 0
 ### PLOTTING

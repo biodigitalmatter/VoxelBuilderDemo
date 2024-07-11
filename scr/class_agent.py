@@ -165,13 +165,14 @@ class Agent:
         edge is defined by number of cells filled
         and larger than [a] of 8 nbs in level
         larger than [b]  9 nbs below"""
+        print(self.pose)
         v = self.get_nb_26_cell_values(layer, self.pose, False)
         print(v)
         # top = v[:9]
         mid = v[9:17]
-        print(mid)
+        # print(mid)
         down = v[17:]
-        print(down)
+        # print(down)
         print(sum(down),sum(mid))
         if sum(down) > below and sum(mid) > in_level:
             return True
@@ -324,6 +325,55 @@ class Agent:
         x,y,z = pose
         n = offset_radius
         v = array[x - n : x + n][y - n : y + n][z - n : z - n]
+        if format_values == 0:
+            return np.sum(v)
+        elif format_values == 1:
+            return np.average(v)
+        elif format_values == 2:
+            return v
+        else: return v
+
+    def scan_horizontal_values(self, array, offset_radius = 1, vertical_shift = - 1, pose = None, format_values = 0):
+        """takes sub array around pose, in 'offset_radius'
+        format values: returns sum '0', avarage '1', or all_values: 'None'"""
+        if isinstance(pose, bool):
+            pose = self.pose
+        x,y,z = pose
+        n = offset_radius
+        v = array[x - n : x + n][y - n : y + n][z + vertical_shift]
+        if format_values == 0:
+            return np.sum(v)
+        elif format_values == 1:
+            return np.average(v)
+        elif format_values == 2:
+            return v
+        else: return v
+
+    def scan_x_vertical_values(self, array, offset_radius = 1, h_shift = 1, pose = None, format_values = 0):
+        """takes sub array around pose, in 'offset_radius'
+        format values: returns sum '0', avarage '1', or all_values: 'None'"""
+        if isinstance(pose, bool):
+            pose = self.pose
+        x,y,z = pose
+        n = offset_radius
+        v = array[x + h_shift][y - n : y + n][z - n : z - n]
+        if format_values == 0:
+            return np.sum(v)
+        elif format_values == 1:
+            return np.average(v)
+        elif format_values == 2:
+            return v
+        else: return v
+
+
+    def scan_y_vertical_values(self, array, offset_radius = 1, h_shift = 1, pose = None, format_values = 0):
+        """takes sub array around pose, in 'offset_radius'
+        format values: returns sum '0', avarage '1', or all_values: 'None'"""
+        if isinstance(pose, bool):
+            pose = self.pose
+        x,y,z = pose
+        n = offset_radius
+        v = array[x - n : x + n][y + h_shift][z - n : z - n]
         if format_values == 0:
             return np.sum(v)
         elif format_values == 1:

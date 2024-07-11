@@ -18,12 +18,12 @@ ground_layer is used for blocking air and movement.
 """
 
 # overal settings
-voxel_size = 20
-agent_count = 15
+voxel_size = 30
+agent_count = 5
 
 # setup variables
 enter_corner_width = 25
-wall_params = [5, voxel_size-6, voxel_size-5, voxel_size-1, 0, 20] # x1,x2,y1,y2,z1,z2
+wall_params = [20,25,20,25, 0, 20] # x1,x2,y1,y2,z1,z2
 
 # BUILD SETTINGS
 reach_to_build = 0.9
@@ -36,8 +36,8 @@ min_in_level = 2
 min_below = 7
 
 # MOVE_PRESETS
-random_pheromon_weigth = 0.2
-air_layer_pheromon_weigth = 1
+random_pheromon_weigth = 0
+air_layer_pheromon_weigth = 1.5
 
 move_up = 1
 move_side = 0.8
@@ -78,7 +78,7 @@ def layer_env_setup(iterations):
 
     air_layer.diffusion_ratio = 1/7
     air_layer.decay_ratio = 1/12
-    air_layer.gradient_resolution = 100000
+    air_layer.gradient_resolution = 1000000
 
 
     ### CREATE ENVIRONMENT
@@ -119,7 +119,7 @@ corner size = enter_corner_width
 """
 def setup_agents(layers):
     agent_space = layers[0]
-    ground_layer = layers[-1]
+    ground_layer = layers[3]
     agents = []
     for i in range(agent_count):
         # create object
