@@ -2,46 +2,24 @@
 import os
 from compas.colors import Color
 from compas.geometry import Pointcloud
+from helpers import *
 
-def get_newest_file_in_folder(folder_path):
-    try:
-        # Get a list of files in the folder
-        files = [os.path.join(folder_path, filename) for filename in os.listdir(folder_path)]
-        # print(files)
-        # Sort the files by change time (modification time) in descending order
-        # files.sort(key=lambda x: os.path.getmtime(x), reverse=True)
-        print('files in folder:')
-        print(files)
-        # Return the newest file
-        if files:
-            return files[0]
-        else:
-            print("Folder is empty.")
-            return None
-    except Exception as e:
-        print(f"Error: {e}")
-        return None
+import argparse
+# Create the parser
+parser = argparse.ArgumentParser(description="provide int variable: i.")
+# Add an argument
+parser.add_argument('nth', type=int, help='i : nth json to open')
+try:
+    # Parse the command-line arguments
+    args = parser.parse_args()
+    Nth = int(args.nth)
+except Exception as e:
+    # print()
+    Nth = 0
 
-def get_nth_newest_file_in_folder(folder_path, n):
-    try:
-        # Get a list of files in the folder
-        files = [os.path.join(folder_path, filename) for filename in os.listdir(folder_path)]
-
-        # Sort the files by change time (modification time) in descending order
-        files.sort(key=lambda x: os.path.getmtime(x), reverse=True)
-
-        # Return the newest file
-        if files:
-            return files[min(n, len(files))]
-        else:
-            print("Folder is empty.")
-            return None
-    except Exception as e:
-        print(f"Error: {e}")
-        return None
 
 # params
-Nth = 0
+# Nth = 0
 show = True
 radius = 1
 folder_path = os.path.join(os.getcwd(), 'data/json/compas_pointclouds')
