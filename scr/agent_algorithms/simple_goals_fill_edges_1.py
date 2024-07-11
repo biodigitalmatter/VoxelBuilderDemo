@@ -37,7 +37,7 @@ min_below = 7
 
 # MOVE_PRESETS
 random_pheromon_weigth = 0
-air_layer_pheromon_weigth = 1.5
+air_layer_pheromon_weigth = -1.5
 
 move_up = 1
 move_side = 0.8
@@ -77,7 +77,7 @@ def layer_env_setup(iterations):
     clay_layer.decay_linear_value = 1 / iterations / agent_count / 2
 
     air_layer.diffusion_ratio = 1/7
-    air_layer.decay_ratio = 1/12
+    air_layer.decay_ratio = 1/5
     air_layer.gradient_resolution = 1000000
 
 

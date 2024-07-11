@@ -111,7 +111,7 @@ if __name__ == '__main__':
         axes.set_xticks([])
         axes.set_yticks([])
         axes.set_zticks([])
-        scatter_plot(axes, layers=[clay_layer, layers[0]])
+        scatter_plot(axes, layers=[air_layer, layers[0]])
         
         suffix = '%s_a%s_i%s' %(note, agent_count, iterations)
 
