@@ -59,14 +59,15 @@ class Agent:
             raise ValueError("Chance must be a number")
         self._erase_chance = value
 
-    def move(self, i, voxel_size = 0):
+    def move(self, i, reintroduce = False):
         """move to a neighbor voxel based on the compas dictonary key index """
         v = self.compass_array[self.compass_keys[i]]
         self.pose += v
         # reintroduce agent if n nonzero
-        n = voxel_size
-        if n != 0:
-            self.pose = np.mod(self.pose, np.asarray([n,n,n]))
+        if reintroduce:
+            self.pose = self.reintroduce_index(self.pose)
+        else:
+            self.pose = self.keep_index_in_bounds(self.pose)
         if self.save_move_history: 
             self.move_history.append(self.compass_keys[i])
     
@@ -139,6 +140,24 @@ class Agent:
         return below, aside, above
     
 
+    def get_cube_array_indices(self, self_contain = False):
+        """list of 26 neighbor cell indicies_list, ordered: top 9 -middle 8 -bottom 9"""
+        # horizontal
+        f = direction_dict_np['front']
+        b = direction_dict_np['back']
+        l = direction_dict_np['left']
+        r = direction_dict_np['right']
+        u = direction_dict_np['up']
+        d = direction_dict_np['down']
+        # first_story in level:
+        story_1 = [ f + l, f, f + r, l, r, b + l, b, b + r]
+        story_0 = [i + d for i in story_1]
+        story_2 = [i + u for i in story_1]
+        if self_contain:
+            nbs_w_corners = story_2 + [u] + story_1 + [np.asarray([0,0,0])] + story_0 + [d]
+        else:
+            nbs_w_corners = story_2 + [u] + story_1 + story_0 + [d]
+        return nbs_w_corners
 
 
     def random_move(self, voxel_size = 0):
@@ -187,18 +206,41 @@ class Agent:
         direction_preference =  np.asarray(u + m + b)
         return direction_preference
     
-    def get_nb_6_cell_indicies(self, pose):
+    def reintroduce_index(self, index):
+        """returns index list as remainers of voxel size"""
+        n = self.voxel_size
+        x,y,z = index
+        x = x % n
+        y = y % n
+        z = z % n
+        return [x,y,z]
+
+    def keep_index_in_bounds(self, index):
+        """returns index list as remainers of voxel size"""
+        n = self.voxel_size
+        index = np.maximum(np.asarray([n,n,n]), np.asarray(index)).tolist()
+        return index
+    
+    def get_nb_6_cell_indicies(self, pose, reintroduce = False):
         """returns the list of nb cell indexes"""
         nb_cell_index_list = []
+        n = self.voxel_size
         for key in self.compass_array.keys():
             d = self.compass_array[key]
-            nb_cell_index_list.append( d + pose)
+            place = d + pose
+            if reintroduce:
+                place = self.reintroduce_index(place)
+            nb_cell_index_list.append( place)
         return nb_cell_index_list
     
-    def get_nb_26_cell_indicies(self, pose):
+    def get_nb_26_cell_indicies(self, pose, reintroduce = False):
         """returns the list of nb cell indexes"""
         nb_cell_index_list = []
+        
         for d in self.cube_array:
+            place = d + pose
+            if reintroduce:
+                place = self.reintroduce_index(place)
             nb_cell_index_list.append(d + pose)
         return nb_cell_index_list
 
@@ -274,8 +316,15 @@ class Agent:
         exclude_pheromones = np.asarray(check_failed)
         return exclude_pheromones
     
-    def get_move_mask_26(self, ground_layer, fly = False):
-        """return ground direction logical_not mask
+    def get_move_mask_26(self, ground_layer,  fly = False, reintroduce = True):
+        """
+        make logical_not mask
+        check if agent can not move to the cell:
+        to be able to move there: 
+        1. cell must not be solid (grond_layer)
+        2. cell must have a face nb with the ground layer
+        
+        return nb cells array, True if cant move 
         True if can not move there
             nb_cell != 0 or nb_value_sum = 0
         False if can move there:
@@ -288,34 +337,115 @@ class Agent:
         nb_cells = self.get_nb_26_cell_indicies(self.pose)
         cells_to_check = list(nb_cells)
         check_failed = []
+        n = self.voxel_size
         # iterate through nb cells
         for nb_pose in cells_to_check:
-            # check if nb cell is empty
-            nb_value = get_layer_value_at_index(ground_layer, nb_pose) 
+            failed = True
+            # dont check if nb cell is outside the boundary
+
+            if reintroduce:
+                # check if nb cell is empty
+                nb_value = get_layer_value_at_index(ground_layer, nb_pose) 
+                if nb_value == 0:
+                    if not fly:
+                        # check if nb cells have any face_nb cell which is solid
+                        nbs_values = self.get_nb_6_cell_values(ground_layer, nb_pose)
+                        if np.sum(nbs_values) > 0:
+                            failed = False
+                    else:
+                        failed = False
+            # check if nb cell is outside the boundary
             
-            if nb_value == 0:
-                if not fly:
-                    # check if nb cells have any face_nb cell which is solid
-                    nbs_values = self.get_nb_6_cell_values(ground_layer, nb_pose)
-                    if np.sum(nbs_values) > 0:
-                        check_failed.append(False)
-                    else: 
-                        check_failed.append(True)
-                else:
-                    check_failed.append(False)
             else:
-                check_failed.append(True)
+                x,y,z = nb_pose
+                if 0 <= x < n and 0 <= y < n and 0 <= z < n: 
+                    # check if nb cell is empty
+                    nb_value = get_layer_value_at_index(ground_layer, nb_pose) 
+                    if nb_value == 0:
+                        if not fly:
+                            # check if nb cells have any face_nb cell which is solid
+                            nbs_values = self.get_nb_6_cell_values(ground_layer, nb_pose)
+                            if np.sum(nbs_values) > 0:
+                                failed = False
+                        else:
+                            failed = False
+            check_failed.append(failed)
+        
         exclude_pheromones = np.asarray(check_failed)
         return exclude_pheromones
     
-    def follow_pheromones(self, pheromone_cube, check_collision = False, fly = False):
+
+    def get_erase_mask_6(self, ground_layer):
+        """
+        make logical_not mask
+        check if agent can erase the cell:
+        to be able to erase::
+        0. 3 x 3 nb cube of agent
+        1. cell must be solid (grond_layer)
+        2. cell must be in boundary
+        return 26 nb cells array, True if cant erase 
+        
+        """
+        # get nb cell indicies
+        # nb_cells = self.get_nb_6_cell_indicies(self.pose)
+        nb_cells = self.get_nb_6_cell_indicies(self.pose)
+        cells_to_check = list(nb_cells)
+        check_failed = []
+        n = self.voxel_size
+        # iterate through nb cells
+        for nb_pose in cells_to_check:
+            failed = True
+            # check if nb cell is outside the boundary
+            x,y,z = nb_pose
+            if 0 <= x < n and 0 <= y < n and 0 <= z < n:
+                # check if nb cell is empty
+                nb_value = get_layer_value_at_index(ground_layer, nb_pose) 
+                if nb_value == 1:
+                    failed = False
+            check_failed.append(failed)
+        exclude_pheromones = np.asarray(check_failed)
+        return exclude_pheromones
+    
+
+    def get_erase_mask_26(self, ground_layer):
+        """
+        make logical_not mask
+        check if agent can erase the cell:
+        to be able to erase::
+        0. 3 x 3 nb cube of agent
+        1. cell must be solid (grond_layer)
+        2. cell must be in boundary
+        return 26 nb cells array, True if cant erase 
+        
+        """
+        # get nb cell indicies
+        # nb_cells = self.get_nb_6_cell_indicies(self.pose)
+        nb_cells = self.get_nb_26_cell_indicies(self.pose)
+        cells_to_check = list(nb_cells)
+        check_failed = []
+        n = self.voxel_size
+        # iterate through nb cells
+        for nb_pose in cells_to_check:
+            failed = True
+            # check if nb cell is outside the boundary
+            x,y,z = nb_pose
+            if 0 <= x < n and 0 <= y < n and 0 <= z < n:
+                # check if nb cell is empty
+                nb_value = get_layer_value_at_index(ground_layer, nb_pose) 
+                if nb_value == 1:
+                    failed = False
+            check_failed.append(failed)
+        exclude_pheromones = np.asarray(check_failed)
+        return exclude_pheromones
+    
+    def follow_pheromones(self, pheromone_cube, check_collision = False, fly = False, reintroduce = False):
         # check ground condition
-        exclude_pheromones = self.get_move_mask_26(self.ground_layer, fly)
+        exclude_pheromones = self.get_move_mask_26(self.ground_layer, fly, reintroduce)
         pheromone_cube[exclude_pheromones] = -1
         
         if check_collision:
             # collision_array = self.space_layer.get_merged_array_with(self.ground_layer)
-            exclude_pheromones = self.get_move_mask_26(self.space_layer, fly)
+            exclude_pheromones = self.get_move_mask_26(self.space_layer, fly, reintroduce)
             pheromone_cube[exclude_pheromones] = -1
         
         if np.sum(pheromone_cube) == -26:
@@ -490,19 +620,24 @@ class Agent:
             bool_ = False
         return bool_
     
-    def erase(self, layer, only_face_nb = True):
-
-
+    def erase(self, layer, only_face_nb = True, reintroduce = False):
+        """erase from layer
+        no reintroduction"""
         if only_face_nb:
-            v = self.get_nb_6_cell_values(self.ground_layer, self.pose, reintroduce=False)
-            places = self.get_nb_6_cell_indicies(self.pose)
+            v = self.get_nb_6_cell_values(layer, self.pose, reintroduce)
+            mask = self.get_erase_mask_6(layer, reintroduce)
+            v[mask] = -1
+            places = self.get_nb_6_cell_indicies(self.pose, reintroduce)
             places = np.asarray(places)
             choice = np.argmax(v)
             place = places[choice]    
         else:
-            v = self.get_nb_26_cell_values()
+            v = self.get_nb_26_cell_values(layer)
+            mask = self.get_erase_mask_26(layer, reintroduce)
+            v[mask] = -1
             choice = np.argmax(v)
-            cube = self.get_nb_26_cell_indicies(self.pose)
+            cube = self.get_nb_26_cell_indicies(self.pose, reintroduce)
+
             vector = cube[choice]
             place = self.pose + vector
        

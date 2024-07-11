@@ -1,5 +1,5 @@
 #pass
-from voxel_builder_library import pheromon_loop, make_solid_box_z
+from voxel_builder_library import pheromon_loop, make_solid_box_z, make_solid_box_xxyyzz
 from class_agent import Agent
 from class_layer import Layer
 # from voxel_builder_library import get_chance_by_climb_style, get_chance_by_relative_position, get_chances_by_density
@@ -10,6 +10,11 @@ DESIGN INTENTION
 
 fill up the edges
 
+# notes:
+clay_layer: represent clay volume, float array, decays linearly per age.
+ground_layer: contains clay volume + floor, is integrer array, doesnt decay
+when build, both is built.
+ground_layer is used for blocking air and movement.
 """
 
 # overal settings
@@ -19,6 +24,7 @@ wait_to_diffuse = 1
 
 # setup variables
 enter_corner_width = 8
+wall_params = [5, voxel_size-6, 30, voxel_size-1, 1, 20] # x1,x2,y1,y2,z1,z2
 
 # BUILD OVERALL SETTINGS
 reach_to_build = 1
@@ -67,13 +73,14 @@ def layer_env_setup(iterations):
     # make ground_layer
     ground_layer_level_Z = 0
     ground_layer.array = make_solid_box_z(voxel_size, ground_layer_level_Z)
-    # wall = make_solid_box_xxyyzz(voxel_size, 20,23,20,23,0,3)
-    # ground_layer.array += wall
-    ground_layer.rgb = [207/255, 179/255, 171/255]
+    x1,x2,y1,y2,z1,z2 = wall_params
+    
+    # add_clay_block
+    wall = make_solid_box_xxyyzz(voxel_size, x1,x2,y1,y2,z1,z2 )
+    clay_layer.array += wall
 
-    # set ground_layer moisture
-    clay_layer.array = ground_layer.array.copy()
-    pheromon_loop(air_layer, emmission_array = clay_layer.array,i = 3, blocking_layer = ground_layer)
+    # emmitt the clay in the air a little 
+    pheromon_loop(air_layer, emmission_array = clay_layer.array, i = 3, blocking_layer = ground_layer)
     
     # WRAP ENVIRONMENT
     layers = [agent_space, air_layer, clay_layer, ground_layer]
@@ -146,55 +153,30 @@ def move_agent(agent, layers):
 
 
     """
-    agent_space, air_layer, build_boundary_pheromon, clay_layer,  ground_layer, queen_bee_pheromon, sky_ph_layer = layers
+    # agent_space, air_layer, clay_layer,  ground_layer = layers
+    air_layer = layers[1]
+    # MOVE_PRESETS
+    random_pheromon_weigth = 0.2
+    air_layer_pheromon_weigth = 1
 
-    # PRESETS
-    move_ph_random = 0.2
+    move_up = 1
+    move_side = 0.5
+    move_down = 0.1
+    move_preference_weigth = 0.5
 
-    move_ph_queen_bee = 0
-
-    move_ph_sky = 1
-
-    move_ph_moisture = 0
-
-    move_dir_prefer_to_side = 0.5
-    move_dir_prefer_to_up = 1
-    move_dir_prefer_to_down = 1
-    move_dir_prefer_strength = 3
-
-    check_collision = False
-
-    move_ph_strength_list = [
-        move_ph_queen_bee,
-        move_ph_sky,
-        move_ph_moisture,
-    ]
-
-    move_ph_layers_list = [
-        queen_bee_pheromon,
-        sky_ph_layer,
-        air_layer
-    ]
-
-    move_dir_preferences = [
-        move_dir_prefer_to_up,
-        move_dir_prefer_to_side,
-        move_dir_prefer_to_down
-    ]
-
+    # add pheromon attractors
     pose = agent.pose
-    cube = move_ph_random
-    for s, layer in zip(move_ph_strength_list, move_ph_layers_list):
-        if layer != None:
-            # cube = get_sub_array(array = layer.array, offset_radius = 1, center = pose, format_values = None)
-            cube += s * agent.get_nb_26_cell_values(layer, pose)
-        else: pass
+    # random
+    cube = agent.random_pheromones(26) * random_pheromon_weigth
+    # air
+    cube += agent.get_nb_26_cell_values(air_layer, pose) * air_layer_pheromon_weigth
 
-    if move_dir_preferences != None:
-        side, up, down = move_dir_preferences
-        cube += agent.direction_preference_26_pheromones_v2(up, side, down) * move_dir_prefer_strength
-
-    moved = agent.follow_pheromones(cube, check_collision)
+    # add direction prerence
+    cube += agent.direction_preference_26_pheromones_v2(move_up, move_side, move_down) * move_preference_weigth
+    
+    # move
+    moved = agent.follow_pheromones(cube, check_collision = False)
+    
     return moved
 
 def calculate_build_chances(agent, layers):

@@ -36,7 +36,7 @@ def get_layer_value_at_index(layer, index = [0,0,0], reintroduce = True):
     return v
 
 def get_cube_array_indices(self_contain = False):
-    """26 nb indicies, ordered: top-middle-bottom"""
+    """list of 26 neighbor cell indicies_list, ordered: top 9 -middle 8 -bottom 9"""
     # horizontal
     f = direction_dict_np['front']
     b = direction_dict_np['back']
