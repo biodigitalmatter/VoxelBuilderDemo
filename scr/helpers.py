@@ -2,6 +2,7 @@
 from compas.geometry import Pointcloud
 import numpy as np
 import json
+import os
 
 
 def convert_array_to_compas_pointcloud(ptcloud_array, order = 'xyz'):
@@ -91,3 +92,40 @@ def save_array(array, filename):
 def save_ptcloud(ptcloud, filename):
     with open(filename, 'w') as file:
         ptcloud.to_json(file, True)
+
+def get_newest_file_in_folder(folder_path):
+    try:
+        # Get a list of files in the folder
+        files = [os.path.join(folder_path, filename) for filename in os.listdir(folder_path)]
+        # print(files)
+        # Sort the files by change time (modification time) in descending order
+        # files.sort(key=lambda x: os.path.getmtime(x), reverse=True)
+        print('files in folder:')
+        print(files)
+        # Return the newest file
+        if files:
+            return files[0]
+        else:
+            print("Folder is empty.")
+            return None
+    except Exception as e:
+        print(f"Error: {e}")
+        return None
+
+def get_nth_newest_file_in_folder(folder_path, n):
+    try:
+        # Get a list of files in the folder
+        files = [os.path.join(folder_path, filename) for filename in os.listdir(folder_path)]
+
+        # Sort the files by change time (modification time) in descending order
+        files.sort(key=lambda x: os.path.getmtime(x), reverse=True)
+
+        # Return the newest file
+        if files:
+            return files[min(n, len(files))]
+        else:
+            print("Folder is empty.")
+            return None
+    except Exception as e:
+        print(f"Error: {e}")
+        return None
