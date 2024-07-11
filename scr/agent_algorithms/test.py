@@ -1,0 +1,7 @@
+l = list(range(26))
+print('top')
+print(l[0:9])
+print('mid')
+print(l[9:17])
+print('bottom')
+print(l[17:26])

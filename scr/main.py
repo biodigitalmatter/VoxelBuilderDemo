@@ -7,19 +7,20 @@ from class_agent import Agent
 from class_layer import Layer
 
 # import presets from here
-from scr.agent_algorithms.simple_goals_fill_edges_1 import *
+from agent_algorithms.simple_goals_fill_edges_1 import *
 
 
-iterations = 1000
-note = 'sg_fill_corner_1'
+iterations = 100
+note = 'fill_corner_1'
 time__ = timestamp_now
 _save = True
-save_json_every_nth = 200
-plot = False
+save_json_every_nth = 100
 trim_floor = False
 
+run_animation = False
+save_animation = False
 # SETUP ENVIRONMENT
-settings, layers, clay_layer= layer_env_setup(iterations)
+settings, layers, _ = layer_env_setup(iterations)
 print(voxel_size)
 
 # MAKE AGENTS
@@ -46,24 +47,11 @@ def simulate(frame):
                 reset_agent(agent, voxel_size)
         else:
             if reset_after_build:
-                reset_agent(agent, voxel_size)
-    # 2.b clay dries
-    
+                reset_agent(agent, voxel_size)    
 
     # 3. make frame for animation
-    if save_animation:
-        a1 = clay_layer.array.copy()
-        a1[:,:,0] = 0
-
-        # scatter plot
-        pts_built = convert_array_to_points(a1, False)
-        # pts_built_2 = convert_array_to_points(agent_space.array, False)
-
-        arrays_to_show = [pts_built]
-        colors = [clay_layer.rgb]
-        for array, color in zip(arrays_to_show, colors):
-            p = array.transpose()
-            axes.scatter(p[0, :], p[1, :], p[2, :], marker = 's', s = 1, facecolor = color)
+    if run_animation:
+        scatter_plot(axes, layers=[clay_layer, layers[0]])
     
     simulate.counter += 1
     
@@ -99,33 +87,35 @@ def simulate(frame):
 
             print('\ncompas_pointcloud saved as %s:\n' %filename)
 
+def scatter_plot(axes, layers):
+    for layer in layers:
+        color = layer.rgb
+        pts = convert_array_to_points(layer.array, False)
+        p = pts.transpose()
+        axes.scatter(p[0, :], p[1, :], p[2, :], marker = 's', s = 1, facecolor = color)
         
 simulate.counter = 0
 ### PLOTTING
 ### SAVE
 save_img = _save
-save_animation = False
 save_json = _save
 
 # RUN
 if __name__ == '__main__':
-    if save_animation: 
+    agent_space, air_layer, clay_layer, ground = layers
+    if run_animation: 
         scale = voxel_size
         fig = plt.figure(figsize = [4, 4], dpi = 200)
         axes = plt.axes(xlim=(0, scale), ylim =  (0, scale), zlim = (0, scale), projection = '3d')
         axes.set_xticks([])
         axes.set_yticks([])
         axes.set_zticks([])
-        # a1 = clay_layer.array
-        # a1[:,:,0] = 0
-        # clay_layer.array = a1
-        p = clay_layer.array.transpose()
-        axes.scatter(p[0, :], p[1, :], p[2, :], marker = 's', s = 1, facecolor = clay_layer.rgb)
-
+        scatter_plot(axes, layers=[clay_layer, layers[0]])
+        
         suffix = '%s_a%s_i%s' %(note, agent_count, iterations)
 
         simulate.counter = 0
-        anim = animation.FuncAnimation(fig, simulate, frames=iterations, interval = 1)
+        anim = animation.FuncAnimation(fig, simulate, frames=iterations, interval = 2)
 
         if save_animation:
             anim.save('img/gif/gif_%s_%s.gif' %(timestamp_now, suffix))
@@ -138,7 +128,8 @@ if __name__ == '__main__':
 
     else:
         for i in range(iterations):
-            print(i)
+            if i % 25 == 0:
+                print(i)
             simulate(None)
         
         if save_img:
@@ -150,18 +141,10 @@ if __name__ == '__main__':
             axes.set_zticks([])
             
             a1 = clay_layer.array.copy()
-            a1[:,:,0] = 0
+            # a1[:,:,0] = 0
 
-            # scatter plot
-            pts_built = convert_array_to_points(a1, False)
-            # pts_built_2 = convert_array_to_points(agent_space.array, False)
-
-            arrays_to_show = [pts_built]
-            colors = [clay_layer.rgb]
-            for array, color in zip(arrays_to_show, colors):
-                p = array.transpose()
-                axes.scatter(p[0, :], p[1, :], p[2, :], marker = 's', s = 1, facecolor = color)
-
+            scatter_plot(axes, [clay_layer, layers[0]])
+            
             suffix = '%s_a%s_i%s' %(note, agent_count, iterations)
 
             plt.savefig('img/img_%s_%s.png' %(timestamp_now, suffix), bbox_inches='tight', dpi = 200)

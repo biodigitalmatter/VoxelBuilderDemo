@@ -1,19 +1,14 @@
 from voxel_builder_library import *
-
+from voxel_builder_library import direction_dictonary as dir_dict
 class Agent:
     def __init__(self, 
         pose = [0,0,0], 
-        compass_array = direction_dict_np,
         ground_layer = None,
         space_layer = None,
         track_layer = None,
         leave_trace = False,
         save_move_history = True):
-
         self.pose = np.asarray(pose)  # [i,j,k]
-        self.compass_array = compass_array
-        self.compass_keys = list(compass_array.keys())
-        # self.limited_to_ground = limited_to_ground
         self.leave_trace = leave_trace
         self.space_layer = space_layer
         self.track_layer = track_layer
@@ -27,6 +22,14 @@ class Agent:
         self._climb_style = ''
         self._build_chance = 0
         self._erase_chance = 0
+
+    @property
+    def direction_dictonary(self):
+        return dir_dict
+    
+    @property
+    def direction_keys(self):
+        return list(dir_dict.keys())
 
     @property
     def climb_style(self):
@@ -61,7 +64,7 @@ class Agent:
 
     def move(self, i, reintroduce = False):
         """move to a neighbor voxel based on the compas dictonary key index """
-        v = self.compass_array[self.compass_keys[i]]
+        v = self.direction_dictonary[self.direction_keys[i]]
         self.pose += v
         # reintroduce agent if n nonzero
         if reintroduce:
@@ -69,7 +72,7 @@ class Agent:
         else:
             self.pose = self.keep_index_in_bounds(self.pose)
         if self.save_move_history: 
-            self.move_history.append(self.compass_keys[i])
+            self.move_history.append(self.direction_keys[i])
     
     def move_26(self, dir, voxel_size = 0, keep_in_range_z = True, reintroduce = True):
         """move to a neighbor voxel based on dir vector """
@@ -90,7 +93,7 @@ class Agent:
 
     def move_key(self, key, voxel_size = 0):
         """move to a neighbor voxel based on the compas dictonary key"""
-        v = self.compass_array[key]
+        v = self.direction_dictonary[key]
         self.pose += v
         # reintroduce agent if n nonzero
         n = voxel_size
@@ -104,7 +107,7 @@ class Agent:
         return list of bool:
             [below, aside, above]"""
         # place = self.pose
-        # f = direction_dict_np['front']
+        # f = direction_dictonary['front']
         # b = direction_dict_np['back']
         # l = direction_dict_np['left']
         # r = direction_dict_np['right']
@@ -117,7 +120,7 @@ class Agent:
         sides = sum(values)
 
         # print(above, below, sides)
-        # self.compass_array.keys()
+        # self.direction_dictonary.keys()
         # above = layer.array[place + u]
         # print(above)
         # below = layer.array[place + d] 
@@ -138,10 +141,49 @@ class Agent:
         else: below = False
         self.relative_booleans_bottom_up = [below, aside, above] 
         return below, aside, above
-    
+
+#     def check_edge_situation_face(self, layer, in_level = 1, below = 9):
+#         """returns checks if in edge situation v1
+#         edge is defined by number of cells filled
+#         and larger than [a] of 4 face nbs in level
+#         larger than [b]  9 nbs below
+# .
+#         """
+#         v = self.get_nb_26_cell_values(layer, self.pose, False)
+#         # top = v[:9]
+#         # mid = v[9:17]
+#         down = v[17:]
+#         u, f, r, b, l, d = self.direction_dictonary
+#         mid = [f,r,b,l]
+#         if sum(down) > below and sum(mid) > in_level:
+#             return True
+#         else:
+#             return False
+        
+    def check_edge_situation(self, layer, in_level = 1, below = 9):
+        """returns checks if in edge situation v1
+        edge is defined by number of cells filled
+        and larger than [a] of 8 nbs in level
+        larger than [b]  9 nbs below"""
+        v = self.get_nb_26_cell_values(layer, self.pose, False)
+        print(v)
+        # top = v[:9]
+        mid = v[9:17]
+        print(mid)
+        down = v[17:]
+        print(down)
+        print(sum(down),sum(mid))
+        if sum(down) > below and sum(mid) > in_level:
+            return True
+        else:
+            return False
 
     def get_cube_array_indices(self, self_contain = False):
-        """list of 26 neighbor cell indicies_list, ordered: top 9 -middle 8 -bottom 9"""
+        """list of 26 neighbor cell indicies_list, 
+        ordered per horizontal layers, top down, 
+        counter clock wise, starting front, ending in the middle
+        9 top + 8 middle + 9 bottom
+        """
         # horizontal
         f = direction_dict_np['front']
         b = direction_dict_np['back']
@@ -150,7 +192,7 @@ class Agent:
         u = direction_dict_np['up']
         d = direction_dict_np['down']
         # first_story in level:
-        story_1 = [ f + l, f, f + r, l, r, b + l, b, b + r]
+        story_1 = [f, f + r, r, b + r, b, b + l, l, f + l]
         story_0 = [i + d for i in story_1]
         story_2 = [i + u for i in story_1]
         if self_contain:
@@ -162,7 +204,7 @@ class Agent:
 
     def random_move(self, voxel_size = 0):
         i = np.random.randint(0,5)
-        keys = self.compass_array.keys()
+        keys = self.direction_dictonary.keys()
         key = keys[i]
         self.move_key(key, voxel_size)
     
@@ -225,8 +267,8 @@ class Agent:
         """returns the list of nb cell indexes"""
         nb_cell_index_list = []
         n = self.voxel_size
-        for key in self.compass_array.keys():
-            d = self.compass_array[key]
+        for key in self.direction_dictonary.keys():
+            d = self.direction_dictonary[key]
             place = d + pose
             if reintroduce:
                 place = self.reintroduce_index(place)
@@ -234,7 +276,11 @@ class Agent:
         return nb_cell_index_list
     
     def get_nb_26_cell_indicies(self, pose, reintroduce = False):
-        """returns the list of nb cell indexes"""
+        """returns the list of nb cell indexes
+        ordered:
+            horizontal layers downwards
+            counter clock wise, starting front, ending in the middle
+            9 top + 8 middle + 9 bottom"""
         nb_cell_index_list = []
         
         for d in self.cube_array:
@@ -247,19 +293,26 @@ class Agent:
     def get_nb_6_cell_values(self, layer, pose = None, reintroduce=True):
         # nb_value_dict = {}
         value_list = []
-        for key in self.compass_array.keys():
-            d = self.compass_array[key]
+        for key in self.direction_dictonary.keys():
+            d = self.direction_dictonary[key]
             nb_cell_index = d + pose
             # dont check index in boundary
             v = get_layer_value_at_index(layer, nb_cell_index, reintroduce)
             value_list.append(v)
         return np.asarray(value_list)
     
-    def get_nb_26_cell_values(self, layer, pose = None):
+    def get_nb_26_cell_values(self, layer, pose = None, reintroduce = False):
+        """returns the list of nb cell values
+        if not reintroduced, out of bound values = 0
+        ordered:
+            horizontal layers downwards
+            counter clock wise, starting front, ending in the middle
+            9 top + 8 middle + 9 bottom
+            """
         value_list = []
         for d in self.cube_array:
             nb_cell_index = d + pose
-            v = get_layer_value_at_index(layer, nb_cell_index)
+            v = get_layer_value_at_index(layer, nb_cell_index, reintroduce)
             value_list.append(v)
         return np.asarray(value_list)
 
@@ -701,9 +754,9 @@ class Agent:
 
 direction_dict_np = {
     'up' : np.asarray([0,0,1]),
+    'front' : np.asarray([0,-1,0]),
+    'right' : np.asarray([1,0,0]),
+    'back' : np.asarray([0,1,0]),
     'left' : np.asarray([-1,0,0]),
     'down' : np.asarray([0,0,-1]),
-    'right' : np.asarray([1,0,0]),
-    'front' : np.asarray([0,-1,0]),
-    'back' : np.asarray([0,1,0])
 }

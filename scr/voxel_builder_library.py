@@ -1,6 +1,17 @@
 import numpy as np
 from math_functions import *
 
+global direction_dictonary, direction_keys
+direction_dictonary = {
+    'up' : np.asarray([0,0,1]),
+    'front' : np.asarray([0,-1,0]),
+    'right' : np.asarray([1,0,0]),
+    'back' : np.asarray([0,1,0]),
+    'left' : np.asarray([-1,0,0]),
+    'down' : np.asarray([0,0,-1]),
+}
+direction_keys = list(direction_dictonary.keys())
+
 def create_zero_array(n):
     # create voxel-like array
     a = np.zeros(n ** 3)  # 3 dimensional numpy array representing voxel voxel
@@ -38,12 +49,12 @@ def get_layer_value_at_index(layer, index = [0,0,0], reintroduce = True):
 def get_cube_array_indices(self_contain = False):
     """list of 26 neighbor cell indicies_list, ordered: top 9 -middle 8 -bottom 9"""
     # horizontal
-    f = direction_dict_np['front']
-    b = direction_dict_np['back']
-    l = direction_dict_np['left']
-    r = direction_dict_np['right']
-    u = direction_dict_np['up']
-    d = direction_dict_np['down']
+    f = direction_dictonary['front']
+    b = direction_dictonary['back']
+    l = direction_dictonary['left']
+    r = direction_dictonary['right']
+    u = direction_dictonary['up']
+    d = direction_dictonary['down']
     # first_story in level:
     story_1 = [ f + l, f, f + r, l, r, b + l, b, b + r]
     story_0 = [i + d for i in story_1]
@@ -56,12 +67,12 @@ def get_cube_array_indices(self_contain = False):
 
 def get_nb_cell_directions_w_edges():
     # horizontal
-    f = direction_dict_np['front']
-    b = direction_dict_np['back']
-    l = direction_dict_np['left']
-    r = direction_dict_np['right']
-    u = direction_dict_np['up']
-    d = direction_dict_np['down']
+    f = direction_dictonary['front']
+    b = direction_dictonary['back']
+    l = direction_dictonary['left']
+    r = direction_dictonary['right']
+    u = direction_dictonary['up']
+    d = direction_dictonary['down']
     # first_story in level:
     story_1 = [f, f + l, f + r, l, r, b, b + l, b + r]
     story_0 = [i + d for i in [f,b,l,r]]
@@ -71,7 +82,7 @@ def get_nb_cell_directions_w_edges():
 
 def get_nb_cell_directions_w_edges():
     # horizontal
-    face_nbs = list(direction_dict_np.values())
+    face_nbs = list(direction_dictonary.values())
     nbs_w_edges = face_nbs + [np.asarray([0,0,0])]
     return nbs_w_edges
 
@@ -137,18 +148,7 @@ def get_sub_array(array, offset_radius, center = None, format_values = None):
     else: 
         return v
 
-global direction_dict_np, direction_keys
 
-direction_dict_np = {
-    'up' : np.asarray([0,0,1]),
-    'left' : np.asarray([-1,0,0]),
-    'down' : np.asarray([0,0,-1]),
-    'right' : np.asarray([1,0,0]),
-    'front' : np.asarray([0,-1,0]),
-    'back' : np.asarray([0,1,0])
-}
-direction_keys = list(direction_dict_np.keys())
-# print(direction_keys)[5]
 
 def pheromon_loop(pheromon_layer, emmission_array = None, i = 1, blocking_layer = None, gravity_shift_bool = False, diffuse_bool = True, decay = True, decay_linear = False):
     """gravity direction: 0:left, 1:right, 2:front, 3:back, 4:down, 5:up"""

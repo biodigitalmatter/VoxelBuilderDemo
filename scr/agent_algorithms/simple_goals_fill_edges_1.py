@@ -18,19 +18,31 @@ ground_layer is used for blocking air and movement.
 """
 
 # overal settings
-voxel_size = 40
+voxel_size = 20
 agent_count = 15
-wait_to_diffuse = 1
 
 # setup variables
-enter_corner_width = 8
-wall_params = [5, voxel_size-6, 30, voxel_size-1, 1, 20] # x1,x2,y1,y2,z1,z2
+enter_corner_width = 25
+wall_params = [5, voxel_size-6, voxel_size-5, voxel_size-1, 0, 20] # x1,x2,y1,y2,z1,z2
 
-# BUILD OVERALL SETTINGS
-reach_to_build = 1
-reach_to_erase = 1
+# BUILD SETTINGS
+reach_to_build = 0.9
+reach_to_erase = 1000
 stacked_chances = False
 reset_after_build = True
+
+# edge analysis variables:
+min_in_level = 2
+min_below = 7
+
+# MOVE_PRESETS
+random_pheromon_weigth = 0.2
+air_layer_pheromon_weigth = 1
+
+move_up = 1
+move_side = 0.8
+move_down = 0.1
+move_preference_weigth = 0.5
 
 
 """ ENVIRONMENT:
@@ -65,8 +77,8 @@ def layer_env_setup(iterations):
     clay_layer.decay_linear_value = 1 / iterations / agent_count / 2
 
     air_layer.diffusion_ratio = 1/7
-    air_layer.decay_ratio = 1/2
-    air_layer.gradient_resolution = 100
+    air_layer.decay_ratio = 1/12
+    air_layer.gradient_resolution = 100000
 
 
     ### CREATE ENVIRONMENT
@@ -78,9 +90,10 @@ def layer_env_setup(iterations):
     # add_clay_block
     wall = make_solid_box_xxyyzz(voxel_size, x1,x2,y1,y2,z1,z2 )
     clay_layer.array += wall
+    ground_layer.array += wall
 
     # emmitt the clay in the air a little 
-    pheromon_loop(air_layer, emmission_array = clay_layer.array, i = 3, blocking_layer = ground_layer)
+    pheromon_loop(air_layer, emmission_array = clay_layer.array, i = 3, blocking_layer = None)
     
     # WRAP ENVIRONMENT
     layers = [agent_space, air_layer, clay_layer, ground_layer]
@@ -113,7 +126,7 @@ def setup_agents(layers):
         agent = Agent(
             space_layer = agent_space, 
             ground_layer = ground_layer,
-            save_move_history=True)
+            save_move_history=False)
         # drop in the corner
         reset_agent(agent, voxel_size)
 
@@ -122,14 +135,15 @@ def setup_agents(layers):
 
 def reset_agent(agent, voxel_size):
     # centered setup
-    a, b = margin_boundaries(voxel_size, margin_ratio + 2)
-    a, b = 0, 5
+    a, b = 0, enter_corner_width
+    a = 0
+    b = 10
     x = np.random.randint(a, b)
     y = np.random.randint(a, b)
     agent.pose = [x,y,1]
 
-    agent.build_chance = 0
-    agent.erase_chance = 0
+    # agent.build_chance = 0
+    # agent.erase_chance = 0
     agent.move_history = []
 
 
@@ -155,14 +169,6 @@ def move_agent(agent, layers):
     """
     # agent_space, air_layer, clay_layer,  ground_layer = layers
     air_layer = layers[1]
-    # MOVE_PRESETS
-    random_pheromon_weigth = 0.2
-    air_layer_pheromon_weigth = 1
-
-    move_up = 1
-    move_side = 0.5
-    move_down = 0.1
-    move_preference_weigth = 0.5
 
     # add pheromon attractors
     pose = agent.pose
@@ -176,61 +182,62 @@ def move_agent(agent, layers):
     
     # move
     moved = agent.follow_pheromones(cube, check_collision = False)
-    
+
     return moved
 
+
+    
+        
 def calculate_build_chances(agent, layers):
-    """PLACEHOLDER NOT REMOVED!
-    build_chance, erase_chance = [0.2,0]
-    function operating with Agent and Layer class objects
+    """function operating with Agent and Layer class objects
     calculates probability of building and erasing voxels 
     combining several density analyses
 
     returns build_chance, erase_chance
     """
-
-    boundary = layers[2]
-    ground_layer = layers[4]
-
     build_chance = agent.build_chance
     erase_chance = agent.erase_chance
-
-    # RELATIVE POSITION
-    c = agent.get_chance_by_relative_position(
-        ground_layer,
-        build_below = 2,
-        build_aside = 1,
-        build_above = 1,
-        build_strength = 0.1)
-    build_chance += c
-
-    # surrrounding ground_layer_density
-    c, e = agent.get_chances_by_density(
-            ground_layer,      
-            build_if_over = 0,
-            build_if_below = 15,
-            erase_if_over = 21,
-            erase_if_below = 30,
-            build_strength = 1)
+    
+    # CHECK EDGE SITUATION
+    ground_layer = layers[3]
+    edge_bool = agent.check_edge_situation(ground_layer, in_level = min_in_level, below = min_below)
+    if edge_bool:
+        c = 2
+        print('its and edge')
+    else:
+        c = 0
+    e = 0
     build_chance += c
     erase_chance += e
 
-    # boundary
-    c, e = agent.get_chances_by_density(
-            boundary,      
-            build_if_over = 9,
-            build_if_below = 30,
-            erase_if_over = 0,
-            erase_if_below = 8,
-            build_strength = 1)
-    build_chance += c
-    erase_chance += e
+    # clay_layer = layers[2]
+    # Agent.check_edge_situation_v2(clay_layer, 1, 4)
 
+    # # RELATIVE POSITION
+    # c = agent.get_chance_by_relative_position(
+    #     ground_layer,
+    #     build_below = 2,
+    #     build_aside = 1,
+    #     build_above = 1,
+    #     build_strength = 0.1)
+    # build_chance += c
+
+    # # surrrounding ground_layer_density
+    # c, e = agent.get_chances_by_density(
+    #         ground_layer,      
+    #         build_if_over = 0,
+    #         build_if_below = 15,
+    #         erase_if_over = 21,
+    #         erase_if_below = 30,
+    #         build_strength = 1)
+    # build_chance += c
+    # erase_chance += e
+    print(build_chance, erase_chance)
     return build_chance, erase_chance
 
 def build(agent, layers, build_chance, erase_chance, decay_clay = False):
-    ground_layer = layers[4]
-    clay_layer = layers[3]
+    ground_layer = layers[3]
+    clay_layer = layers[2]
     """agent builds on construction_layer, if pheromon value in cell hits limit
     chances are either momentary values or stacked by history
     return bool"""
