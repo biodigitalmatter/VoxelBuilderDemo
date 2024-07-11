@@ -19,7 +19,7 @@ ground_layer is used for blocking air and movement.
 
 # overal settings
 voxel_size = 20
-agent_count = 15
+agent_count = 2
 
 # setup variables
 enter_corner_width = 25
@@ -136,8 +136,8 @@ def setup_agents(layers):
 def reset_agent(agent, voxel_size):
     # centered setup
     a, b = 0, enter_corner_width
-    a = 0
-    b = 10
+    a = 20
+    b = 22
     x = np.random.randint(a, b)
     y = np.random.randint(a, b)
     agent.pose = [x,y,1]

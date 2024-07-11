@@ -17,7 +17,7 @@ _save = True
 save_json_every_nth = 100
 trim_floor = False
 
-run_animation = False
+run_animation = True
 save_animation = False
 # SETUP ENVIRONMENT
 settings, layers, _ = layer_env_setup(iterations)
