@@ -3,19 +3,19 @@ from show_voxel_plt import *
 
 
 voxel_size = 30
-agent_count = 2
-iterations = 50
+agent_count = 20
+iterations = 5000
 save_ = True
 title_ = 'img'
 note = 'build_after_queen_ph-tests'
 
 gravity_option = ['nb_check', 'offset_ph', 'cube_corner_nb_check', 'cube_edge_nb_check'][2]
 
-construction_on = False
+construction_on = True
 # construct_limit_1 = 0.01
 # construct_limit_2 = 0.09
-construct_limit_1 = 0.005
-construct_limit_2 = 0.02
+construct_limit_1 = 0.001
+construct_limit_2 = 0.006
 wait = 50
 check_collision = False
 
@@ -115,7 +115,7 @@ a5 = smell_layer.array
 
 # show image
 f,a = init_fig(suffix=note)  #bottom_line=Layer.__str__())
-# show_voxel(f,a, a1 + a2 + a3, c1 + c2 + c3, save=save_, suffix=note)
+show_voxel(f,a, a1 + a2 + a3, c1 + c2 + c3, save=save_, suffix=note)
 # show_voxel(f,a, a1 + a2 + a3 + a5, c1 + c2 + c3 + c5, save=True, suffix=note)
-show_voxel(f,a, a5, c5, save=save_, suffix=note + '_smells')
+# show_voxel(f,a, a5, c5, save=save_, suffix=note + '_smells')
 # show_voxel(f,a, a1 + a3, c1 + c3, save=save_, suffix=note)
