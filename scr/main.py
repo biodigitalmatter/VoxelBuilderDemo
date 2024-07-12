@@ -13,12 +13,15 @@ from agent_algorithms.simple_goals_fill_edges_1 import *
 iterations = 100
 note = 'fill_corner_1'
 time__ = timestamp_now
-_save = True
 save_json_every_nth = 100
 trim_floor = False
 
+### SAVE
+save_img = True
+save_json = False
 run_animation = True
 save_animation = False
+
 # SETUP ENVIRONMENT
 settings, layers, _ = layer_env_setup(iterations)
 print(voxel_size)
@@ -26,8 +29,10 @@ print(voxel_size)
 # MAKE AGENTS
 agents = setup_agents(layers)
 
-# SIMULATION FUNCTION
+# title
+suffix = '%s_a%s_i%s' %(note, agent_count, iterations)
 
+# SIMULATION FUNCTION
 def simulate(frame):
 # for i in range(iterations):
     # print('simulate.counter', simulate.counter)
@@ -51,13 +56,13 @@ def simulate(frame):
 
     # 3. make frame for animation
     if run_animation:
-        scatter_plot(axes, layers=[clay_layer, layers[0]])
+        scatter_plot(ax, layers=[clay_layer, layers[0]], clear_ax= True)
     
     simulate.counter += 1
     
     # 4. DUMP JSON
-    if _save:
-        suffix = '%s_a%s_i%s' %(note, agent_count, iterations)
+    if save_json:
+        # suffix = '%s_a%s_i%s' %(note, agent_count, iterations)
         if simulate.counter % save_json_every_nth == 0:
             if trim_floor:
                 # trim floor
@@ -87,43 +92,52 @@ def simulate(frame):
 
             print('\ncompas_pointcloud saved as %s:\n' %filename)
 
-def scatter_plot(axes, layers):
+def scatter_plot(ax, layers, clear_ax = False):
+    if clear_ax:
+        ax.clear()
+    l = ground.array.shape[0]
+    ax.set_xlim(0, l)
+    ax.set_ylim(0, l)
+    ax.set_zlim(0, l)
+    ax.set_xticks([])
+    ax.set_yticks([])
+    ax.set_zticks([])
     for layer in layers:
         color = layer.rgb
         pts = convert_array_to_points(layer.array, False)
         p = pts.transpose()
-        axes.scatter(p[0, :], p[1, :], p[2, :], marker = 's', s = 1, facecolor = color)
-
-        
+        ax.scatter(p[0, :], p[1, :], p[2, :], marker = 's', s = 1, facecolor = color)
+      
 simulate.counter = 0
 ### PLOTTING
-### SAVE
-save_img = _save
-save_json = _save
+
 
 # RUN
 if __name__ == '__main__':
     agent_space, air_layer, clay_layer, ground = layers
     if run_animation: 
+        # init fig plot
         scale = voxel_size
         fig = plt.figure(figsize = [4, 4], dpi = 200)
-        axes = plt.axes(xlim=(0, scale), ylim =  (0, scale), zlim = (0, scale), projection = '3d')
-        axes.set_xticks([])
-        axes.set_yticks([])
-        axes.set_zticks([])
-        scatter_plot(axes, layers=[air_layer, layers[0]])
+        ax = fig.add_subplot(111, projection='3d')
+        # ax = plt.axes(xlim=(0, scale), ylim =  (0, scale), zlim = (0, scale), projection = '3d')
+        ax.set_xticks([])
+        ax.set_yticks([])
+        ax.set_zticks([])
+        l = ground.array.shape[0]
+        ax.set_xlim(0, l)
+        ax.set_ylim(0, l)
+        ax.set_zlim(0, l)
+        ax.set_box_aspect([1,1,1])  # Aspect ratio is 1:1:1
+        scatter_plot(ax, layers=[air_layer, layers[0]], clear_ax=False)
         
-        suffix = '%s_a%s_i%s' %(note, agent_count, iterations)
-
         simulate.counter = 0
         anim = animation.FuncAnimation(fig, simulate, frames=iterations, interval = 2)
 
+        # suffix = '%s_a%s_i%s' %(note, agent_count, iterations)
         if save_animation:
             anim.save('img/gif/gif_%s_%s.gif' %(timestamp_now, suffix))
             print('animation saved')
-        if save_img:
-            plt.savefig('img/img_%s_%s.png' %(timestamp_now, suffix), bbox_inches='tight', dpi = 200)
-            print('image saved')
 
         plt.show()
 
@@ -133,22 +147,21 @@ if __name__ == '__main__':
                 print(i)
             simulate(None)
         
-        if save_img:
-            scale = voxel_size
-            fig = plt.figure(figsize = [4, 4], dpi = 200)
-            axes = plt.axes(xlim=(0, scale), ylim =  (0, scale), zlim = (0, scale), projection = '3d')
-            axes.set_xticks([])
-            axes.set_yticks([])
-            axes.set_zticks([])
-            
-            a1 = clay_layer.array.copy()
-            # a1[:,:,0] = 0
+    if save_img:
+        scale = voxel_size
+        fig = plt.figure(figsize = [4, 4], dpi = 200)
+        ax = plt.axes(xlim=(0, scale), ylim =  (0, scale), zlim = (0, scale), projection = '3d')
+        ax.set_xticks([])
+        ax.set_yticks([])
+        ax.set_zticks([])
+        a1 = clay_layer.array.copy()
+        # a1[:,:,0] = 0
 
-            scatter_plot(axes, [clay_layer, layers[0]])
-            
-            suffix = '%s_a%s_i%s' %(note, agent_count, iterations)
+        scatter_plot(ax, [clay_layer, layers[0]])
+        
 
-            plt.savefig('img/img_%s_%s.png' %(timestamp_now, suffix), bbox_inches='tight', dpi = 200)
-            print('image saved')
 
-            plt.show()
+        plt.savefig('img/img_%s_%s.png' %(timestamp_now, suffix), bbox_inches='tight', dpi = 200)
+        print('image saved')
+
+        plt.show()
