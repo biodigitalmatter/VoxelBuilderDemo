@@ -7,11 +7,11 @@ from class_agent import Agent
 from class_layer import Layer
 
 # import presets from here
-from agent_algorithms.simple_goals_fill_edges_1 import *
+from agent_algorithms.simple_goals_build_pipe import *
 
 
 iterations = 100
-note = 'fill_corner_1'
+note = 'build_pipe_test_moving'
 time__ = timestamp_now
 save_json_every_nth = 100
 trim_floor = False
@@ -23,7 +23,7 @@ run_animation = True
 save_animation = False
 
 # SETUP ENVIRONMENT
-settings, layers, _ = layer_env_setup(iterations)
+settings, layers, clay_layer = layer_env_setup(iterations)
 print(voxel_size)
 
 # MAKE AGENTS
@@ -56,7 +56,7 @@ def simulate(frame):
 
     # 3. make frame for animation
     if run_animation:
-        scatter_plot(ax, layers=[clay_layer, layers[0]], clear_ax= True)
+        scatter_plot(ax, plot_layers, clear_ax= True)
     
     simulate.counter += 1
     
@@ -95,7 +95,7 @@ def simulate(frame):
 def scatter_plot(ax, layers, clear_ax = False):
     if clear_ax:
         ax.clear()
-    l = ground.array.shape[0]
+    l = layers[0].array.shape[0]
     ax.set_xlim(0, l)
     ax.set_ylim(0, l)
     ax.set_zlim(0, l)
@@ -114,7 +114,8 @@ simulate.counter = 0
 
 # RUN
 if __name__ == '__main__':
-    agent_space, air_layer, clay_layer, ground = layers
+    # agent_space, air_layer, clay_layer, ground = layers
+    plot_layers = [layers[0], clay_layer, layers[-2]]
     if run_animation: 
         # init fig plot
         scale = voxel_size
@@ -124,12 +125,12 @@ if __name__ == '__main__':
         ax.set_xticks([])
         ax.set_yticks([])
         ax.set_zticks([])
-        l = ground.array.shape[0]
+        l = clay_layer.array.shape[0]
         ax.set_xlim(0, l)
         ax.set_ylim(0, l)
         ax.set_zlim(0, l)
         ax.set_box_aspect([1,1,1])  # Aspect ratio is 1:1:1
-        scatter_plot(ax, layers=[air_layer, layers[0]], clear_ax=False)
+        scatter_plot(ax, plot_layers, clear_ax=False)
         
         simulate.counter = 0
         anim = animation.FuncAnimation(fig, simulate, frames=iterations, interval = 2)
@@ -157,7 +158,7 @@ if __name__ == '__main__':
         a1 = clay_layer.array.copy()
         # a1[:,:,0] = 0
 
-        scatter_plot(ax, [clay_layer, layers[0]])
+        scatter_plot(ax, plot_layers)
         
 
 

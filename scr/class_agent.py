@@ -165,15 +165,15 @@ class Agent:
         edge is defined by number of cells filled
         and larger than [a] of 8 nbs in level
         larger than [b]  9 nbs below"""
-        print(self.pose)
+        # print(self.pose)
         v = self.get_nb_26_cell_values(layer, self.pose, False)
-        print(v)
+        # print(v)
         # top = v[:9]
         mid = v[9:17]
         # print(mid)
         down = v[17:]
         # print(down)
-        print(sum(down),sum(mid))
+        # print(sum(down),sum(mid))
         if sum(down) > below and sum(mid) > in_level:
             return True
         else:
