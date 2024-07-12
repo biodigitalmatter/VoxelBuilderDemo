@@ -23,7 +23,8 @@ agent_count = 5
 
 # setup variables
 # agent enter:
-enter_zone = [0, 10, 0, 10]
+enter_zone = [10,20,10,20]
+queen_coloumn = [15,16,15,16,0,30]
 # wall_params = [20,25,20,25, 0, 20] # x1,x2,y1,y2,z1,z2
 
 # BUILD SETTINGS
@@ -38,7 +39,7 @@ min_below = 7
 
 # MOVE_PRESETS
 random_pheromon_weigth = 0
-queen_layer_pheromon_weigth = -1.5
+queen_layer_pheromon_weigth = 1.5
 
 move_up = 1
 move_side = 0.8
@@ -76,16 +77,18 @@ def layer_env_setup(iterations):
     air_layer = Layer('air_layer', voxel_size, rgb = [i/255 for i in rgb_air])
     queen_pheromon = Layer('queen_pheromon', voxel_size, rgb = [i/255 for i in rgb_sky])
     # clay_layer.decay_linear_value = 1 / iterations / agent_count / 2
-    queen_coloum_array = make_solid_box_xxyyzz(voxel_size,10,11,10,11,0,40)
+    a,b,c,d,e,f = queen_coloumn
+    queen_coloum_array = make_solid_box_xxyyzz(voxel_size,a,b,c,d,e,f)
     # air_layer.diffusion_ratio = 1/7
     # air_layer.decay_ratio = 1/5
     # air_layer.gradient_resolution = 1000000
     queen_pheromon.diffusion_ratio = 1/7
     queen_pheromon.decay_ratio = 1/10
     queen_pheromon.emission_factor = 0.5
-    queen_pheromon.emission(queen_coloum_array)
-    queen_pheromon.diffuse()
-    queen_pheromon.decay()
+    for i in range(20):
+        queen_pheromon.emission(queen_coloum_array)
+        queen_pheromon.diffuse()
+        queen_pheromon.decay()
 
     ### CREATE ENVIRONMENT
     # make ground_layer
@@ -170,17 +173,27 @@ def move_agent(agent, layers):
     # add pheromon attractors
     pose = agent.pose
     # random
-    cube = agent.random_pheromones(26) * random_pheromon_weigth
-    # air
-    cube += agent.get_nb_26_cell_values(queen_pheromon, pose) * queen_layer_pheromon_weigth
+    # cube = agent.random_pheromones(26) * random_pheromon_weigth
+
+    # follow queen ph
+    cube = agent.get_nb_26_cell_values(queen_pheromon, pose) * queen_layer_pheromon_weigth
+    print(cube)
+    best = np.argmax(cube)
+    cube == best
+    dirs = agent.get_cube_array_indices()
+    d = dirs[best]
+
+    print(d)
+    agent.pose += d
+    agent.pose = np.clip(agent.pose, 0, agent.voxel_size-1)
+    print('pose:', pose)
 
     # add direction prerence
-    cube += agent.direction_preference_26_pheromones_v2(move_up, move_side, move_down) * move_preference_weigth
+    # cube += agent.direction_preference_26_pheromones_v2(move_up, move_side, move_down) * move_preference_weigth
     
     # move
-    moved = agent.follow_pheromones(cube, check_collision = False)
-
-    return moved
+    # moved = agent.follow_pheromones(cube, check_collision = False, reintroduce=True)
+    return True
 
 
     
@@ -231,7 +244,7 @@ def calculate_build_chances(agent, layers):
     # erase_chance += e
     build_chance = 0
     erase_chance = 0
-    print(build_chance, erase_chance)
+    # print(build_chance, erase_chance)
     return build_chance, erase_chance
 
 def build(agent, layers, build_chance, erase_chance, decay_clay = False):

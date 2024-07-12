@@ -25,6 +25,7 @@ save_animation = False
 # SETUP ENVIRONMENT
 settings, layers, clay_layer = layer_env_setup(iterations)
 print(voxel_size)
+plot_layers = [layers[0]]
 
 # MAKE AGENTS
 agents = setup_agents(layers)
@@ -115,7 +116,7 @@ simulate.counter = 0
 # RUN
 if __name__ == '__main__':
     # agent_space, air_layer, clay_layer, ground = layers
-    plot_layers = [layers[0], clay_layer, layers[-2]]
+    # plot_layers = [layers[0], clay_layer, layers[-2]]
     if run_animation: 
         # init fig plot
         scale = voxel_size

@@ -557,6 +557,7 @@ class Agent:
 
         # select best pheromon
         choice = np.argmax(pheromone_cube)
+        
         # print('choice:', choice)
         move_vector = self.cube_array[choice]
 
