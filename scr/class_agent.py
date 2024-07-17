@@ -317,6 +317,8 @@ class Agent:
     
     def follow_pheromones(self, pheromone_cube, check_collision = False, fly = False):
         # check ground condition
+        print('pose:', self.pose)
+        print('cube:', pheromone_cube)
         exclude_pheromones = self.get_move_mask_26(self.ground_layer, fly)
         pheromone_cube[exclude_pheromones] = -1
         
@@ -331,8 +333,9 @@ class Agent:
 
         # select best pheromon
         choice = np.argmax(pheromone_cube)
-        # print('choice:', choice)
+        print('choice:', choice)
         move_vector = self.cube_array[choice]
+        print('move vector:', move_vector)
 
         # update track layer
         if self.leave_trace:

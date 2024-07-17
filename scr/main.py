@@ -7,16 +7,22 @@ from class_agent import Agent
 from class_layer import Layer
 
 # import presets from here
-from agent_algorithms_setup_4c_higher_reset import *
+from agent_algorithms_setup_5_reset import *
 
-
-iterations = 1000
-note = 'setup_4c_reset'
+note = 'setup_5'
+iterations = 10
 time__ = timestamp_now
-_save = True
 save_json_every_nth = 200
-plot = False
+plot = True
 trim_floor = False
+
+### SAVE
+_save = False
+save_img = _save
+save_json = _save
+save_animation = False
+show_animation = True
+
 
 # SETUP ENVIRONMENT
 settings, layers, clay_moisture_layer= layer_env_setup(iterations)
@@ -26,6 +32,14 @@ print(voxel_size)
 agents = setup_agents(layers)
 
 # SIMULATION FUNCTION
+
+def scatter_layers(axes, layers):
+    for layer in layers:
+        a1 = layer.array.copy()
+        # scatter plot
+        pt_array = convert_array_to_points(a1, False)
+        p = pt_array.transpose()
+        axes.scatter(p[0, :], p[1, :], p[2, :], marker = 's', s = 1, facecolor = layer.rgb)
 
 def simulate(frame):
 # for i in range(iterations):
@@ -51,20 +65,8 @@ def simulate(frame):
     
 
     # 3. make frame for animation
-    if save_animation:
-        a1 = clay_moisture_layer.array.copy()
-        a1[:,:,0] = 0
-
-        # scatter plot
-        pts_built = convert_array_to_points(a1, False)
-        # pts_built_2 = convert_array_to_points(agent_space.array, False)
-
-        arrays_to_show = [pts_built]
-        colors = [clay_moisture_layer.rgb]
-        for array, color in zip(arrays_to_show, colors):
-            p = array.transpose()
-            axes.scatter(p[0, :], p[1, :], p[2, :], marker = 's', s = 1, facecolor = color)
-    
+    if show_animation or save_animation:
+        scatter_layers(axes, layers = [layers[0]]) 
     simulate.counter += 1
     
     # 4. DUMP JSON
@@ -102,25 +104,17 @@ def simulate(frame):
         
 simulate.counter = 0
 ### PLOTTING
-### SAVE
-save_img = _save
-save_animation = False
-save_json = _save
 
 # RUN
 if __name__ == '__main__':
-    if save_animation: 
+    if show_animation: 
         scale = voxel_size
         fig = plt.figure(figsize = [4, 4], dpi = 200)
         axes = plt.axes(xlim=(0, scale), ylim =  (0, scale), zlim = (0, scale), projection = '3d')
         axes.set_xticks([])
         axes.set_yticks([])
         axes.set_zticks([])
-        # a1 = clay_moisture_layer.array
-        # a1[:,:,0] = 0
-        # clay_moisture_layer.array = a1
-        p = clay_moisture_layer.array.transpose()
-        axes.scatter(p[0, :], p[1, :], p[2, :], marker = 's', s = 1, facecolor = clay_moisture_layer.rgb)
+        scatter_layers(axes, layers = [layers[0]]) 
 
         suffix = '%s_a%s_i%s' %(note, agent_count, iterations)
 
@@ -150,11 +144,11 @@ if __name__ == '__main__':
             axes.set_zticks([])
             
             a1 = clay_moisture_layer.array.copy()
-            a1[:,:,0] = 0
+            # a1[:,:,0] = 0
 
             # scatter plot
             pts_built = convert_array_to_points(a1, False)
-            # pts_built_2 = convert_array_to_points(agent_space.array, False)
+            pts_built_2 = convert_array_to_points(agent_space.array, False)
 
             arrays_to_show = [pts_built]
             colors = [clay_moisture_layer.rgb]

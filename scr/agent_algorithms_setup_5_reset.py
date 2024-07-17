@@ -24,8 +24,8 @@ do reset
 
 # overal settings
 voxel_size = 40
-agent_count = 15
-wait_to_diffuse = 1
+agent_count = 1
+wait_to_diffuse = 10
 
 # BUILD OVERALL SETTINGS
 reach_to_build = 6
@@ -36,20 +36,21 @@ reset_after_build = False
 # make boundary
 global margin_ratio, fly
 margin_ratio = 4
-fly = True
-
+fly = False
 
 # MOVE PRESETS - pheromon layers
 move_ph_random = 0.002
 move_ph_queen_bee = 0
-move_ph_sky = 1
+move_ph_sky = 0
 move_ph_moisture = 0
 
 # direction preference
 move_dir_prefer_to_side = 1
 move_dir_prefer_to_up = 1
 move_dir_prefer_to_down = 3
-move_dir_prefer_strength = 4
+move_dir_prefer_strength = 0
+
+ground_level_Z = 1
 
 
 def margin_boundaries(size, parts):
@@ -104,8 +105,7 @@ def layer_env_setup(iterations):
 
     ### CREATE ENVIRONMENT
     # make ground
-    ground_level_Z = 0
-    ground.array = make_solid_box_z(voxel_size, ground_level_Z)
+    ground.array += make_solid_box_z(voxel_size, ground_level_Z)
     # wall = make_solid_box_xxyyzz(voxel_size, 20,23,20,23,0,3)
     # ground.array += wall
     ground.rgb = [207/255, 179/255, 171/255]
@@ -158,7 +158,8 @@ def reset_agent(agent, voxel_size):
     
     x = np.random.randint(a, b)
     y = np.random.randint(a, b)
-    z = np.random.randint(a, b)
+    # z = np.random.randint(a, b)
+    z = ground_level_Z
     agent.pose = [x,y,z]
 
     agent.build_chance = 0
@@ -224,15 +225,16 @@ def move_agent(agent, layers):
 
     pose = agent.pose
     cube = move_ph_random
-    for s, layer in zip(move_ph_strength_list, move_ph_layers_list):
-        if layer != None:
-            # cube = get_sub_array(array = layer.array, offset_radius = 1, center = pose, format_values = None)
-            cube += s * agent.get_nb_26_cell_values(layer, pose)
-        else: pass
+    cube = np.random.random(26)
+    # for s, layer in zip(move_ph_strength_list, move_ph_layers_list):
+    #     if layer != None:
+    #         # cube = get_sub_array(array = layer.array, offset_radius = 1, center = pose, format_values = None)
+    #         cube += s * agent.get_nb_26_cell_values(layer, pose)
+    #     else: pass
 
-    if move_dir_preferences != None:
-        up, side, down = move_dir_preferences
-        cube += agent.direction_preference_26_pheromones_v2(up, side, down) * move_dir_prefer_strength
+    # if move_dir_preferences != None:
+    #     up, side, down = move_dir_preferences
+    #     cube += agent.direction_preference_26_pheromones_v2(up, side, down) * move_dir_prefer_strength
 
     moved = agent.follow_pheromones(cube, check_collision, fly)
     return moved
