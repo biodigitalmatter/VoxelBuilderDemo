@@ -230,12 +230,13 @@ class Agent:
 
     def scan_neighborhood_values(self, array, offset_radius = 1, pose = None, format_values = 0):
         """takes sub array around pose, in 'offset_radius'
-        format values: returns sum '0', avarage '1', or all_values: 'None'"""
+        format values: returns sum '0', avarage '1', or all_values: '2'"""
         if isinstance(pose, bool):
             pose = self.pose
         x,y,z = pose
         n = offset_radius
         v = array[x - n : x + n][y - n : y + n][z - n : z - n]
+        
         if format_values == 0:
             return np.sum(v)
         elif format_values == 1:
@@ -300,17 +301,18 @@ class Agent:
             # check if nb cell is empty
             nb_value = get_layer_value_at_index(ground_layer, nb_pose) 
             print(nb_value)
-            if nb_value != 0:
-                exclude.append(False)
+            if nb_value == 0:
+                # exclude.append(True)
                 # if not fly:
-                #     # check if nb cells have any face_nb cell which is solid
-                #     nbs_values = self.get_nb_6_cell_values(ground_layer, nb_pose)
-                #     if np.sum(nbs_values) > 0:
-                #         check_failed.append(False)
-                #     else: 
-                #         check_failed.append(True)
+                # check if nb cells have any face_nb cell which is solid
+                nbs_values = self.get_nb_6_cell_values(ground_layer, nb_pose)
+                print(nbs_values)
+                if np.sum(nbs_values) > 0:
+                    exclude.append(False) 
+                else: 
+                    exclude.append(True)
                 # else:
-                #     check_failed.append(False)
+                #     exclude.append(False)
             else:
                 exclude.append(True)
         print(exclude)
@@ -320,6 +322,8 @@ class Agent:
     def follow_pheromones(self, pheromone_cube, check_collision = False, fly = False):
         # check ground condition
         print('pose:', self.pose)
+        ground_around = self.scan_neighborhood_values(self.ground_layer.array, offset_radius=2,pose=self.pose, format_values=2)
+        print('ground around', ground_around)
         exclude_pheromones = self.get_move_mask_26(self.ground_layer, fly)
         pheromone_cube[exclude_pheromones] = -1
         

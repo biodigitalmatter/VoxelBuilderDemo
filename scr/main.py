@@ -10,7 +10,7 @@ from class_layer import Layer
 from agent_algorithms_setup_5_reset import *
 
 note = 'setup_5'
-iterations = 10
+iterations = 3
 time__ = timestamp_now
 save_json_every_nth = 200
 plot = True
@@ -36,8 +36,14 @@ agents = setup_agents(layers)
 
 # SIMULATION FUNCTION
 
-def scatter_layers(axes, layers):
+def scatter_layers(axes, layers, clear = False, scale = voxel_size):
     # axes.clear()
+    if clear:
+        axes.clear()
+        axes = plt.axes(xlim=(0, scale), ylim =  (0, scale), zlim = (0, scale), projection = '3d')
+        axes.set_xticks([])
+        axes.set_yticks([])
+        axes.set_zticks([])
     for layer in layers:
         a1 = layer.array.copy()
         # scatter plot
@@ -55,16 +61,26 @@ def simulate(frame):
     # 2. MOVE and BUILD
     for agent in agents:
         # MOVE
-        moved = move_agent(agent, layers)
-        # BUILD
-        if moved:
-            build_chance, erase_chance = calculate_build_chances(agent, layers)
-            built, erased = build(agent, layers, build_chance, erase_chance, False)
-            if built and reset_after_build:
-                reset_agent(agent, voxel_size)
+        print(agent.pose)
+        agent.space_layer.set_layer_value_at_index(agent.pose, 0)
+        if np.amax( agent.pose) >= voxel_size - 1:
+            reset_agent(agent, voxel_size)
         else:
-            if reset_after_build:
-                reset_agent(agent, voxel_size)
+            if simulate.counter % 2 == 0:
+                dir = [0,1,0]
+            else: dir = [1,0,0]
+            agent.pose += np.asarray(dir)
+        agent.space_layer.set_layer_value_at_index(agent.pose, 1)
+        # moved = move_agent(agent, layers)
+        # # BUILD
+        # if moved:
+        #     build_chance, erase_chance = calculate_build_chances(agent, layers)
+        #     built, erased = build(agent, layers, build_chance, erase_chance, False)
+        #     if built and reset_after_build:
+        #         reset_agent(agent, voxel_size)
+        # else:
+        #     if reset_after_build:
+        #         reset_agent(agent, voxel_size)
     # 2.b clay dries
     
 

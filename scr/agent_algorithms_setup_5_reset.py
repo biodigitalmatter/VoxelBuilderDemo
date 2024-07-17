@@ -35,7 +35,7 @@ reset_after_build = False
 
 # make boundary
 global margin_ratio, fly
-margin_ratio = 4
+margin_ratio = 2
 fly = False
 
 # MOVE PRESETS - pheromon layers
@@ -105,7 +105,9 @@ def layer_env_setup(iterations):
 
     ### CREATE GROUND
     # make ground
+    
     ground.array += make_solid_box_z(voxel_size, ground_level_Z)
+    print(ground.array)
     # wall = make_solid_box_xxyyzz(voxel_size, 20,23,20,23,0,3)
     # ground.array += wall
     ground.rgb = [207/255, 179/255, 171/255]
