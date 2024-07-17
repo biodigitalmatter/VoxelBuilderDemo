@@ -29,7 +29,7 @@ layers_to_scatter = []
 # SETUP ENVIRONMENT
 settings, layers, clay_moisture_layer= layer_env_setup(iterations)
 print('env made. voxel size:',voxel_size)
-layers_to_scatter = [layers[0]]
+layers_to_scatter = [layers[0], layers[4]]
 
 # MAKE AGENTS
 agents = setup_agents(layers)

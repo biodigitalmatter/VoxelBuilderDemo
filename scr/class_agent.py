@@ -319,8 +319,11 @@ class Agent:
         exclude_pheromones = np.asarray(exclude)
         return exclude_pheromones
     
-    def move_on_ground(self, ground):
+    def move_on_ground(self, ground, voxel_size = None):
         cube = self.get_nb_26_cell_indicies(self.pose)
+        if voxel_size != None:
+            cube = np.clip(cube,0,voxel_size)
+            
         random_ph = np.random.random(26)
         exclude = self.get_move_mask_26(self.ground_layer)
         random_ph[exclude] = -1

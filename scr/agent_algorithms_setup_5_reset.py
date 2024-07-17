@@ -1,5 +1,5 @@
 #pass
-from voxel_builder_library import pheromon_loop, make_solid_box_z
+from voxel_builder_library import pheromon_loop, make_solid_box_z, make_solid_box_xxyyzz
 from class_agent import Agent
 from class_layer import Layer
 # from voxel_builder_library import get_chance_by_climb_style, get_chance_by_relative_position, get_chances_by_density
@@ -23,7 +23,7 @@ do reset
 """
 
 # overal settings
-voxel_size = 40
+voxel_size = 20
 agent_count = 1
 wait_to_diffuse = 10
 
@@ -51,6 +51,8 @@ move_dir_prefer_to_down = 3
 move_dir_prefer_strength = 0
 
 ground_level_Z = 1
+enter_zone_a = 0
+enter_zone_b = 4
 
 
 def margin_boundaries(size, parts):
@@ -106,9 +108,10 @@ def layer_env_setup(iterations):
     ### CREATE GROUND
     # make ground
     
-    ground.array += make_solid_box_z(voxel_size, ground_level_Z)
+    # ground.array += make_solid_box_z(voxel_size, ground_level_Z)
+    ground.array[:,:,:ground_level_Z + 1] = 1
     print(ground.array)
-    # wall = make_solid_box_xxyyzz(voxel_size, 20,23,20,23,0,3)
+    # wall = make_solid_box_xxyyzz(voxel_size, 10,20,10,20,0,20)
     # ground.array += wall
     ground.rgb = [207/255, 179/255, 171/255]
 
@@ -149,19 +152,19 @@ def setup_agents(layers):
             track_layer = None, leave_trace=False, save_move_history=True)
         
         # drop in the middle
-        reset_agent(agent, voxel_size)
+        reset_agent(agent, ground_level_Z + 1, enter_zone_a, enter_zone_b)
 
         agents.append(agent)
     return agents
 
-def reset_agent(agent, voxel_size):
+def reset_agent(agent, z, enter_zone_a, enter_zone_b):
     # centered setup
-    a, b = margin_boundaries(voxel_size, margin_ratio + 2)
+    a, b = [enter_zone_a, enter_zone_b]
     
     x = np.random.randint(a, b)
     y = np.random.randint(a, b)
     # z = np.random.randint(a, b)
-    z = ground_level_Z
+    z = ground_level_Z + 1
     agent.pose = [x,y,z]
 
     agent.build_chance = 0
@@ -237,7 +240,7 @@ def move_agent(agent, layers):
     # if move_dir_preferences != None:
     #     up, side, down = move_dir_preferences
     #     cube += agent.direction_preference_26_pheromones_v2(up, side, down) * move_dir_prefer_strength
-    moved = agent.move_on_ground(layers[4])
+    moved = agent.move_on_ground(layers[4], voxel_size)
     # moved = agent.follow_pheromones(cube, check_collision, fly)
     return moved
 
