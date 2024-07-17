@@ -23,8 +23,8 @@ do reset
 """
 
 # overal settings
-voxel_size = 20
-agent_count = 1
+voxel_size = 22
+agent_count = 2
 wait_to_diffuse = 10
 
 # BUILD OVERALL SETTINGS
@@ -51,9 +51,9 @@ move_dir_prefer_to_down = 3
 move_dir_prefer_strength = 0
 
 ground_level_Z = 1
-enter_zone_a = 0
-enter_zone_b = 4
-
+enter_zone_a = 5
+enter_zone_b = 8
+solid_box = [10,20,10,20,0,6]
 
 def margin_boundaries(size, parts):
     """return margin start and end integrers"""
@@ -111,8 +111,8 @@ def layer_env_setup(iterations):
     # ground.array += make_solid_box_z(voxel_size, ground_level_Z)
     ground.array[:,:,:ground_level_Z + 1] = 1
     print(ground.array)
-    # wall = make_solid_box_xxyyzz(voxel_size, 10,20,10,20,0,20)
-    # ground.array += wall
+    wall = make_solid_box_xxyyzz(voxel_size, *solid_box)
+    ground.array += wall
     ground.rgb = [207/255, 179/255, 171/255]
 
     # set ground moisture

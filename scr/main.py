@@ -30,13 +30,14 @@ layers_to_scatter = []
 settings, layers, clay_moisture_layer= layer_env_setup(iterations)
 print('env made. voxel size:',voxel_size)
 layers_to_scatter = [layers[0], layers[4]]
+# layers_to_scatter = [layers[0]]
 
 # MAKE AGENTS
 agents = setup_agents(layers)
 
 # SIMULATION FUNCTION
 
-def scatter_layers(axes, layers, clear = False, scale = voxel_size):
+def scatter_layers(axes, layers, clear = True, scale = voxel_size):
     # axes.clear()
     if clear:
         axes.clear()
