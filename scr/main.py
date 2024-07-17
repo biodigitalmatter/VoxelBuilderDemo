@@ -23,10 +23,13 @@ save_json = _save
 save_animation = False
 show_animation = True
 
+global layers_to_scatter
+layers_to_scatter = []
 
 # SETUP ENVIRONMENT
 settings, layers, clay_moisture_layer= layer_env_setup(iterations)
-print(voxel_size)
+print('env made. voxel size:',voxel_size)
+layers_to_scatter = [layers[0]]
 
 # MAKE AGENTS
 agents = setup_agents(layers)
@@ -34,6 +37,7 @@ agents = setup_agents(layers)
 # SIMULATION FUNCTION
 
 def scatter_layers(axes, layers):
+    # axes.clear()
     for layer in layers:
         a1 = layer.array.copy()
         # scatter plot
@@ -66,7 +70,7 @@ def simulate(frame):
 
     # 3. make frame for animation
     if show_animation or save_animation:
-        scatter_layers(axes, layers = [layers[0]]) 
+        scatter_layers(axes, layers_to_scatter) 
     simulate.counter += 1
     
     # 4. DUMP JSON
@@ -114,7 +118,7 @@ if __name__ == '__main__':
         axes.set_xticks([])
         axes.set_yticks([])
         axes.set_zticks([])
-        scatter_layers(axes, layers = [layers[0]]) 
+        scatter_layers(axes, layers_to_scatter) 
 
         suffix = '%s_a%s_i%s' %(note, agent_count, iterations)
 

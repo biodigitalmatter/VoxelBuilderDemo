@@ -103,7 +103,7 @@ def layer_env_setup(iterations):
     air_moisture_layer.gradient_resolution = 10000
 
 
-    ### CREATE ENVIRONMENT
+    ### CREATE GROUND
     # make ground
     ground.array += make_solid_box_z(voxel_size, ground_level_Z)
     # wall = make_solid_box_xxyyzz(voxel_size, 20,23,20,23,0,3)
