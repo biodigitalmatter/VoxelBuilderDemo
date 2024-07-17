@@ -61,17 +61,19 @@ def simulate(frame):
     # 2. MOVE and BUILD
     for agent in agents:
         # MOVE
-        print(agent.pose)
-        agent.space_layer.set_layer_value_at_index(agent.pose, 0)
-        if np.amax( agent.pose) >= voxel_size - 1:
-            reset_agent(agent, voxel_size)
-        else:
-            if simulate.counter % 2 == 0:
-                dir = [0,1,0]
-            else: dir = [1,0,0]
-            agent.pose += np.asarray(dir)
-        agent.space_layer.set_layer_value_at_index(agent.pose, 1)
-        # moved = move_agent(agent, layers)
+        ### simple test zigzag
+        # print(agent.pose)
+        # agent.space_layer.set_layer_value_at_index(agent.pose, 0)
+        # if np.amax( agent.pose) >= voxel_size - 1:
+        #     reset_agent(agent, voxel_size)
+        # else:
+        #     if simulate.counter % 2 == 0:
+        #         dir = [0,1,0]
+        #     else: dir = [1,0,0]
+        #     agent.pose += np.asarray(dir)
+        # agent.space_layer.set_layer_value_at_index(agent.pose, 1)
+        # MOVE
+        moved = move_agent(agent, layers)
         # # BUILD
         # if moved:
         #     build_chance, erase_chance = calculate_build_chances(agent, layers)

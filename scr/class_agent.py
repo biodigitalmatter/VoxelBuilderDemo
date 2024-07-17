@@ -295,7 +295,7 @@ class Agent:
         # nb_cells = self.get_nb_6_cell_indicies(self.pose)
         nb_cells = self.get_nb_26_cell_indicies(self.pose)
         cells_to_check = list(nb_cells)
-        exclude = []
+        exclude = [] # FALSE if agent can move there, True if cannot
         # iterate through nb cells
         for nb_pose in cells_to_check:
             # check if nb cell is empty
@@ -319,6 +319,33 @@ class Agent:
         exclude_pheromones = np.asarray(exclude)
         return exclude_pheromones
     
+    def move_on_ground(self, ground):
+        cube = self.get_nb_26_cell_indicies(self.pose)
+        random_ph = np.random.random(26)
+        exclude = self.get_move_mask_26(self.ground_layer)
+        random_ph[exclude] = -1
+        choice = np.argmax(random_ph)
+        print('pose', self.pose)
+        print('choice:', choice)
+        new_pose = cube[choice]
+        print('new_pose:', new_pose)
+
+        # update track layer
+        if self.leave_trace:
+            self.track_layer.set_layer_value_at_index(self.pose, 1)
+        # update location in space layer
+        self.space_layer.set_layer_value_at_index(self.pose, 0)
+
+        # move
+        self.pose = new_pose
+        # self.move_26(move_vector, self.space_layer.voxel_size)
+
+        # update location in space layer
+        self.space_layer.set_layer_value_at_index(self.pose, 1)
+        return True
+
+
+
     def follow_pheromones(self, pheromone_cube, check_collision = False, fly = False):
         # check ground condition
         print('pose:', self.pose)

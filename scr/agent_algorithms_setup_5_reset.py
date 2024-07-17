@@ -237,8 +237,8 @@ def move_agent(agent, layers):
     # if move_dir_preferences != None:
     #     up, side, down = move_dir_preferences
     #     cube += agent.direction_preference_26_pheromones_v2(up, side, down) * move_dir_prefer_strength
-
-    moved = agent.follow_pheromones(cube, check_collision, fly)
+    moved = agent.move_on_ground(layers[4])
+    # moved = agent.follow_pheromones(cube, check_collision, fly)
     return moved
 
 def calculate_build_chances(agent, layers):
