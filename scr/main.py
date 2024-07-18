@@ -9,8 +9,8 @@ from class_layer import Layer
 # import presets from here
 from agent_algorithms_setup_5_reset import *
 
-note = 'setup_5__random_build'
-iterations = 100
+note = 'setup_5__allways_build_test_bounds'
+iterations = 200
 time__ = timestamp_now
 save_json_every_nth = 200
 plot = True
@@ -18,10 +18,13 @@ trim_floor = False
 
 ### SAVE
 # _save = True
-save_img = True
+save_img = False
 save_json = False
 save_animation = False
-show_animation = False
+show_animation = True
+# img plot type
+show_scatter_img_bool = False
+show_voxel_img_bool = True
 
 global layers_to_scatter
 layers_to_scatter = []
@@ -65,19 +68,23 @@ def simulate(frame):
     for agent in agents:
         # MOVE
         moved = move_agent(agent, layers)
+        print(moved)
+        if not moved:
+            reset_agent(agent)
         # BUILD DEMO
-        if np.random.random(1) > 0.3:
-            x,y,z = agent.pose
-            ground.array[x,y,z] = 1
+        if moved:
+            if np.random.random(1) >= 0:
+                x,y,z = agent.pose
+                ground.array[x,y,z] = 1
         # # BUILD
         # if moved:
         #     build_chance, erase_chance = calculate_build_chances(agent, layers)
         #     built, erased = build(agent, layers, build_chance, erase_chance, False)
         #     if built and reset_after_build:
-        #         reset_agent(agent, voxel_size)
+        #         reset_agent(agent)
         # else:
         #     if reset_after_build:
-        #         reset_agent(agent, voxel_size)
+        #         reset_agent(agent)
     # 2.b clay dries
     
 
@@ -156,27 +163,35 @@ if __name__ == '__main__':
             scale = voxel_size
             fig = plt.figure(figsize = [4, 4], dpi = 200)
             axes = plt.axes(xlim=(0, scale), ylim =  (0, scale), zlim = (0, scale), projection = '3d')
-            axes.set_xticks([])
-            axes.set_yticks([])
-            axes.set_zticks([])
+            if show_scatter_img_bool:
+                axes.set_xticks([])
+                axes.set_yticks([])
+                axes.set_zticks([])
+                
+                # scatter plot special
+                a1 = ground.array.copy()
+                a1[:,:,:ground_level_Z] = 0
+                pts_built = convert_array_to_points(a1, False)
+                agent_space_pts = convert_array_to_points(layers['agent_space'].array, False)
+                arrays_to_show = [pts_built, agent_space_pts]
+                colors = [layers['clay_moisture_layer'].rgb, agent_space.rgb]
+                for array, color in zip(arrays_to_show, colors):
+                    p = array.transpose()
+                    axes.scatter(p[0, :], p[1, :], p[2, :], marker = 's', s = 1, facecolor = color)
+                
+                # # scatter plot as preset:
+                # scatter_layers(axes, layers_to_scatter) 
+                
             
-            a1 = ground.array.copy()
-            a1[:,:,:ground_level_Z] = 0
+            elif show_voxel_img_bool:
+                colors = [layer.rgb for layer in layers_to_scatter]
+                voxel_grids = [layer.array[:,:,ground_level_Z:] for layer in layers_to_scatter]
+                plot_voxels_2(axes, voxel_grids, colors, edgecolor=None)
+                suffix = '%s_a%s_i%s' %(note, agent_count, iterations)
 
-            # scatter plot special
-            pts_built = convert_array_to_points(a1, False)
-            agent_space_pts = convert_array_to_points(layers['agent_space'].array, False)
-            arrays_to_show = [pts_built, agent_space_pts]
-            colors = [layers['clay_moisture_layer'].rgb, agent_space.rgb]
-            for array, color in zip(arrays_to_show, colors):
-                p = array.transpose()
-                axes.scatter(p[0, :], p[1, :], p[2, :], marker = 's', s = 1, facecolor = color)
-
-            # # scatter plot as preset:
-            # scatter_layers(axes, layers_to_scatter) 
-            suffix = '%s_a%s_i%s' %(note, agent_count, iterations)
 
             plt.savefig('img/img_%s_%s.png' %(timestamp_now, suffix), bbox_inches='tight', dpi = 200)
             print('image saved')
 
             plt.show()
+

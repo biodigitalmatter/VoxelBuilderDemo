@@ -50,6 +50,7 @@ move_dir_prefer_to_up = 1
 move_dir_prefer_to_down = 3
 move_dir_prefer_strength = 0
 
+global ground_level_Z, enter_zone_a, enter_zone_b
 ground_level_Z = 1
 enter_zone_a = 5
 enter_zone_b = 8
@@ -149,12 +150,27 @@ def setup_agents(layers):
             track_layer = None, leave_trace=False, save_move_history=True)
         
         # drop in the middle
-        reset_agent(agent, ground_level_Z, enter_zone_a, enter_zone_b)
+        reset_agent(agent)
 
         agents.append(agent)
     return agents
 
-def reset_agent(agent, z, enter_zone_a, enter_zone_b):
+def reset_agent_2(agent, z, enter_zone_a, enter_zone_b):
+    # centered setup
+    a, b = [enter_zone_a, enter_zone_b]
+    
+    x = np.random.randint(a, b)
+    y = np.random.randint(a, b)
+    # z = np.random.randint(a, b)
+
+    agent.pose = [x,y,z]
+
+    agent.build_chance = 0
+    agent.erase_chance = 0
+    agent.move_history = []
+
+
+def reset_agent(agent):
     # centered setup
     a, b = [enter_zone_a, enter_zone_b]
     
@@ -205,6 +221,7 @@ def move_agent(agent, layers):
     # move_dir_prefer_strength = 0
 
     check_collision = False
+    keep_in_bounds = True
 
     move_ph_strength_list = [
         move_ph_queen_bee,
@@ -237,8 +254,14 @@ def move_agent(agent, layers):
         up, side, down = move_dir_preferences
         cube += agent.direction_preference_26_pheromones_v2(up, side, down) * move_dir_prefer_strength
     # moved = agent.move_on_ground(layers['ground'], voxel_size)
-    moved = agent.move_on_ground_by_cube(ground=layers['ground'], pheromon_cube=cube, voxel_size=voxel_size, fly = False)
-    return moved
+    moved = agent.move_on_ground_by_cube(ground=layers['ground'], pheromon_cube=cube, voxel_size=voxel_size, fly = False, only_bounds = True)
+    
+    # check if in bounds
+    if 0 <= np.max(agent.pose) <= voxel_size - 1:
+        pass
+    else:
+        return False
+    return True
 
 def calculate_build_chances(agent, layers):
     """PLACEHOLDER NOT REMOVED!
@@ -308,7 +331,7 @@ def build(agent, layers, build_chance, erase_chance, decay_clay = False):
         built = agent.build(ground)
         built2 = agent.build(clay_moisture_layer)
         if built and reset_after_build:
-            reset_agent = True
+            # reset_agent = True
             if decay_clay:
                 clay_moisture_layer.decay_linear()
     elif agent.erase_chance >= reach_to_erase and build_condition == True:

@@ -54,6 +54,58 @@ def show(fig, ax, layer, save_img = True, show_img = True,  title = 'voxels_test
     show_voxel(fig, ax, layer.array, layer.color_array, save=save_img, show = show_img, title=title, suffix = suffix)
 
 
+def plot_voxels_2(ax, voxel_grids, colors, edgecolor = None, clear_ax = True):
+    if clear_ax:
+        ax.clear()
+    for i in range(len(voxel_grids)):
+        ax.voxels(voxel_grids[i], facecolors=colors[i], edgecolor = edgecolor)
+    ax.set_xlim(0, voxel_grids[0].shape[0])
+    ax.set_ylim(0, voxel_grids[0].shape[1])
+    ax.set_zlim(0, voxel_grids[0].shape[2])
+    ax.set_xticks([])
+    ax.set_yticks([])
+    ax.set_zticks([])
+    
+    ax.set_box_aspect([1,1,1])  # Aspect ratio is 1:1:1
+
+def plot_voxel_2(ax, voxel_grid, color = 'blue'):
+    ax.clear()
+    ax.voxels(voxel_grid, facecolors=color, edgecolor='k')
+    ax.set_xlim(0, voxel_grid.shape[0])
+    ax.set_ylim(0, voxel_grid.shape[1])
+    ax.set_zlim(0, voxel_grid.shape[2])
+    ax.set_box_aspect([1,1,1])  # Aspect ratio is 1:1:1
+    ax.set_xticks([])
+    ax.set_yticks([])
+    ax.set_zticks([])
+
+def show_voxel_2(voxel_grid, color = 'red'):
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    # ax.clear()
+    ax.voxels(voxel_grid, facecolors=color, edgecolor='k')
+    ax.set_xlim(0, voxel_grid.shape[0])
+    ax.set_ylim(0, voxel_grid.shape[1])
+    ax.set_zlim(0, voxel_grid.shape[2])
+    ax.set_box_aspect([1,1,1])  # Aspect ratio is 1:1:1
+    ax.set_xticks([])
+    ax.set_yticks([])
+    ax.set_zticks([])
+    plt.show()
+
+def show_voxels_2(ax, voxel_grids, colors, edgecolor = 'k'):
+    ax.clear()
+    for i in range(len(voxel_grids)):
+        ax.voxels(voxel_grids[i], facecolors=colors[i], edgecolor='k')
+    ax.set_xlim(0, voxel_grids[0].shape[0])
+    ax.set_ylim(0, voxel_grids[0].shape[1])
+    ax.set_zlim(0, voxel_grids[0].shape[2])
+    ax.set_xticks([])
+    ax.set_yticks([])
+    ax.set_zticks([])
+    plt.show()
+
+
 # # animation template
 
 # from matplotlib import animation

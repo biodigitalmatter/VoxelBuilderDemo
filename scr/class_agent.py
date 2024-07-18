@@ -348,10 +348,19 @@ class Agent:
         self.space_layer.set_layer_value_at_index(self.pose, 1)
         return True
     
-    def move_on_ground_by_cube(self, ground, pheromon_cube, voxel_size = None, fly = None):
+    def move_on_ground_by_cube(self, ground, pheromon_cube, voxel_size = None, fly = None, only_bounds = True):
         cube = self.get_nb_26_cell_indicies(self.pose)
-        if voxel_size != None:
-            cube = np.clip(cube,0,voxel_size)
+
+        # # limit options to inside
+        # print('voxel_size, fly, only_bounds:', voxel_size, fly, only_bounds )
+        # if np.amax(cube) >= voxel_size - 1:
+        #     print('amax:',np.amax(cube))
+        #     print('cube_before:', cube)
+        #     if only_bounds == True:
+        #         cube = np.clip(cube,0,voxel_size - 1)
+        #         print('amax new:', np.amax(cube))
+        #         print(cube)
+
             
         # move on ground
         exclude = self.get_move_mask_26(ground, fly)
@@ -360,7 +369,7 @@ class Agent:
         # print('pose', self.pose)
         # print('choice:', choice)
         new_pose = cube[choice]
-        # print('new_pose:', new_pose)
+        print('new_pose:', new_pose)
 
         # update track layer
         if self.leave_trace:
