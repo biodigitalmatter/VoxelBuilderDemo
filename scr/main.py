@@ -9,19 +9,19 @@ from class_layer import Layer
 # import presets from here
 from agent_algorithms_setup_5_reset import *
 
-note = 'setup_5__allways_build_test_bounds'
-iterations = 200
+note = 'setup_5__test_bounds'
+iterations = 500
 time__ = timestamp_now
-save_json_every_nth = 200
-plot = True
+save_json_every_nth = 100
+# plot = True
 trim_floor = False
 
 ### SAVE
 # _save = True
-save_img = False
-save_json = False
+save_img = True
+save_json = True
 save_animation = False
-show_animation = True
+show_animation = False
 # img plot type
 show_scatter_img_bool = False
 show_voxel_img_bool = True
@@ -68,7 +68,7 @@ def simulate(frame):
     for agent in agents:
         # MOVE
         moved = move_agent(agent, layers)
-        print(moved)
+        # print(moved)
         if not moved:
             reset_agent(agent)
         # BUILD DEMO
@@ -97,13 +97,14 @@ def simulate(frame):
     if save_json:
         suffix = '%s_a%s_i%s' %(note, agent_count, iterations)
         if simulate.counter % save_json_every_nth == 0:
-            if trim_floor:
-                # trim floor
-                a1 = layers['clay_moisture_layer'].array.copy()
-                a1[:,:,:ground_level_Z] = 0
-            else:
-                a1 = layers['clay_moisture_layer'].array.copy()
+            # if trim_floor:
+            #     # trim floor
+            #     a1 = layers['clay_moisture_layer'].array.copy()
+            #     a1[:,:,:ground_level_Z] = 0
+            # else:
+            #     a1 = layers['clay_moisture_layer'].array.copy()
             # save points
+            a1 = ground.array.copy()
             sortedpts, values = sort_pts_by_values(a1, multiply=100)
             list_to_dump = {'pt_list' : sortedpts, 'values' : values}
             filename = 'data/json/points_values/pts_%s_%s.json' %(time__, suffix)
@@ -159,7 +160,7 @@ if __name__ == '__main__':
         for i in range(iterations):
             simulate(None)
         
-        if save_img:
+        if show_scatter_img_bool or show_voxel_img_bool or save_img:
             scale = voxel_size
             fig = plt.figure(figsize = [4, 4], dpi = 200)
             axes = plt.axes(xlim=(0, scale), ylim =  (0, scale), zlim = (0, scale), projection = '3d')
@@ -189,9 +190,9 @@ if __name__ == '__main__':
                 plot_voxels_2(axes, voxel_grids, colors, edgecolor=None)
                 suffix = '%s_a%s_i%s' %(note, agent_count, iterations)
 
-
-            plt.savefig('img/img_%s_%s.png' %(timestamp_now, suffix), bbox_inches='tight', dpi = 200)
-            print('image saved')
+            if save_img:
+                plt.savefig('img/img_%s_%s.png' %(timestamp_now, suffix), bbox_inches='tight', dpi = 200)
+                print('image saved')
 
             plt.show()
 

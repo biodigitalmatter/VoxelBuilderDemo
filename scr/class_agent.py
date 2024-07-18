@@ -352,14 +352,11 @@ class Agent:
         cube = self.get_nb_26_cell_indicies(self.pose)
 
         # # limit options to inside
-        # print('voxel_size, fly, only_bounds:', voxel_size, fly, only_bounds )
-        # if np.amax(cube) >= voxel_size - 1:
-        #     print('amax:',np.amax(cube))
-        #     print('cube_before:', cube)
-        #     if only_bounds == True:
-        #         cube = np.clip(cube,0,voxel_size - 1)
-        #         print('amax new:', np.amax(cube))
-        #         print(cube)
+        # print(np.max(cube), np.min(cube))
+        if only_bounds == True:
+            cube = np.clip(cube,0,voxel_size - 1)
+            # print('amax new:', np.max(cube), np.min(cube))
+            # print(cube)
 
             
         # move on ground
@@ -369,7 +366,7 @@ class Agent:
         # print('pose', self.pose)
         # print('choice:', choice)
         new_pose = cube[choice]
-        print('new_pose:', new_pose)
+        # print('new_pose:', new_pose)
 
         # update track layer
         if self.leave_trace:

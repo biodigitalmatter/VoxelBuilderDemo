@@ -23,8 +23,8 @@ do reset
 """
 
 # overal settings
-voxel_size = 22
-agent_count = 1
+voxel_size = 60
+agent_count = 5
 wait_to_diffuse = 10
 
 # BUILD OVERALL SETTINGS
@@ -34,8 +34,7 @@ stacked_chances = True
 reset_after_build = False
 
 # make boundary
-global margin_ratio, fly
-margin_ratio = 2
+# global margin_ratio, fly
 fly = False
 
 # MOVE PRESETS - pheromon layers
@@ -50,7 +49,11 @@ move_dir_prefer_to_up = 1
 move_dir_prefer_to_down = 3
 move_dir_prefer_strength = 0
 
-global ground_level_Z, enter_zone_a, enter_zone_b
+check_collision = False
+keep_in_bounds = True
+# if not keep in bounds, agents reset if out of bounds
+
+# global ground_level_Z, enter_zone_a, enter_zone_b
 ground_level_Z = 1
 enter_zone_a = 5
 enter_zone_b = 8
@@ -112,7 +115,7 @@ def layer_env_setup(iterations):
     
     # ground.array += make_solid_box_z(voxel_size, ground_level_Z)
     ground.array[:,:,:ground_level_Z] = 1
-    print(ground.array)
+    # print(ground.array)
     # wall = make_solid_box_xxyyzz(voxel_size, *solid_box)
     # ground.array += wall
     ground.rgb = [207/255, 179/255, 171/255]
@@ -220,9 +223,6 @@ def move_agent(agent, layers):
     # move_dir_prefer_to_down = 1
     # move_dir_prefer_strength = 0
 
-    check_collision = False
-    keep_in_bounds = True
-
     move_ph_strength_list = [
         move_ph_queen_bee,
         move_ph_sky,
@@ -254,14 +254,14 @@ def move_agent(agent, layers):
         up, side, down = move_dir_preferences
         cube += agent.direction_preference_26_pheromones_v2(up, side, down) * move_dir_prefer_strength
     # moved = agent.move_on_ground(layers['ground'], voxel_size)
-    moved = agent.move_on_ground_by_cube(ground=layers['ground'], pheromon_cube=cube, voxel_size=voxel_size, fly = False, only_bounds = True)
+    moved = agent.move_on_ground_by_cube(ground=layers['ground'], pheromon_cube=cube, voxel_size=voxel_size, fly = False, only_bounds = keep_in_bounds)
     
     # check if in bounds
-    if 0 <= np.max(agent.pose) <= voxel_size - 1:
-        pass
-    else:
-        return False
-    return True
+    if 0 > np.min(agent.pose) or np.max(agent.pose) >= voxel_size :
+        # print(agent.pose)
+        moved = False
+
+    return moved
 
 def calculate_build_chances(agent, layers):
     """PLACEHOLDER NOT REMOVED!
