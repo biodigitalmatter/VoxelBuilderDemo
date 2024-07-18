@@ -283,11 +283,13 @@ class Agent:
         return exclude_pheromones
     
     def get_move_mask_26(self, ground_layer, fly = False):
-        """return ground direction logical_not mask
-        True if can not move there
-            nb_cell != 0 or nb_value_sum = 0
-        False if can move there:
-            nb_cell == 0 and nb_value_sum > 0
+        """return move mask 1D array for the 26 nb voxel around self.pose
+        the voxel
+            most be non-solid
+            must has at least one solid face_nb 
+        return:
+            True if can not move there
+            False if can move there
 
         if fly == True, cells do not have to be neighbors of solid
         """
@@ -300,22 +302,21 @@ class Agent:
         for nb_pose in cells_to_check:
             # check if nb cell is empty
             nb_value = get_layer_value_at_index(ground_layer, nb_pose) 
-            print(nb_value)
+            # print(nb_value)
             if nb_value == 0:
-                # exclude.append(True)
-                # if not fly:
-                # check if nb cells have any face_nb cell which is solid
-                nbs_values = self.get_nb_6_cell_values(ground_layer, nb_pose)
-                print(nbs_values)
-                if np.sum(nbs_values) > 0:
-                    exclude.append(False) 
-                else: 
-                    exclude.append(True)
-                # else:
-                #     exclude.append(False)
+                if not fly:
+                    # check if nb cells have any face_nb cell which is solid
+                    nbs_values = self.get_nb_6_cell_values(ground_layer, nb_pose)
+                    # print(nbs_values)
+                    if np.sum(nbs_values) > 0:
+                        exclude.append(False) 
+                    else: 
+                        exclude.append(True)
+                else:
+                    exclude.append(False)
             else:
                 exclude.append(True)
-        print(exclude)
+        # print(exclude)
         exclude_pheromones = np.asarray(exclude)
         return exclude_pheromones
     
@@ -328,10 +329,38 @@ class Agent:
         exclude = self.get_move_mask_26(self.ground_layer)
         random_ph[exclude] = -1
         choice = np.argmax(random_ph)
-        print('pose', self.pose)
-        print('choice:', choice)
+        # print('pose', self.pose)
+        # print('choice:', choice)
         new_pose = cube[choice]
-        print('new_pose:', new_pose)
+        # print('new_pose:', new_pose)
+
+        # update track layer
+        if self.leave_trace:
+            self.track_layer.set_layer_value_at_index(self.pose, 1)
+        # update location in space layer
+        self.space_layer.set_layer_value_at_index(self.pose, 0)
+
+        # move
+        self.pose = new_pose
+        # self.move_26(move_vector, self.space_layer.voxel_size)
+
+        # update location in space layer
+        self.space_layer.set_layer_value_at_index(self.pose, 1)
+        return True
+    
+    def move_on_ground_by_cube(self, ground, pheromon_cube, voxel_size = None, fly = None):
+        cube = self.get_nb_26_cell_indicies(self.pose)
+        if voxel_size != None:
+            cube = np.clip(cube,0,voxel_size)
+            
+        # move on ground
+        exclude = self.get_move_mask_26(ground, fly)
+        pheromon_cube[exclude] = -1
+        choice = np.argmax(pheromon_cube)
+        # print('pose', self.pose)
+        # print('choice:', choice)
+        new_pose = cube[choice]
+        # print('new_pose:', new_pose)
 
         # update track layer
         if self.leave_trace:
@@ -347,44 +376,47 @@ class Agent:
         self.space_layer.set_layer_value_at_index(self.pose, 1)
         return True
 
-
-
     def follow_pheromones(self, pheromone_cube, check_collision = False, fly = False):
-        # check ground condition
-        print('pose:', self.pose)
-        ground_around = self.scan_neighborhood_values(self.ground_layer.array, offset_radius=2,pose=self.pose, format_values=2)
-        print('ground around', ground_around)
-        exclude_pheromones = self.get_move_mask_26(self.ground_layer, fly)
-        pheromone_cube[exclude_pheromones] = -1
+        """use move_on_ground or move_on_ground_by_cube"""
+        return None
+
+
+    # def follow_pheromones(self, pheromone_cube, check_collision = False, fly = False):
+    #     # check ground condition
+    #     print('pose:', self.pose)
+    #     ground_around = self.scan_neighborhood_values(self.ground_layer.array, offset_radius=2,pose=self.pose, format_values=2)
+    #     print('ground around', ground_around)
+    #     exclude_pheromones = self.get_move_mask_26(self.ground_layer, fly)
+    #     pheromone_cube[exclude_pheromones] = -1
         
-        print('cube:', pheromone_cube)
-        if check_collision:
-            # collision_array = self.space_layer.get_merged_array_with(self.ground_layer)
-            exclude_pheromones = self.get_move_mask_26(self.space_layer, fly)
-            pheromone_cube[exclude_pheromones] = -1
+    #     print('cube:', pheromone_cube)
+    #     if check_collision:
+    #         # collision_array = self.space_layer.get_merged_array_with(self.ground_layer)
+    #         exclude_pheromones = self.get_move_mask_26(self.space_layer, fly)
+    #         pheromone_cube[exclude_pheromones] = -1
         
-        if np.sum(pheromone_cube) == -26:
-            print('cant move')
-            return False
+    #     if np.sum(pheromone_cube) == -26:
+    #         print('cant move')
+    #         return False
 
-        # select best pheromon
-        choice = np.argmax(pheromone_cube)
-        print('choice:', choice)
-        move_vector = self.cube_array[choice]
-        print('move vector:', move_vector)
+    #     # select best pheromon
+    #     choice = np.argmax(pheromone_cube)
+    #     print('choice:', choice)
+    #     move_vector = self.cube_array[choice]
+    #     print('move vector:', move_vector)
 
-        # update track layer
-        if self.leave_trace:
-            self.track_layer.set_layer_value_at_index(self.pose, 1)
-        # update location in space layer
-        self.space_layer.set_layer_value_at_index(self.pose, 0)
+    #     # update track layer
+    #     if self.leave_trace:
+    #         self.track_layer.set_layer_value_at_index(self.pose, 1)
+    #     # update location in space layer
+    #     self.space_layer.set_layer_value_at_index(self.pose, 0)
 
-        # move
-        self.move_26(move_vector, self.space_layer.voxel_size)
+    #     # move
+    #     self.move_26(move_vector, self.space_layer.voxel_size)
 
-        # update location in space layer
-        self.space_layer.set_layer_value_at_index(self.pose, 1)
-        return True
+    #     # update location in space layer
+    #     self.space_layer.set_layer_value_at_index(self.pose, 1)
+    #     return True
     
     def get_build_flag_by_probability(self, limit):
         if limit < self.build_probability:

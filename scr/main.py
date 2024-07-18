@@ -9,35 +9,37 @@ from class_layer import Layer
 # import presets from here
 from agent_algorithms_setup_5_reset import *
 
-note = 'setup_5'
-iterations = 3
+note = 'setup_5__random_build'
+iterations = 100
 time__ = timestamp_now
 save_json_every_nth = 200
 plot = True
 trim_floor = False
 
 ### SAVE
-_save = False
-save_img = _save
-save_json = _save
+# _save = True
+save_img = True
+save_json = False
 save_animation = False
-show_animation = True
+show_animation = False
 
 global layers_to_scatter
 layers_to_scatter = []
 
 # SETUP ENVIRONMENT
-settings, layers, clay_moisture_layer= layer_env_setup(iterations)
+settings, layers = layer_env_setup(iterations)
 print('env made. voxel size:',voxel_size)
-layers_to_scatter = [layers[0], layers[4]]
-# layers_to_scatter = [layers[0]]
+agent_space = layers['agent_space']
+ground = layers['ground']
+layers_to_scatter = [agent_space, ground]
+# layers_to_scatter = [agent_space]
 
 # MAKE AGENTS
 agents = setup_agents(layers)
 
 # SIMULATION FUNCTION
 
-def scatter_layers(axes, layers, clear = True, scale = voxel_size):
+def scatter_layers(axes, layers, clear = False, scale = voxel_size):
     # axes.clear()
     if clear:
         axes.clear()
@@ -62,19 +64,11 @@ def simulate(frame):
     # 2. MOVE and BUILD
     for agent in agents:
         # MOVE
-        ### simple test zigzag
-        # print(agent.pose)
-        # agent.space_layer.set_layer_value_at_index(agent.pose, 0)
-        # if np.amax( agent.pose) >= voxel_size - 1:
-        #     reset_agent(agent, voxel_size)
-        # else:
-        #     if simulate.counter % 2 == 0:
-        #         dir = [0,1,0]
-        #     else: dir = [1,0,0]
-        #     agent.pose += np.asarray(dir)
-        # agent.space_layer.set_layer_value_at_index(agent.pose, 1)
-        # MOVE
         moved = move_agent(agent, layers)
+        # BUILD DEMO
+        if np.random.random(1) > 0.3:
+            x,y,z = agent.pose
+            ground.array[x,y,z] = 1
         # # BUILD
         # if moved:
         #     build_chance, erase_chance = calculate_build_chances(agent, layers)
@@ -93,15 +87,15 @@ def simulate(frame):
     simulate.counter += 1
     
     # 4. DUMP JSON
-    if _save:
+    if save_json:
         suffix = '%s_a%s_i%s' %(note, agent_count, iterations)
         if simulate.counter % save_json_every_nth == 0:
             if trim_floor:
                 # trim floor
-                a1 = clay_moisture_layer.array.copy()
-                a1[:,:,0] = 0
+                a1 = layers['clay_moisture_layer'].array.copy()
+                a1[:,:,:ground_level_Z] = 0
             else:
-                a1 = clay_moisture_layer.array.copy()
+                a1 = layers['clay_moisture_layer'].array.copy()
             # save points
             sortedpts, values = sort_pts_by_values(a1, multiply=100)
             list_to_dump = {'pt_list' : sortedpts, 'values' : values}
@@ -123,6 +117,7 @@ def simulate(frame):
                 json.dump(values, file)
 
             print('\ncompas_pointcloud saved as %s:\n' %filename)
+    print(simulate.counter)
 
         
 simulate.counter = 0
@@ -155,7 +150,6 @@ if __name__ == '__main__':
 
     else:
         for i in range(iterations):
-            print(i)
             simulate(None)
         
         if save_img:
@@ -166,19 +160,20 @@ if __name__ == '__main__':
             axes.set_yticks([])
             axes.set_zticks([])
             
-            a1 = clay_moisture_layer.array.copy()
-            # a1[:,:,0] = 0
+            a1 = ground.array.copy()
+            a1[:,:,:ground_level_Z] = 0
 
-            # scatter plot
+            # scatter plot special
             pts_built = convert_array_to_points(a1, False)
-            pts_built_2 = convert_array_to_points(agent_space.array, False)
-
-            arrays_to_show = [pts_built]
-            colors = [clay_moisture_layer.rgb]
+            agent_space_pts = convert_array_to_points(layers['agent_space'].array, False)
+            arrays_to_show = [pts_built, agent_space_pts]
+            colors = [layers['clay_moisture_layer'].rgb, agent_space.rgb]
             for array, color in zip(arrays_to_show, colors):
                 p = array.transpose()
                 axes.scatter(p[0, :], p[1, :], p[2, :], marker = 's', s = 1, facecolor = color)
 
+            # # scatter plot as preset:
+            # scatter_layers(axes, layers_to_scatter) 
             suffix = '%s_a%s_i%s' %(note, agent_count, iterations)
 
             plt.savefig('img/img_%s_%s.png' %(timestamp_now, suffix), bbox_inches='tight', dpi = 200)
