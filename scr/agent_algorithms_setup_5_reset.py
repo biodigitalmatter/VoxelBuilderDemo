@@ -90,8 +90,8 @@ def layer_env_setup(iterations):
     air_moisture_layer = Layer('air_moisture', voxel_size, rgb = [i/255 for i in rgb_air_moisture])
 
     queen_bee_pheromon.diffusion_ratio = 1/7
-    queen_bee_pheromon.decay_ratio = 0.01
-    queen_bee_pheromon.gradient_resolution = 10000
+    queen_bee_pheromon.decay_ratio = 0.001
+    queen_bee_pheromon.gradient_resolution = 100000
 
     ground.decay_linear_value = 1 / iterations / 10
     clay_moisture_layer.decay_linear_value = 1 / iterations / agent_count / 2
@@ -100,7 +100,7 @@ def layer_env_setup(iterations):
 
     air_moisture_layer.diffusion_ratio = 1/12
     air_moisture_layer.decay_ratio = 1/4
-    air_moisture_layer.gradient_resolution = 10000
+    air_moisture_layer.gradient_resolution = 100000
 
     ### CREATE GROUND
     # make ground

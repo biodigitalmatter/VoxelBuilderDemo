@@ -9,8 +9,8 @@ from class_layer import Layer
 # import presets from here
 from agent_algorithms_setup_5_reset import *
 
-note = 'setup_5_test_queen_bee'
-iterations = 50
+note = 'setup_5_test_queen_bee_scale_colors_5'
+iterations = 100
 time__ = timestamp_now
 save_json_every_nth = 100
 # plot = True
@@ -41,6 +41,7 @@ global layers_to_scatter
 layers_to_scatter = []
 layers_to_scatter = [queen_bee_pheromon]
 color_4D = True
+scale_colors = 5
 
 # # prediffuse
 # for i in range(wait_to_diffuse):
@@ -184,7 +185,7 @@ if __name__ == '__main__':
                     colors = [layer.rgb for layer in layers_to_scatter]
                     voxel_grids = [layer.array[:,:,ground_level_Z:] for layer in layers_to_scatter]
                 elif color_4D:
-                    colors = [layer.color_array for layer in layers_to_scatter]
+                    colors = [np.clip(layer.color_array * scale_colors - scale_colors + 1, 0, 1) for layer in layers_to_scatter]
                     voxel_grids = [layer.array for layer in layers_to_scatter]
                 plot_voxels_2(axes, voxel_grids, colors, edgecolor=None)
                 suffix = '%s_a%s_i%s' %(note, agent_count, iterations)
