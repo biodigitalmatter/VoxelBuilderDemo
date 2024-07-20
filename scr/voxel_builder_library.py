@@ -179,6 +179,8 @@ def pheromon_loop(pheromon_layer, emmission_array = None, i = 1, blocking_layer 
         if pheromon_layer.gradient_resolution != 0:
             pheromon_layer.grade()
 
+
+
 # def get_chance_by_climb_style(
 #         agent, 
 #         climb = 0.5,

@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 from datetime import datetime
 from numpy import maximum, minimum
+from helpers import convert_array_to_points
 global timestamp_now
 timestamp = datetime.now()
 timestamp_now = timestamp.strftime("%y%m%d_%H%M%S")
@@ -104,6 +105,23 @@ def show_voxels_2(ax, voxel_grids, colors, edgecolor = 'k'):
     ax.set_yticks([])
     ax.set_zticks([])
     plt.show()
+
+
+def scatter_layers(axes, layers, clear = False, scale = 10, trim_below = 0):
+    # axes.clear()
+    if clear:
+        axes.clear()
+        axes = plt.axes(xlim=(0, scale), ylim =  (0, scale), zlim = (0, scale), projection = '3d')
+        axes.set_xticks([])
+        axes.set_yticks([])
+        axes.set_zticks([])
+    for layer in layers:
+        a1 = layer.array.copy()
+        # scatter plot
+        pt_array = convert_array_to_points(a1[:,:,trim_below:], False)
+        p = pt_array.transpose()
+        axes.scatter(p[0, :], p[1, :], p[2, :], marker = 's', s = 1, facecolor = layer.rgb)
+
 
 
 # # animation template

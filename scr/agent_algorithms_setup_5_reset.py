@@ -23,9 +23,9 @@ do reset
 """
 
 # overal settings
-voxel_size = 60
-agent_count = 5
-wait_to_diffuse = 10
+voxel_size = 40
+agent_count = 1
+wait_to_diffuse = 50
 
 # BUILD OVERALL SETTINGS
 reach_to_build = 6
@@ -38,8 +38,8 @@ reset_after_build = False
 fly = False
 
 # MOVE PRESETS - pheromon layers
-move_ph_random_strength = 1
-move_ph_queen_bee = 0
+move_ph_random_strength = 0.1
+move_ph_queen_bee = 1
 move_ph_sky = 0
 move_ph_moisture = 0
 
@@ -49,15 +49,20 @@ move_dir_prefer_to_up = 1
 move_dir_prefer_to_down = 3
 move_dir_prefer_strength = 0
 
+# queen bee:
+queens_place = [30,30,39]
+queens_place_array = np.zeros([voxel_size, voxel_size, voxel_size])
+queens_place_array[queens_place] = 1
+
 check_collision = False
 keep_in_bounds = True
 # if not keep in bounds, agents reset if out of bounds
 
 # global ground_level_Z, enter_zone_a, enter_zone_b
 ground_level_Z = 1
-enter_zone_a = 5
-enter_zone_b = 8
-solid_box = [10,20,10,20,0,6]
+enter_zone_a = 25
+enter_zone_b = 28
+# solid_box = [10,20,10,20,0,6]
 # solid_box = [0,1,0,1,0,1]
 
 def margin_boundaries(size, parts):
@@ -90,15 +95,12 @@ def layer_env_setup(iterations):
     agent_space = Layer('agent_space', voxel_size = voxel_size, rgb = [i/255 for i in rgb_agents])
     # queen_bee_space = Layer(voxel_size=voxel_size, rgb=[203/255, 21/255, 207/255])
     queen_bee_pheromon = Layer('queen_bee_pheromon', voxel_size=voxel_size, rgb = [i/255 for i in rgb_sky])
-    sky_ph_layer = Layer('sky_ph_layer', voxel_size=voxel_size, rgb = [i/255 for i in rgb_sky])
     clay_moisture_layer = Layer('clay_moisture', voxel_size, rgb = [i/255 for i in rgb_clay_moisture])
     air_moisture_layer = Layer('air_moisture', voxel_size, rgb = [i/255 for i in rgb_air_moisture])
 
-    sky_ph_layer.diffusion_ratio = 1/6
-    sky_ph_layer.decay_ratio = 0.01
-    sky_ph_layer.gradient_resolution = 10000
-    sky_ph_layer.gravity_dir = 5
-    sky_ph_layer.gravity_ratio = 0.8
+    queen_bee_pheromon.diffusion_ratio = 1/6
+    queen_bee_pheromon.decay_ratio = 0.01
+    queen_bee_pheromon.gradient_resolution = 10000
 
     ground.decay_linear_value = 1 / iterations / 10
     clay_moisture_layer.decay_linear_value = 1 / iterations / agent_count / 2
@@ -108,7 +110,6 @@ def layer_env_setup(iterations):
     air_moisture_layer.diffusion_ratio = 1/12
     air_moisture_layer.decay_ratio = 1/4
     air_moisture_layer.gradient_resolution = 10000
-
 
     ### CREATE GROUND
     # make ground
@@ -127,19 +128,19 @@ def layer_env_setup(iterations):
     # pheromon_loop(sky_ph_layer, build_boundary_pheromon.array, wait_to_diffuse, blocking_layer=ground, gravity_shift_bool = True)
 
     # WRAP ENVIRONMENT
-    layers = [agent_space, air_moisture_layer, clay_moisture_layer,  ground, queen_bee_pheromon, sky_ph_layer]
     layers = {'agent_space' : agent_space, 'air_moisture_layer' : air_moisture_layer, 'clay_moisture_layer' : clay_moisture_layer, 
-              'ground' : ground, 'queen_bee_pheromon' : queen_bee_pheromon, "sky_ph_layer" : sky_ph_layer}
+              'ground' : ground, 'queen_bee_pheromon' : queen_bee_pheromon}
     settings = {"agent_count" : agent_count, "voxel_size" : voxel_size}
     return settings, layers
 
 def diffuse_environment(layers):
-    air_moisture_layer = layers['air_moisture_layer']
+    # air_moisture_layer = layers['air_moisture_layer']
     ground = layers['ground']
-    clay_moisture_layer = layers['clay_moisture_layer']
-    # queen_bee_pheromon = layers['queen_bee_pheromon']
+    # clay_moisture_layer = layers['clay_moisture_layer']
+    queen_bee_pheromon = layers['queen_bee_pheromon']
     # sky_ph_layer = layers['sky_ph_layer']
-    pheromon_loop(air_moisture_layer, emmission_array = clay_moisture_layer.array, blocking_layer = ground)
+    pheromon_loop(queen_bee_pheromon, emmission_array=queens_place_array, blocking_layer=ground)
+    # pheromon_loop(air_moisture_layer, emmission_array = clay_moisture_layer.array, blocking_layer = ground)
     pass
 
 def setup_agents(layers):
@@ -158,21 +159,6 @@ def setup_agents(layers):
         agents.append(agent)
     return agents
 
-def reset_agent_2(agent, z, enter_zone_a, enter_zone_b):
-    # centered setup
-    a, b = [enter_zone_a, enter_zone_b]
-    
-    x = np.random.randint(a, b)
-    y = np.random.randint(a, b)
-    # z = np.random.randint(a, b)
-
-    agent.pose = [x,y,z]
-
-    agent.build_chance = 0
-    agent.erase_chance = 0
-    agent.move_history = []
-
-
 def reset_agent(agent):
     # centered setup
     a, b = [enter_zone_a, enter_zone_b]
@@ -186,7 +172,6 @@ def reset_agent(agent):
     agent.build_chance = 0
     agent.erase_chance = 0
     agent.move_history = []
-
 
 def move_agent(agent, layers):
     """move agents in a direction, based on several pheromons weighted in different ratios.
@@ -211,11 +196,7 @@ def move_agent(agent, layers):
 
     # # PRESETS
     # move_ph_random_strength = 1.2
-
     # move_ph_queen_bee = 0
-
-    # move_ph_sky = 1
-
     # move_ph_moisture = 1
 
     # move_dir_prefer_to_side = 1
@@ -225,13 +206,11 @@ def move_agent(agent, layers):
 
     move_ph_strength_list = [
         move_ph_queen_bee,
-        move_ph_sky,
         move_ph_moisture
     ]
 
     move_ph_layers_list = [
         layers['queen_bee_pheromon'],
-        layers["sky_ph_layer"],
         layers["air_moisture_layer"]
     ]
 
@@ -242,7 +221,6 @@ def move_agent(agent, layers):
     ]
 
     pose = agent.pose
-    cube = move_ph_random_strength
     cube = np.random.random(26) * move_ph_random_strength
     for s, layer in zip(move_ph_strength_list, move_ph_layers_list):
         if layer != None:

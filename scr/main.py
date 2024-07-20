@@ -9,8 +9,8 @@ from class_layer import Layer
 # import presets from here
 from agent_algorithms_setup_5_reset import *
 
-note = 'setup_5__test_bounds'
-iterations = 500
+note = 'setup_5_test_queen_bee'
+iterations = 50
 time__ = timestamp_now
 save_json_every_nth = 100
 # plot = True
@@ -18,10 +18,10 @@ trim_floor = False
 
 ### SAVE
 # _save = True
-save_img = True
-save_json = True
-save_animation = False
-show_animation = False
+save_img = False
+save_json = False
+save_animation = True
+show_animation = True
 # img plot type
 show_scatter_img_bool = False
 show_voxel_img_bool = True
@@ -35,28 +35,15 @@ print('env made. voxel size:',voxel_size)
 agent_space = layers['agent_space']
 ground = layers['ground']
 layers_to_scatter = [agent_space, ground]
-# layers_to_scatter = [agent_space]
+
+# prediffuse
+for i in range(wait_to_diffuse):
+    diffuse_environment(layers)
 
 # MAKE AGENTS
 agents = setup_agents(layers)
 
 # SIMULATION FUNCTION
-
-def scatter_layers(axes, layers, clear = False, scale = voxel_size):
-    # axes.clear()
-    if clear:
-        axes.clear()
-        axes = plt.axes(xlim=(0, scale), ylim =  (0, scale), zlim = (0, scale), projection = '3d')
-        axes.set_xticks([])
-        axes.set_yticks([])
-        axes.set_zticks([])
-    for layer in layers:
-        a1 = layer.array.copy()
-        # scatter plot
-        pt_array = convert_array_to_points(a1, False)
-        p = pt_array.transpose()
-        axes.scatter(p[0, :], p[1, :], p[2, :], marker = 's', s = 1, facecolor = layer.rgb)
-
 def simulate(frame):
 # for i in range(iterations):
     # print('simulate.counter', simulate.counter)
@@ -72,25 +59,22 @@ def simulate(frame):
         if not moved:
             reset_agent(agent)
         # BUILD DEMO
-        if moved:
-            if np.random.random(1) >= 0:
-                x,y,z = agent.pose
-                ground.array[x,y,z] = 1
+        # if moved:
+        #     if np.random.random(1) >= 0:
+        #         x,y,z = agent.pose
+        #         ground.array[x,y,z] = 1
         # # BUILD
         # if moved:
         #     build_chance, erase_chance = calculate_build_chances(agent, layers)
         #     built, erased = build(agent, layers, build_chance, erase_chance, False)
         #     if built and reset_after_build:
         #         reset_agent(agent)
-        # else:
-        #     if reset_after_build:
-        #         reset_agent(agent)
     # 2.b clay dries
     
 
     # 3. make frame for animation
     if show_animation or save_animation:
-        scatter_layers(axes, layers_to_scatter) 
+        scatter_layers(axes, layers_to_scatter, trim_below=1) 
     simulate.counter += 1
     
     # 4. DUMP JSON
@@ -126,10 +110,8 @@ def simulate(frame):
 
             print('\ncompas_pointcloud saved as %s:\n' %filename)
     print(simulate.counter)
-
-        
+     
 simulate.counter = 0
-### PLOTTING
 
 # RUN
 if __name__ == '__main__':
