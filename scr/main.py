@@ -10,7 +10,7 @@ from class_layer import Layer
 from agent_algorithms_setup_5_reset import *
 
 note = 'setup_5_test_queen_bee'
-iterations = 50
+iterations = 10
 time__ = timestamp_now
 save_json_every_nth = 100
 # plot = True
@@ -26,15 +26,18 @@ show_animation = True
 show_scatter_img_bool = False
 show_voxel_img_bool = True
 
-global layers_to_scatter
-layers_to_scatter = []
-
 # SETUP ENVIRONMENT
 settings, layers = layer_env_setup(iterations)
 print('env made. voxel size:',voxel_size)
+
+# select layers to PLOT
+global layers_to_scatter
+layers_to_scatter = []
+
 agent_space = layers['agent_space']
 ground = layers['ground']
-layers_to_scatter = [agent_space, ground]
+queen_bee_pheromon = layers['queen_bee_pheromon']
+layers_to_scatter = [queen_bee_pheromon]
 
 # prediffuse
 for i in range(wait_to_diffuse):
@@ -151,19 +154,19 @@ if __name__ == '__main__':
                 axes.set_yticks([])
                 axes.set_zticks([])
                 
-                # scatter plot special
-                a1 = ground.array.copy()
-                a1[:,:,:ground_level_Z] = 0
-                pts_built = convert_array_to_points(a1, False)
-                agent_space_pts = convert_array_to_points(layers['agent_space'].array, False)
-                arrays_to_show = [pts_built, agent_space_pts]
-                colors = [layers['clay_moisture_layer'].rgb, agent_space.rgb]
-                for array, color in zip(arrays_to_show, colors):
-                    p = array.transpose()
-                    axes.scatter(p[0, :], p[1, :], p[2, :], marker = 's', s = 1, facecolor = color)
+                # # scatter plot special
+                # a1 = ground.array.copy()
+                # a1[:,:,:ground_level_Z] = 0
+                # pts_built = convert_array_to_points(a1, False)
+                # agent_space_pts = convert_array_to_points(layers['agent_space'].array, False)
+                # arrays_to_show = [pts_built, agent_space_pts]
+                # colors = [layers['clay_moisture_layer'].rgb, agent_space.rgb]
+                # for array, color in zip(arrays_to_show, colors):
+                #     p = array.transpose()
+                #     axes.scatter(p[0, :], p[1, :], p[2, :], marker = 's', s = 1, facecolor = color)
                 
-                # # scatter plot as preset:
-                # scatter_layers(axes, layers_to_scatter) 
+                # scatter plot as preset:
+                scatter_layers(axes, layers_to_scatter) 
                 
             
             elif show_voxel_img_bool:

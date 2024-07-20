@@ -6,26 +6,14 @@ from class_layer import Layer
 import numpy as np
 
 """
-DESIGN INTENTION
-1. sky ph as attractor volume and build boundary
-2. control build by ground density and 
-
-Agents are flying!!!
-doest really work
-should try falling
-
-
-parameter changes
-reach to build >> 6
-do reset
-"""
-"""    layers = [agent_space, air_moisture_layer, build_boundary_pheromon, clay_moisture_layer,  ground, queen_bee_pheromon, sky_ph_layer]
+SETUP GOAL
+testing pheromon method
 """
 
 # overal settings
 voxel_size = 40
 agent_count = 1
-wait_to_diffuse = 50
+wait_to_diffuse = 0
 
 # BUILD OVERALL SETTINGS
 reach_to_build = 6
