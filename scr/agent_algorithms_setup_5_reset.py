@@ -52,6 +52,9 @@ keep_in_bounds = True
 ground_level_Z = 1
 enter_zone_a = 25
 enter_zone_b = 28
+
+solid_box = None
+solid_box = [25,26,0,30,ground_level_Z,12]
 # solid_box = [10,20,10,20,0,6]
 # solid_box = [0,1,0,1,0,1]
 
@@ -79,15 +82,16 @@ def layer_env_setup(iterations):
     rgb_air_moisture = [200, 204, 219]
     rgb_ground = [207, 179, 171]
     rgb_queen = [232, 226, 211]
+    rgb_queen = [237, 190, 71]
 
 
 
     ground = Layer(voxel_size=voxel_size, name='ground', rgb = [i/255 for i in rgb_ground])
     agent_space = Layer('agent_space', voxel_size = voxel_size, rgb = [i/255 for i in rgb_agents])
     # queen_bee_space = Layer(voxel_size=voxel_size, rgb=[203/255, 21/255, 207/255])
-    queen_bee_pheromon = Layer('queen_bee_pheromon', voxel_size=voxel_size, rgb = [i/255 for i in rgb_queen])
-    clay_moisture_layer = Layer('clay_moisture', voxel_size, rgb = [i/255 for i in rgb_clay_moisture])
-    air_moisture_layer = Layer('air_moisture', voxel_size, rgb = [i/255 for i in rgb_air_moisture])
+    queen_bee_pheromon = Layer('queen_bee_pheromon', voxel_size=voxel_size, rgb = [i/255 for i in rgb_queen], flip_colors = True)
+    clay_moisture_layer = Layer('clay_moisture', voxel_size, rgb = [i/255 for i in rgb_clay_moisture], flip_colors=True)
+    air_moisture_layer = Layer('air_moisture', voxel_size, rgb = [i/255 for i in rgb_air_moisture], flip_colors=True)
 
     queen_bee_pheromon.diffusion_ratio = 1/7
     queen_bee_pheromon.decay_ratio = 0.001
@@ -108,8 +112,9 @@ def layer_env_setup(iterations):
     # ground.array += make_solid_box_z(voxel_size, ground_level_Z)
     ground.array[:,:,:ground_level_Z] = 1
     # print(ground.array)
-    # wall = make_solid_box_xxyyzz(voxel_size, *solid_box)
-    # ground.array += wall
+    if solid_box != None:
+        wall = make_solid_box_xxyyzz(voxel_size, *solid_box)
+        ground.array += wall
     ground.rgb = [207/255, 179/255, 171/255]
 
     # set ground moisture

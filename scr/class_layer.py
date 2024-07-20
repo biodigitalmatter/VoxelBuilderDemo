@@ -4,7 +4,7 @@ class Layer:
     def __init__(self, name = '', voxel_size = 20, rgb = [1,1,1], 
                 diffusion_ratio = 0.12, diffusion_random_factor = 0,
                 decay_ratio = 0, decay_random_factor = 0, decay_linear_value = 0, emission_factor = 0.1,
-                gradient_resolution = 0, color_array = None):
+                gradient_resolution = 0, color_array = None, flip_colors = False):
         
         # self._array =  # value array
         self._color_array = None # colored array 4D
@@ -24,6 +24,7 @@ class Layer:
         self._color_array = color_array
         self._emission_factor = emission_factor
         self._emmision_array = None
+        self._flip_colors = flip_colors
     
     def __str__(self):
         properties = []
@@ -54,12 +55,7 @@ class Layer:
     
     @property
     def color_array(self):
-        self.calculate_color_array_remap(True)
-        return self._color_array
-
-    @property
-    def color_array_inverse(self):
-        self.calculate_color_array_remap(False)
+        self.calculate_color_array_remap()
         return self._color_array
     
     @property
@@ -116,11 +112,19 @@ class Layer:
     def voxel_crop_range(self):
         return self._voxel_crop_range
 
+    @property
+    def flip_color(self):
+        return self._flip_colors
+
     # Property setters
 
     @emission_factor.setter
     def emission_factor(self, value):
         self._emission_factor = value
+
+    @flip_color.setter
+    def flip_color(self, value):
+        self._flip_colors = value
     
     @iter_count.setter
     def iter_count(self, value):
@@ -441,33 +445,21 @@ class Layer:
         self._array = self.crop_array(self._array - self.decay_linear_value, s,e)
     from math_functions import remap
 
-    def calculate_color_array_remap(self, inverse = False):
+    def calculate_color_array_remap(self):
         r,g,b = self.rgb
         colors = np.copy(self.array)
         min_ = np.min(colors) 
         max_ = np.max(colors)
         colors = remap(colors, output_domain = [0,1], input_domain = [min_, max_])
-        if inverse:
+        if self._flip_colors:
             colors = 1 - colors
+        else: pass
 
         reds = np.reshape(colors * (r), [self._n, self._n, self._n, 1])
         greens = np.reshape(colors * (g), [self._n, self._n, self._n, 1])
         blues = np.reshape(colors * (b), [self._n, self._n, self._n, 1])
         colors = np.concatenate((reds, greens, blues), axis = 3)
         self._color_array = colors
-        return self._color_array
-
-    def calculate_color_array_cap(self):
-        r,g,b = self.rgb
-        colors = np.where(self.array != 0, 0, 1)
-        colors.reshape(self.array.shape)
-        reds = np.reshape(colors * (r), [self._n, self._n, self._n, 1])
-        greens = np.reshape(colors * (g), [self._n, self._n, self._n, 1])
-        blues = np.reshape(colors * (b), [self._n, self._n, self._n, 1])
-        c = np.concatenate((reds, greens, blues), axis = -1)
-        c = np.minimum(c, 1)
-        c = np.maximum(c, 0)
-        self._color_array = c
         return self._color_array
 
     def iterate(self, diffusion_limit_by_Hirsh=False, reintroduce_on_the_other_end=False ):

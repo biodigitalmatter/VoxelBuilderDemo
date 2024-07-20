@@ -9,8 +9,8 @@ from class_layer import Layer
 # import presets from here
 from agent_algorithms_setup_5_reset import *
 
-note = 'setup_5_test_queen_bee_scale_colors_5'
-iterations = 100
+note = 'setup_5_test_queen_bee_blocking_no_grading'
+iterations = 40
 time__ = timestamp_now
 save_json_every_nth = 100
 # plot = True
@@ -20,8 +20,8 @@ trim_floor = False
 # _save = True
 save_img = True
 save_json = False
-save_animation = False
-show_animation = False
+save_animation = True
+show_animation = True
 # img plot type
 show_scatter_img_bool = False
 show_voxel_img_bool = True
@@ -39,18 +39,20 @@ print('env made. voxel size:',voxel_size)
 # select layers to PLOT
 global layers_to_scatter
 layers_to_scatter = []
-layers_to_scatter = [queen_bee_pheromon]
+layers_to_scatter = [queen_bee_pheromon, ground]
 color_4D = True
-scale_colors = 5
+scale_colors = 1
 
-# # prediffuse
-# for i in range(wait_to_diffuse):
-#     diffuse_environment(layers)
-print('queens_place:', queens_place_array)
-queen_bee_pheromon.emission_intake(external_emission_array = queens_place_array, factor = 1)
-queen_bee_pheromon.diffuse()
-queen_bee_pheromon.decay()
-queen_bee_pheromon.grade()
+# prediffuse
+for i in range(wait_to_diffuse):
+    # diffuse_environment(layers)
+    queen_bee_pheromon.emission_intake(external_emission_array = queens_place_array, factor = 1)
+    queen_bee_pheromon.diffuse()
+    queen_bee_pheromon.decay()
+    ground.block_layers([queen_bee_pheromon])
+
+    # queen_bee_pheromon.grade()
+
 
 # MAKE AGENTS
 agents = setup_agents(layers)
@@ -62,8 +64,9 @@ def simulate(frame):
     queen_bee_pheromon.emission_intake(external_emission_array = queens_place_array, factor = 1)
     queen_bee_pheromon.diffuse()
     queen_bee_pheromon.decay()
-    queen_bee_pheromon.grade()
-    print(np.min(queen_bee_pheromon.array), np.max(queen_bee_pheromon.array))
+    ground.block_layers([queen_bee_pheromon])
+    # queen_bee_pheromon.grade()
+    # print(np.min(queen_bee_pheromon.array), np.max(queen_bee_pheromon.array))
     np.min(queen_bee_pheromon.array)
     # 2. MOVE and BUILD
     for agent in agents:
