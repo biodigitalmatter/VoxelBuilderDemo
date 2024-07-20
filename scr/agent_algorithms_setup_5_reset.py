@@ -38,9 +38,11 @@ move_dir_prefer_to_down = 3
 move_dir_prefer_strength = 0
 
 # queen bee:
-queens_place = [30,30,39]
+queens_place = [30,0,2]
 queens_place_array = np.zeros([voxel_size, voxel_size, voxel_size])
-queens_place_array[queens_place] = 1
+x,y,z = queens_place
+queens_place_array[x][y][z] = 1
+print('queens_place_array', '\n_____________\n', queens_place_array)
 
 check_collision = False
 keep_in_bounds = True
@@ -76,17 +78,18 @@ def layer_env_setup(iterations):
     rgb_clay_moisture = [167, 217, 213]
     rgb_air_moisture = [200, 204, 219]
     rgb_ground = [207, 179, 171]
+    rgb_queen = [232, 226, 211]
 
 
 
     ground = Layer(voxel_size=voxel_size, name='ground', rgb = [i/255 for i in rgb_ground])
     agent_space = Layer('agent_space', voxel_size = voxel_size, rgb = [i/255 for i in rgb_agents])
     # queen_bee_space = Layer(voxel_size=voxel_size, rgb=[203/255, 21/255, 207/255])
-    queen_bee_pheromon = Layer('queen_bee_pheromon', voxel_size=voxel_size, rgb = [i/255 for i in rgb_sky])
+    queen_bee_pheromon = Layer('queen_bee_pheromon', voxel_size=voxel_size, rgb = [i/255 for i in rgb_queen])
     clay_moisture_layer = Layer('clay_moisture', voxel_size, rgb = [i/255 for i in rgb_clay_moisture])
     air_moisture_layer = Layer('air_moisture', voxel_size, rgb = [i/255 for i in rgb_air_moisture])
 
-    queen_bee_pheromon.diffusion_ratio = 1/6
+    queen_bee_pheromon.diffusion_ratio = 1/7
     queen_bee_pheromon.decay_ratio = 0.01
     queen_bee_pheromon.gradient_resolution = 10000
 
@@ -111,7 +114,7 @@ def layer_env_setup(iterations):
 
     # set ground moisture
     clay_moisture_layer.array = ground.array.copy()
-    pheromon_loop(air_moisture_layer, clay_moisture_layer.array, 3, ground)
+    # pheromon_loop(air_moisture_layer, clay_moisture_layer.array, 3, ground)
     
     # pheromon_loop(sky_ph_layer, build_boundary_pheromon.array, wait_to_diffuse, blocking_layer=ground, gravity_shift_bool = True)
 

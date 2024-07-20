@@ -10,7 +10,7 @@ from class_layer import Layer
 from agent_algorithms_setup_5_reset import *
 
 note = 'setup_5_test_queen_bee'
-iterations = 10
+iterations = 50
 time__ = timestamp_now
 save_json_every_nth = 100
 # plot = True
@@ -18,42 +18,52 @@ trim_floor = False
 
 ### SAVE
 # _save = True
-save_img = False
+save_img = True
 save_json = False
-save_animation = True
-show_animation = True
+save_animation = False
+show_animation = False
 # img plot type
 show_scatter_img_bool = False
 show_voxel_img_bool = True
 
 # SETUP ENVIRONMENT
 settings, layers = layer_env_setup(iterations)
+# call layers
+agent_space = layers['agent_space']
+ground = layers['ground']
+queen_bee_pheromon = layers['queen_bee_pheromon']
+# print info
 print('env made. voxel size:',voxel_size)
+# print(queen_bee_pheromon.name, queen_bee_pheromon.diffusion_ratio, queen_bee_pheromon.decay_ratio, queen_bee_pheromon.gradient_resolution)
 
 # select layers to PLOT
 global layers_to_scatter
 layers_to_scatter = []
-
-agent_space = layers['agent_space']
-ground = layers['ground']
-queen_bee_pheromon = layers['queen_bee_pheromon']
 layers_to_scatter = [queen_bee_pheromon]
+color_4D = True
 
-# prediffuse
-for i in range(wait_to_diffuse):
-    diffuse_environment(layers)
+# # prediffuse
+# for i in range(wait_to_diffuse):
+#     diffuse_environment(layers)
+print('queens_place:', queens_place_array)
+queen_bee_pheromon.emission_intake(external_emission_array = queens_place_array, factor = 1)
+queen_bee_pheromon.diffuse()
+queen_bee_pheromon.decay()
+queen_bee_pheromon.grade()
 
 # MAKE AGENTS
 agents = setup_agents(layers)
 
 # SIMULATION FUNCTION
 def simulate(frame):
-# for i in range(iterations):
-    # print('simulate.counter', simulate.counter)
-
     # 1. diffuse environment's layers
-    diffuse_environment(layers)
-
+    # diffuse_environment(layers)
+    queen_bee_pheromon.emission_intake(external_emission_array = queens_place_array, factor = 1)
+    queen_bee_pheromon.diffuse()
+    queen_bee_pheromon.decay()
+    queen_bee_pheromon.grade()
+    print(np.min(queen_bee_pheromon.array), np.max(queen_bee_pheromon.array))
+    np.min(queen_bee_pheromon.array)
     # 2. MOVE and BUILD
     for agent in agents:
         # MOVE
@@ -170,8 +180,12 @@ if __name__ == '__main__':
                 
             
             elif show_voxel_img_bool:
-                colors = [layer.rgb for layer in layers_to_scatter]
-                voxel_grids = [layer.array[:,:,ground_level_Z:] for layer in layers_to_scatter]
+                if not color_4D:
+                    colors = [layer.rgb for layer in layers_to_scatter]
+                    voxel_grids = [layer.array[:,:,ground_level_Z:] for layer in layers_to_scatter]
+                elif color_4D:
+                    colors = [layer.color_array for layer in layers_to_scatter]
+                    voxel_grids = [layer.array for layer in layers_to_scatter]
                 plot_voxels_2(axes, voxel_grids, colors, edgecolor=None)
                 suffix = '%s_a%s_i%s' %(note, agent_count, iterations)
 

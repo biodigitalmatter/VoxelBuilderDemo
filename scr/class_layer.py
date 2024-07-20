@@ -54,12 +54,12 @@ class Layer:
     
     @property
     def color_array(self):
-        self.calculate_color_array(False)
+        self.calculate_color_array_remap(True)
         return self._color_array
 
     @property
     def color_array_inverse(self):
-        self.calculate_color_array(True)
+        self.calculate_color_array_remap(False)
         return self._color_array
     
     @property
@@ -400,7 +400,7 @@ class Layer:
         return self._array
     
 
-    def emission(self, external_emission_array = None, external_emission_factor = 1, proportional = True):
+    def emission_self(self, proportional = True):
         """updates array values based on self array values
         by an emission factor ( multiply / linear )"""
 
@@ -439,10 +439,14 @@ class Layer:
     def decay_linear(self):
         s,e = self.voxel_crop_range
         self._array = self.crop_array(self._array - self.decay_linear_value, s,e)
+    from math_functions import remap
 
-    def calculate_color_array(self, inverse = True):
+    def calculate_color_array_remap(self, inverse = False):
         r,g,b = self.rgb
         colors = np.copy(self.array)
+        min_ = np.min(colors) 
+        max_ = np.max(colors)
+        colors = remap(colors, output_domain = [0,1], input_domain = [min_, max_])
         if inverse:
             colors = 1 - colors
 
@@ -453,7 +457,7 @@ class Layer:
         self._color_array = colors
         return self._color_array
 
-    def calculate_color_array_2(self):
+    def calculate_color_array_cap(self):
         r,g,b = self.rgb
         colors = np.where(self.array != 0, 0, 1)
         colors.reshape(self.array.shape)
