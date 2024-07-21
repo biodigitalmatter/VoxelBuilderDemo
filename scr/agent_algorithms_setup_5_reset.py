@@ -12,26 +12,27 @@ testing pheromon method
 
 # overal settings
 voxel_size = 40
-agent_count = 2
+agent_count = 20
 wait_to_diffuse = 10
 
 # BUILD SETTINGS
 reach_to_build = 0.5
 reach_to_erase = 1
 stacked_chances = True
-reset_after_build = False
+reset_after_build = True
 
 # pheromon sensitivity
-queen_pheromon_min_to_build = 0.0001
+queen_pheromon_min_to_build = 0.001
+queen_pheromon_max_to_build = 0.003
 queen_pheromon_build_strength = 1
 queen_ph_build_flat_strength = True
 
 # Agent deployment
-deployment_zone__a = 10
-deployment_zone__b = 15
+deployment_zone__a = 0
+deployment_zone__b = 40
 
 # MOVE PRESETS - pheromon layers
-move_ph_random_strength = 0.0004
+move_ph_random_strength = 0.004
 move_ph_queen_bee = 2
 move_ph_sky = 0
 move_ph_moisture = 0
@@ -296,7 +297,7 @@ def calculate_build_chances(agent, layers):
     build_chance = agent.build_chance
     erase_chance = agent.erase_chance
 
-    v = agent.get_pheromone_strength(queen_bee_pheromon, queen_pheromon_min_to_build, upper_limit, queen_pheromon_build_strength, queen_ph_build_flat_strength)
+    v = agent.get_pheromone_strength(queen_bee_pheromon, queen_pheromon_min_to_build, queen_pheromon_max_to_build, queen_pheromon_build_strength, queen_ph_build_flat_strength)
     build_chance += v
     erase_chance += 0
 
@@ -355,7 +356,6 @@ def build_over_limits(agent, layers, build_chance, erase_chance):
 
     return built, erased
 
-
 def build_roll_a_dice(agent, layers, build_chance, erase_chance):
     ground = layers['ground']
     """agent builds on construction_layer, if pheromon value in cell hits limit * random value
@@ -387,7 +387,7 @@ def build(agent, layers, build_chance, erase_chance):
     """build - select build style here"""
     # bool_ = build_roll_a_dice(agent, layers, build_chance, erase_chance)
     bool_ = build_over_limits(agent, layers, build_chance, erase_chance)
-    bool_ =  build_over_limits_old(agent, layers, build_chance, erase_chance, decay_clay = True)
+    # bool_ =  build_over_limits_old(agent, layers, build_chance, erase_chance, decay_clay = True)
     built, erased = bool_
     return built, erased
 

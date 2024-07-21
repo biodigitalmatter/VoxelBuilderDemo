@@ -9,8 +9,8 @@ from class_layer import Layer
 # import presets from here
 from agent_algorithms_setup_5_reset import *
 
-note = 'setup_5_test_follow_pheromon'
-iterations = 300
+note = 'setup_5_build_setups'
+iterations = 600
 time__ = timestamp_now
 save_json_every_nth = 100
 # plot = True
