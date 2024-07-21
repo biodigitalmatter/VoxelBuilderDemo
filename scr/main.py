@@ -7,17 +7,15 @@ from class_agent import Agent
 from class_layer import Layer
 
 # import presets from here
-from agent_algorithms_setup_5_reset import *
+from agent_algorithms_setup_6_moisture import *
 
-note = 'setup_5_build_test_queen_ph_and_moisture_ph'
+note = 'setup_6_build_by_fresh_test_more_gravity'
 iterations = 300
 time__ = timestamp_now
 save_json_every_nth = 100
-# plot = True
 trim_floor = False
 
 ### SAVE
-# _save = True
 save_img = True
 save_json = False
 save_animation = False
@@ -34,14 +32,14 @@ print('env made. voxel size:',voxel_size)
 # call layers
 agent_space = layers['agent_space']
 ground = layers['ground']
-queen_bee_pheromon = layers['queen_bee_pheromon']
+clay = layers['clay_moisture_layer']
 # select layers to show
 global layers_to_scatter
 layers_to_scatter = []
 layers_to_scatter = [agent_space, ground]
-# layers_to_scatter = [agent_space]
+layers_to_scatter = [agent_space,clay, ground]
 # layers_to_scatter = [ground]
-color_4D = False
+color_4D = True
 scale_colors = 1
 
 # prediffuse
