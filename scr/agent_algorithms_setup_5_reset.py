@@ -22,7 +22,7 @@ stacked_chances = True
 reset_after_build = True
 
 # pheromon sensitivity
-queen_pheromon_min_to_build = 0.01
+queen_pheromon_min_to_build = 0.005
 queen_pheromon_max_to_build = 0.05
 queen_pheromon_build_strength = 1
 queen_ph_build_flat_strength = True
@@ -31,31 +31,31 @@ queen_ph_build_flat_strength = True
 deployment_zone__a = 5
 deployment_zone__b = 35
 
-# MOVE PRESETS - pheromon layers
+# MOVE SETTINGS
+# pheromon layers
 move_ph_random_strength = 0.0001
-move_ph_queen_bee_strength = 1
-move_ph_sky = 0
-move_ph_moisture = 0
-
+move_ph_queen_bee_strength = 2
+moisture_ph_strength = 0
 
 # direction preference
-move_dir_prefer_to_side = 1
-move_dir_prefer_to_up = 1
-move_dir_prefer_to_down = 3
+move_dir_prefer_to_side = 0
+move_dir_prefer_to_up = 0
+move_dir_prefer_to_down = 0
 move_dir_prefer_strength = 0
 
+# general
+check_collision = False
+keep_in_bounds = True
+
+# PHEROMON SETTINGS
 # queen bee:
 queens_place = [20,20,2]
 queens_place_array = np.zeros([voxel_size, voxel_size, voxel_size])
 x,y,z = queens_place
 queens_place_array[x][y][z] = 1
-
-check_collision = False
-keep_in_bounds = True
-# if not keep in bounds, agents reset if out of bounds
+queen_bee_pheromon_gravity_ratio = 0
 
 # ENVIRONMENT GEO
-# global ground_level_Z, deployment_zone__a, deployment_zone__b
 ground_level_Z = 1
 solid_box = None
 # solid_box = [25,26,0,30,ground_level_Z,12]
@@ -70,7 +70,7 @@ def margin_boundaries(size, parts):
     return boundary_a, boundary_b
 
 
-def layer_env_setup(iterations):
+def layer_setup(iterations):
     """
     creates the simulation environment setup
     with preset values in the definition
@@ -98,34 +98,26 @@ def layer_env_setup(iterations):
     air_moisture_layer = Layer('air_moisture', voxel_size, rgb = [i/255 for i in rgb_air_moisture], flip_colors=True)
 
     queen_bee_pheromon.diffusion_ratio = 1/7
-    queen_bee_pheromon.decay_ratio = 0.001
+    queen_bee_pheromon.decay_ratio = 1/1000
     queen_bee_pheromon.gradient_resolution = 0
+    queen_bee_pheromon.gravity_dir = 5
+    queen_bee_pheromon.gravity_ratio = queen_bee_pheromon_gravity_ratio
 
-    ground.decay_linear_value = 1 / iterations / 10
     clay_moisture_layer.decay_linear_value = 1 / iterations / agent_count / 2
-    # print(clay_moisture_layer.decay_linear_value)
-    # print(ground.decay_linear_value)
 
-    air_moisture_layer.diffusion_ratio = 1/12
-    air_moisture_layer.decay_ratio = 1/4
-    air_moisture_layer.gradient_resolution = 100000
+    air_moisture_layer.diffusion_ratio = 1/7
+    air_moisture_layer.decay_ratio = 1/100
+    air_moisture_layer.gradient_resolution = 0
 
     ### CREATE GROUND
-    # make ground
-    
-    # ground.array += make_solid_box_z(voxel_size, ground_level_Z)
     ground.array[:,:,:ground_level_Z] = 1
     # print(ground.array)
     if solid_box != None:
         wall = make_solid_box_xxyyzz(voxel_size, *solid_box)
         ground.array += wall
-    ground.rgb = [207/255, 179/255, 171/255]
 
     # set ground moisture
     clay_moisture_layer.array = ground.array.copy()
-    # pheromon_loop(air_moisture_layer, clay_moisture_layer.array, 3, ground)
-    
-    # pheromon_loop(sky_ph_layer, build_boundary_pheromon.array, wait_to_diffuse, blocking_layer=ground, gravity_shift_bool = True)
 
     # WRAP ENVIRONMENT
     layers = {'agent_space' : agent_space, 'air_moisture_layer' : air_moisture_layer, 'clay_moisture_layer' : clay_moisture_layer, 
@@ -136,10 +128,11 @@ def layer_env_setup(iterations):
 def diffuse_environment(layers):
     ground = layers['ground']
     queen_bee_pheromon = layers['queen_bee_pheromon']
-    pheromon_loop(queen_bee_pheromon, emmission_array=queens_place_array, blocking_layer=ground)
-    # air_moisture_layer = layers['air_moisture_layer']
-    # clay_moisture_layer = layers['clay_moisture_layer']
-    # pheromon_loop(air_moisture_layer, emmission_array = clay_moisture_layer.array, blocking_layer = ground)
+    pheromon_loop(queen_bee_pheromon, emmission_array=queens_place_array, blocking_layer=ground, gravity_shift_bool=True)
+    air_moisture_layer = layers['air_moisture_layer']
+    clay_moisture_layer = layers['clay_moisture_layer']
+    clay_moisture_layer.decay_linear()
+    pheromon_loop(air_moisture_layer, emmission_array = clay_moisture_layer.array, blocking_layer = ground)
     pass
 
 def setup_agents(layers):
@@ -188,22 +181,11 @@ def get_direction_cube_values_for_layer(agent, layer, strength):
     return ph_cube * strength
 
 def move_agent(agent, layers):
-    """move agents in a direction, based on several pheromons weighted in different ratios.
-    1. random direction pheromon
-    2. queen_bee_pheromon = None : Layer class object,
-    3. sky_ph_layer = None : Layer class object,
-    4. air_moisture_layer
-    5. world direction preference pheromons
-
-    Input:
-        agent: Agent class object
-        queen_bee_pheromon = None : Layer class object,
-        sky_ph_layer = None : Layer class object,
-        air_moisture_layer = None : Layer class object,
-        None layers are passed
-    further parameters are preset in the function
-
-    return True if moved, False if not
+    """moves agents in a calculated direction
+    calculate weigthed sum of slices of layers makes the direction_cube
+    check and excludes illegal moves by replace values to -1
+    move agent
+    return True if moved, False if not or in ground
     """
     pose = agent.pose
     # check if agent_in_ground
@@ -219,14 +201,16 @@ def move_agent(agent, layers):
     strength = move_ph_queen_bee_strength
     ph_cube_1 = get_direction_cube_values_for_layer_domain(agent, layer, domain, strength)
 
-    # further ph cube
-    # ph_cube_2 = get_direction_cube_values_for_layer(agent, layer, strength=)
-    # print(ph_cube)
+    # move by moisture_ph
+    strength = moisture_ph_strength
+    layer = layers['air_moisture_layer']
+    ph_cube_2 = get_direction_cube_values_for_layer(agent, layer, strength)
+
 
     # get random directions cube
     random_cube = np.random.random(26) * move_ph_random_strength
 
-    cube = ph_cube_1 + random_cube
+    cube = ph_cube_1 + ph_cube_2 + random_cube
     
     # global direction preference cube
     move_dir_preferences = [
@@ -339,6 +323,7 @@ def build_over_limits_old(agent, layers, build_chance, erase_chance, decay_clay 
 
 def build_over_limits(agent, layers, build_chance, erase_chance):
     ground = layers['ground']
+    clay = layers['clay_moisture_layer']
     """agent builds on construction_layer, if pheromon value in cell hits limit
     chances are either momentary values or stacked by history
     return bool"""
@@ -350,17 +335,20 @@ def build_over_limits(agent, layers, build_chance, erase_chance):
         agent.build_chance = build_chance
         agent.erase_chance = erase_chance
 
-    # CHECK IF BUILD CONDITIONS are favorable
+    # check is there is any solid neighbors
+    build_condition = agent.check_build_conditions(ground)
+
     built = False
     erased = False
-    build_condition = agent.check_build_conditions(ground)
-    # build
-    if agent.build_chance >= reach_to_build and build_condition == True:
-        built = agent.build(ground)
-    # erase
-    elif agent.erase_chance >= reach_to_erase and build_condition == True:
-        erased = agent.erase(ground)
-
+    if build_condition:
+        # build
+        if agent.build_chance >= reach_to_build:
+            built = agent.build(ground)
+            agent.build_on_layer(clay)
+        # erase
+        elif agent.erase_chance >= reach_to_erase:
+            erased = agent.erase(ground)
+            agent.erase(clay)
     return built, erased
 
 def build_roll_a_dice(agent, layers, build_chance, erase_chance):

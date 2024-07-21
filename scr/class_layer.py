@@ -25,6 +25,7 @@ class Layer:
         self._emission_factor = emission_factor
         self._emmision_array = None
         self._flip_colors = flip_colors
+        self._gravity_ratio = 0
     
     def __str__(self):
         properties = []
@@ -190,7 +191,7 @@ class Layer:
     def gravity_ratio(self):
         return self._gravity_ratio
     
-    @gravity_dir.setter
+    @gravity_ratio.setter
     def gravity_ratio(self, v):
         if not isinstance(v, (int, float)):
             raise ValueError("gravity ratio must be a number")
@@ -310,6 +311,7 @@ class Layer:
         """infinitive borders
         every value of the voxel cube diffuses with its face nb
         standard finite volume approach (Hirsch, 1988). 
+        in not limit_by_Hirsch: ph volume can grow
         diffusion change of voxel_x between voxel_x and y:
         delta_x = -a(x-y) 
         where 0 <= a <= 1/6 
@@ -359,7 +361,7 @@ class Layer:
         return self._array
     
 
-    def gravity_shift(self, gravity_ratio = 0.1, reintroduce_on_the_other_end = False):
+    def gravity_shift(self, reintroduce_on_the_other_end = False):
         """direction: 0:left, 1:right, 2:front, 3:back, 4:down, 5:up
         infinitive borders
         every value of the voxel cube diffuses with its face nb
@@ -374,33 +376,37 @@ class Layer:
         # order: left, right, front
         # diffuse per six face_neighbors
         total_diffusions = create_zero_array(self._n)
-        for i in [self.gravity_dir]:
-            # y: shift neighbor
-            y = np.copy(self._array)
-            y = np.roll(y, shifts[i % 2], axis = axes[i])
-            if not reintroduce_on_the_other_end:
-                e = self._n - 1
-                # removing the values from the other end after rolling
-                if i == 0:
-                    y[:][:][e] = 0
-                elif i == 1:
-                    y[:][:][0] = 0
-                elif 2 <= i <= 3:
-                    m = y.transpose((1,0,2))
-                    if i == 2:
-                        m[:][:][e] = 0
-                    elif i == 3:
-                        m[:][:][0] = 0
-                    y = m.transpose((1,0,2))
-                elif 4 <= i <= 5:
-                    m = y.transpose((2,0,1))
-                    if i == 4:
-                        m[:][:][e] = 0
-                    elif i == 5:
-                        m[:][:][0] = 0
-                    y = m.transpose((1,2,0))
-            total_diffusions += self.gravity_ratio * (self._array - y) / 2
-        self._array -= total_diffusions
+        if self.gravity_ratio != 0:
+            for i in [self.gravity_dir]:
+                # y: shift neighbor
+                y = np.copy(self._array)
+                y = np.roll(y, shifts[i % 2], axis = axes[i])
+                if not reintroduce_on_the_other_end:
+                    # TODO replace to padded array method
+                    e = self._n - 1
+                    # removing the values from the other end after rolling
+                    if i == 0:
+                        y[:][:][e] = 0
+                    elif i == 1:
+                        y[:][:][0] = 0
+                    elif 2 <= i <= 3:
+                        m = y.transpose((1,0,2))
+                        if i == 2:
+                            m[:][:][e] = 0
+                        elif i == 3:
+                            m[:][:][0] = 0
+                        y = m.transpose((1,0,2))
+                    elif 4 <= i <= 5:
+                        m = y.transpose((2,0,1))
+                        if i == 4:
+                            m[:][:][e] = 0
+                        elif i == 5:
+                            m[:][:][0] = 0
+                        y = m.transpose((1,2,0))
+                total_diffusions += self.gravity_ratio * (self._array - y) / 2
+            self._array -= total_diffusions
+        else:
+            pass
         return self._array
     
 

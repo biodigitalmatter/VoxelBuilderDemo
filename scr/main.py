@@ -9,7 +9,7 @@ from class_layer import Layer
 # import presets from here
 from agent_algorithms_setup_5_reset import *
 
-note = 'setup_5_build_test_move_into_the_domain005-001'
+note = 'setup_5_build_test_queen_ph_and_moisture_ph'
 iterations = 300
 time__ = timestamp_now
 save_json_every_nth = 100
@@ -27,7 +27,7 @@ show_scatter_img_bool = False
 show_voxel_img_bool = True
 
 # SETUP ENVIRONMENT
-settings, layers = layer_env_setup(iterations)
+settings, layers = layer_setup(iterations)
 print('env made. voxel size:',voxel_size)
 
 # PLOT SETTINGS
