@@ -7,13 +7,13 @@ import numpy as np
 
 """
 SETUP GOAL
-testing pheromon method
+testing build setups
 """
 
 # overal settings
 voxel_size = 40
-agent_count = 20
-wait_to_diffuse = 10
+agent_count = 50
+wait_to_diffuse = 25
 
 # BUILD SETTINGS
 reach_to_build = 0.5
@@ -22,18 +22,18 @@ stacked_chances = True
 reset_after_build = True
 
 # pheromon sensitivity
-queen_pheromon_min_to_build = 0.001
-queen_pheromon_max_to_build = 0.003
+queen_pheromon_min_to_build = 0.01
+queen_pheromon_max_to_build = 0.05
 queen_pheromon_build_strength = 1
 queen_ph_build_flat_strength = True
 
 # Agent deployment
-deployment_zone__a = 0
-deployment_zone__b = 40
+deployment_zone__a = 5
+deployment_zone__b = 35
 
 # MOVE PRESETS - pheromon layers
-move_ph_random_strength = 0.004
-move_ph_queen_bee = 2
+move_ph_random_strength = 0.0001
+move_ph_queen_bee_strength = 1
 move_ph_sky = 0
 move_ph_moisture = 0
 
@@ -172,6 +172,21 @@ def reset_agent(agent):
     agent.erase_chance = 0
     agent.move_history = []
 
+def get_direction_cube_values_for_layer_domain(agent, layer, domain, strength):
+    # mirrored above domain end and squezed with the domain length
+    # centered at 1
+    ph_cube = agent.get_nb_26_cell_values(layer, agent.pose)
+    start , end = domain
+    center = (start + end) / 2
+    # ph_cube -= center
+    ph_cube = ((np.absolute(ph_cube - center) * -1) + center) * strength
+    # print(ph_cube)
+    return ph_cube
+
+def get_direction_cube_values_for_layer(agent, layer, strength):
+    ph_cube = agent.get_nb_26_cell_values(layer, agent.pose)
+    return ph_cube * strength
+
 def move_agent(agent, layers):
     """move agents in a direction, based on several pheromons weighted in different ratios.
     1. random direction pheromon
@@ -189,50 +204,40 @@ def move_agent(agent, layers):
     further parameters are preset in the function
 
     return True if moved, False if not
-
-
     """
+    pose = agent.pose
+    # check if agent_in_ground
+    
+    # # check layer value
+    gv = agent.get_layer_value_at_pose(layers['ground'], print_ = False)
+    if gv != 0:
+        return False
 
-    # # PRESETS
-    # move_ph_random_strength = 1.2
-    # move_ph_queen_bee = 0
-    # move_ph_moisture = 1
+    # move by queen_ph
+    layer = layers['queen_bee_pheromon']
+    domain = [queen_pheromon_min_to_build, queen_pheromon_max_to_build]
+    strength = move_ph_queen_bee_strength
+    ph_cube_1 = get_direction_cube_values_for_layer_domain(agent, layer, domain, strength)
 
-    # move_dir_prefer_to_side = 1
-    # move_dir_prefer_to_up = 1
-    # move_dir_prefer_to_down = 1
-    # move_dir_prefer_strength = 0
+    # further ph cube
+    # ph_cube_2 = get_direction_cube_values_for_layer(agent, layer, strength=)
+    # print(ph_cube)
 
-    move_ph_strength_list = [
-        move_ph_queen_bee,
-        move_ph_moisture
-    ]
+    # get random directions cube
+    random_cube = np.random.random(26) * move_ph_random_strength
 
-    move_ph_layers_list = [
-        layers['queen_bee_pheromon'],
-        layers["air_moisture_layer"]
-    ]
-
+    cube = ph_cube_1 + random_cube
+    
+    # global direction preference cube
     move_dir_preferences = [
         move_dir_prefer_to_up,
         move_dir_prefer_to_side,
         move_dir_prefer_to_down
     ]
-    # # check layer value
-    # agent.get_layer_value_at_pose(layers['queen_bee_pheromon'], print_ = False)
-    
-    pose = agent.pose
-    cube = np.random.random(26) * move_ph_random_strength
-    for s, layer in zip(move_ph_strength_list, move_ph_layers_list):
-        if layer != None:
-            # cube = get_sub_array(array = layer.array, offset_radius = 1, center = pose, format_values = None)
-            cube += s * agent.get_nb_26_cell_values(layer, pose)
-        else: pass
-
     if move_dir_preferences != None:
         up, side, down = move_dir_preferences
         cube += agent.direction_preference_26_pheromones_v2(up, side, down) * move_dir_prefer_strength
-    # moved = agent.move_on_ground(layers['ground'], voxel_size)
+    
     moved = agent.move_on_ground_by_cube(ground=layers['ground'], pheromon_cube=cube, voxel_size=voxel_size, fly = False, only_bounds = keep_in_bounds)
     
     # check if in bounds
@@ -321,8 +326,8 @@ def build_over_limits_old(agent, layers, build_chance, erase_chance, decay_clay 
     erased = False
     build_condition = agent.check_build_conditions(ground)
     if agent.build_chance >= reach_to_build and build_condition == True:
-        built = agent.build(ground)
-        built2 = agent.build(clay_moisture_layer)
+        built = agent.build()
+        built2 = agent.build_on_layer(clay_moisture_layer)
         if built and reset_after_build:
             # reset_agent = True
             if decay_clay:
@@ -349,8 +354,10 @@ def build_over_limits(agent, layers, build_chance, erase_chance):
     built = False
     erased = False
     build_condition = agent.check_build_conditions(ground)
+    # build
     if agent.build_chance >= reach_to_build and build_condition == True:
         built = agent.build(ground)
+    # erase
     elif agent.erase_chance >= reach_to_erase and build_condition == True:
         erased = agent.erase(ground)
 

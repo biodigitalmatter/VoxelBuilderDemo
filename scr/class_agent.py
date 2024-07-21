@@ -198,7 +198,7 @@ class Agent:
         pose = self.pose
         x,y,z = pose
         v = layer.array[x][y][z]
-        if print:   
+        if print_:   
             print('queen_ph_in_pose:', pose, 'v=' , v)
         return v
     
@@ -582,14 +582,19 @@ class Agent:
 
         return build_chance
 
+    def build_on_layer(self, layer, pose = None):
+        try:
+            set_value_at_index(layer, self.pose, 1)
+            bool_ = True
+        except Exception as e:
+            print(e)
+            print('cant build here:', self.pose)
+            bool_ = False
+        return bool_
+    
 
-    def build(self, layer, pose = None):
-        # if pose == None:
-        #     pose = self.pose
-        # else: 
-        #     pass
-        # if n != 0:
-        #     self.pose = np.mod(self.pose, np.asarray([n,n,n]))
+    def build(self, pose):
+        layer = self.ground_layer
         try:
             set_value_at_index(layer, self.pose, 1)
             bool_ = True

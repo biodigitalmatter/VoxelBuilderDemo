@@ -9,8 +9,8 @@ from class_layer import Layer
 # import presets from here
 from agent_algorithms_setup_5_reset import *
 
-note = 'setup_5_build_setups'
-iterations = 600
+note = 'setup_5_build_test_move_into_the_domain005-001'
+iterations = 300
 time__ = timestamp_now
 save_json_every_nth = 100
 # plot = True
@@ -28,26 +28,25 @@ show_voxel_img_bool = True
 
 # SETUP ENVIRONMENT
 settings, layers = layer_env_setup(iterations)
+print('env made. voxel size:',voxel_size)
+
+# PLOT SETTINGS
 # call layers
 agent_space = layers['agent_space']
 ground = layers['ground']
 queen_bee_pheromon = layers['queen_bee_pheromon']
-# print info
-print('env made. voxel size:',voxel_size)
-# print(queen_bee_pheromon.name, queen_bee_pheromon.diffusion_ratio, queen_bee_pheromon.decay_ratio, queen_bee_pheromon.gradient_resolution)
-
-# select layers to PLOT
+# select layers to show
 global layers_to_scatter
 layers_to_scatter = []
 layers_to_scatter = [agent_space, ground]
 # layers_to_scatter = [agent_space]
+# layers_to_scatter = [ground]
 color_4D = False
 scale_colors = 1
 
 # prediffuse
 for i in range(wait_to_diffuse):
     diffuse_environment(layers)
-
 
 # MAKE AGENTS
 agents = setup_agents(layers)
@@ -140,7 +139,7 @@ if __name__ == '__main__':
         if save_animation:
             anim.save('img/gif/gif_%s_%s.gif' %(timestamp_now, suffix))
             print('animation saved')
-        if save_img:
+
             plt.savefig('img/img_%s_%s.png' %(timestamp_now, suffix), bbox_inches='tight', dpi = 200)
             print('image saved')
 
