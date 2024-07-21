@@ -9,8 +9,8 @@ from class_layer import Layer
 # import presets from here
 from agent_algorithms_setup_5_reset import *
 
-note = 'setup_5_test_queen_bee_diffuse_function'
-iterations = 30
+note = 'setup_5_test_follow_pheromon'
+iterations = 300
 time__ = timestamp_now
 save_json_every_nth = 100
 # plot = True
@@ -18,10 +18,10 @@ trim_floor = False
 
 ### SAVE
 # _save = True
-save_img = False
+save_img = True
 save_json = False
 save_animation = False
-show_animation = True
+show_animation = False
 # img plot type
 show_scatter_img_bool = False
 show_voxel_img_bool = True
@@ -39,8 +39,9 @@ print('env made. voxel size:',voxel_size)
 # select layers to PLOT
 global layers_to_scatter
 layers_to_scatter = []
-layers_to_scatter = [queen_bee_pheromon, ground]
-color_4D = True
+layers_to_scatter = [agent_space, ground]
+# layers_to_scatter = [agent_space]
+color_4D = False
 scale_colors = 1
 
 # prediffuse
@@ -68,12 +69,14 @@ def simulate(frame):
         #     if np.random.random(1) >= 0:
         #         x,y,z = agent.pose
         #         ground.array[x,y,z] = 1
-        # # BUILD
-        # if moved:
-        #     build_chance, erase_chance = calculate_build_chances(agent, layers)
-        #     built, erased = build(agent, layers, build_chance, erase_chance, False)
-        #     if built and reset_after_build:
-        #         reset_agent(agent)
+        # BUILD
+        if moved:
+            build_chance, erase_chance = calculate_build_chances(agent, layers)
+            built, erased = build(agent, layers, build_chance, erase_chance)
+            # if built:
+            #     print('built:', agent.pose)
+            if built and reset_after_build:
+                reset_agent(agent)
     # 2.b clay dries
     
 
@@ -120,7 +123,7 @@ simulate.counter = 0
 
 # RUN
 if __name__ == '__main__':
-    if show_animation: 
+    if show_animation or save_animation: 
         scale = voxel_size
         fig = plt.figure(figsize = [4, 4], dpi = 200)
         axes = plt.axes(xlim=(0, scale), ylim =  (0, scale), zlim = (0, scale), projection = '3d')

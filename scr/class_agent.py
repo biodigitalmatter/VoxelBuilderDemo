@@ -194,6 +194,14 @@ class Agent:
         direction_preference =  np.asarray(u + m + b)
         return direction_preference
     
+    def get_layer_value_at_pose(self, layer, print_ = False):
+        pose = self.pose
+        x,y,z = pose
+        v = layer.array[x][y][z]
+        if print:   
+            print('queen_ph_in_pose:', pose, 'v=' , v)
+        return v
+    
     def get_nb_6_cell_indicies(self, pose):
         """returns the list of nb cell indexes"""
         nb_cell_index_list = []
@@ -423,7 +431,7 @@ class Agent:
     #     # update location in space layer
     #     self.space_layer.set_layer_value_at_index(self.pose, 1)
     #     return True
-    
+
     def get_build_flag_by_probability(self, limit):
         if limit < self.build_probability:
             return True
@@ -503,7 +511,6 @@ class Agent:
         """
         v = self.get_nb_26_cell_values(pheromone_layer, self.pose)
         v = np.sum(v)
-        # v = self.scan_neighborhood_values(pheromone_layer.array, radius, self.pose, format_values=0)
 
         
         if build_if_over < v < build_if_below:
@@ -514,7 +521,6 @@ class Agent:
             erase_chance = 0
         else:
             erase_chance = build_strength
-        
         return build_chance, erase_chance
 
     def get_chance_by_relative_position(
@@ -527,6 +533,25 @@ class Agent:
         b, s, t = self.analyze_relative_position(layer)
         build_chance = (build_below * b + build_aside * s + build_above * t) * build_strength
         return build_chance
+    
+    def get_pheromone_strength(self, pheromon_layer, limit1, limit2, strength, flat_value = True):
+        """gets pheromone v at pose. 
+        if in limits, returns strength or strength * value"""
+        v = get_layer_value_at_index(pheromon_layer, self.pose)
+        # build
+        if limit1 == None:
+            flag = v <= limit2
+        elif limit2 == None:
+            flag = v >= limit1
+        else:
+            flag = limit1 <= v <= limit2
+        if flag == True:
+            if flat_value:
+                return strength
+            else:
+                return v * strength
+        else: 
+            return 0 
     
     def get_chance_by_climb_style(
             self, 
