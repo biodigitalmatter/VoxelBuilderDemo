@@ -9,8 +9,8 @@ from class_layer import Layer
 # import presets from here
 from agent_algorithms_setup_5_reset import *
 
-note = 'setup_5_test_queen_bee_blocking_no_grading'
-iterations = 40
+note = 'setup_5_test_queen_bee_diffuse_function'
+iterations = 30
 time__ = timestamp_now
 save_json_every_nth = 100
 # plot = True
@@ -18,9 +18,9 @@ trim_floor = False
 
 ### SAVE
 # _save = True
-save_img = True
+save_img = False
 save_json = False
-save_animation = True
+save_animation = False
 show_animation = True
 # img plot type
 show_scatter_img_bool = False
@@ -45,13 +45,7 @@ scale_colors = 1
 
 # prediffuse
 for i in range(wait_to_diffuse):
-    # diffuse_environment(layers)
-    queen_bee_pheromon.emission_intake(external_emission_array = queens_place_array, factor = 1)
-    queen_bee_pheromon.diffuse()
-    queen_bee_pheromon.decay()
-    ground.block_layers([queen_bee_pheromon])
-
-    # queen_bee_pheromon.grade()
+    diffuse_environment(layers)
 
 
 # MAKE AGENTS
@@ -60,14 +54,8 @@ agents = setup_agents(layers)
 # SIMULATION FUNCTION
 def simulate(frame):
     # 1. diffuse environment's layers
-    # diffuse_environment(layers)
-    queen_bee_pheromon.emission_intake(external_emission_array = queens_place_array, factor = 1)
-    queen_bee_pheromon.diffuse()
-    queen_bee_pheromon.decay()
-    ground.block_layers([queen_bee_pheromon])
-    # queen_bee_pheromon.grade()
-    # print(np.min(queen_bee_pheromon.array), np.max(queen_bee_pheromon.array))
-    np.min(queen_bee_pheromon.array)
+    diffuse_environment(layers)
+
     # 2. MOVE and BUILD
     for agent in agents:
         # MOVE

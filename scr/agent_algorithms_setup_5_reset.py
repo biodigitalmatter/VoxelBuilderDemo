@@ -42,7 +42,6 @@ queens_place = [30,0,2]
 queens_place_array = np.zeros([voxel_size, voxel_size, voxel_size])
 x,y,z = queens_place
 queens_place_array[x][y][z] = 1
-print('queens_place_array', '\n_____________\n', queens_place_array)
 
 check_collision = False
 keep_in_bounds = True
@@ -95,7 +94,7 @@ def layer_env_setup(iterations):
 
     queen_bee_pheromon.diffusion_ratio = 1/7
     queen_bee_pheromon.decay_ratio = 0.001
-    queen_bee_pheromon.gradient_resolution = 100000
+    queen_bee_pheromon.gradient_resolution = 0
 
     ground.decay_linear_value = 1 / iterations / 10
     clay_moisture_layer.decay_linear_value = 1 / iterations / agent_count / 2
@@ -135,6 +134,13 @@ def diffuse_environment(layers):
     # clay_moisture_layer = layers['clay_moisture_layer']
     queen_bee_pheromon = layers['queen_bee_pheromon']
     # sky_ph_layer = layers['sky_ph_layer']
+
+    # queen_bee_pheromon.emission_intake(external_emission_array = queens_place_array, factor = 1)
+    # queen_bee_pheromon.diffuse()
+    # queen_bee_pheromon.decay()
+    # ground.block_layers([queen_bee_pheromon])
+    # queen_bee_pheromon.grade()
+    
     pheromon_loop(queen_bee_pheromon, emmission_array=queens_place_array, blocking_layer=ground)
     # pheromon_loop(air_moisture_layer, emmission_array = clay_moisture_layer.array, blocking_layer = ground)
     pass
