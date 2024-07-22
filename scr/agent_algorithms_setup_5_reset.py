@@ -4,6 +4,7 @@ from class_agent import Agent
 from class_layer import Layer
 # from voxel_builder_library import get_chance_by_climb_style, get_chance_by_relative_position, get_chances_by_density
 import numpy as np
+from main import voxel_size, agent_count
 
 """
 SETUP GOAL
@@ -11,8 +12,8 @@ testing build setups
 """
 
 # overal settings
-voxel_size = 40
-agent_count = 50
+# voxel_size = 40
+# agent_count = 50
 wait_to_diffuse = 25
 
 # BUILD SETTINGS
@@ -200,7 +201,7 @@ def move_agent(agent, layers):
         up, side, down = move_dir_preferences
         cube += agent.direction_preference_26_pheromones_v2(up, side, down) * move_dir_prefer_strength
     
-    moved = agent.move_on_ground_by_cube(ground=layers['ground'], pheromon_cube=cube, voxel_size=voxel_size, fly = False, only_bounds = keep_in_bounds)
+    moved = agent.move_on_ground_by_cube(ground=layers['ground'], pheromon_cube=cube, voxel_size=voxel_size, fly = False, only_bounds = keep_in_bounds, check_self_collision = True)
     
     # check if in bounds
     if 0 > np.min(agent.pose) or np.max(agent.pose) >= voxel_size :

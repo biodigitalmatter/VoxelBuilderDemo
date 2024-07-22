@@ -290,7 +290,7 @@ class Agent:
         exclude_pheromones = np.asarray(check_failed)
         return exclude_pheromones
     
-    def get_move_mask_26(self, ground_layer, fly = False):
+    def get_move_mask_26(self, ground_layer, fly = False, check_self_collision = False):
         """return move mask 1D array for the 26 nb voxel around self.pose
         the voxel
             most be non-solid
@@ -310,6 +310,9 @@ class Agent:
         for nb_pose in cells_to_check:
             # check if nb cell is empty
             nb_value = get_layer_value_at_index(ground_layer, nb_pose) 
+            if check_self_collision:
+                nb_value_collision = get_layer_value_at_index(self.space_layer, nb_pose)
+                nb_value += nb_value_collision
             # print(nb_value)
             if nb_value == 0:
                 if not fly:
@@ -328,13 +331,13 @@ class Agent:
         exclude_pheromones = np.asarray(exclude)
         return exclude_pheromones
     
-    def move_on_ground(self, ground, voxel_size = None):
+    def move_on_ground(self, ground, voxel_size = None, check_self_collision = False):
         cube = self.get_nb_26_cell_indicies(self.pose)
         if voxel_size != None:
             cube = np.clip(cube,0,voxel_size)
             
         random_ph = np.random.random(26)
-        exclude = self.get_move_mask_26(self.ground_layer)
+        exclude = self.get_move_mask_26(self.ground_layer, check_self_collision=check_self_collision)
         random_ph[exclude] = -1
         choice = np.argmax(random_ph)
         # print('pose', self.pose)
@@ -356,7 +359,7 @@ class Agent:
         self.space_layer.set_layer_value_at_index(self.pose, 1)
         return True
     
-    def move_on_ground_by_cube(self, ground, pheromon_cube, voxel_size = None, fly = None, only_bounds = True):
+    def move_on_ground_by_cube(self, ground, pheromon_cube, voxel_size = None, fly = None, only_bounds = True, check_self_collision = False):
         cube = self.get_nb_26_cell_indicies(self.pose)
 
         # # limit options to inside
@@ -368,7 +371,7 @@ class Agent:
 
             
         # move on ground
-        exclude = self.get_move_mask_26(ground, fly)
+        exclude = self.get_move_mask_26(ground, fly, check_self_collision=check_self_collision)
         pheromon_cube[exclude] = -1
         choice = np.argmax(pheromon_cube)
         # print('pose', self.pose)
