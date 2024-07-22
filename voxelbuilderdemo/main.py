@@ -5,7 +5,7 @@ from show_voxel_plt import timestamp_now
 from matplotlib import animation
 from class_agent import Agent
 from class_layer import Layer
-from . import IMG_DIR
+from voxelbuilderdemo import IMG_DIR
 
 # SELECT ALGORITM PRESET FOR IMPORT
 # from agent_algorithms_setup_5_reset import *

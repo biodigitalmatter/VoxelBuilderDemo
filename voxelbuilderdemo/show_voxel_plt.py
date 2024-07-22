@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 from datetime import datetime
 from numpy import maximum, minimum, clip
 from helpers import convert_array_to_points
-from . import IMG_DIR
+from voxelbuilderdemo import IMG_DIR
 
 global timestamp_now
 timestamp = datetime.now()
