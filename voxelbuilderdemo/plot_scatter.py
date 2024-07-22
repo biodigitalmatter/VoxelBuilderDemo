@@ -28,7 +28,7 @@ def show_scatter_main(fig, axes, array, scale = 0):
     axes.set_yticks([])
     axes.set_zticks([])
     p = array.transpose()
-    ax.scatter(p[0, :], p[1, :], p[2, :], marker = 's', s = 2)
+    axes.scatter(p[0, :], p[1, :], p[2, :], marker = 's', s = 2)
 
 
 if __name__ == '__main__':

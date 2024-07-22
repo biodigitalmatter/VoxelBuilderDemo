@@ -22,7 +22,7 @@ trim_floor = False
 save_img = True
 save_json = False
 save_animation = False
-show_animation = True
+show_animation = False
 # img plot type
 show_scatter_img_bool = False
 show_voxel_img_bool = True
@@ -33,13 +33,13 @@ scale_colors = 1
 selected_to_plot = [
     'ground'
 ]
-selected_to_plot = [
-    'agent_space'
-]
+# selected_to_plot = [
+#     'agent_space'
+# ]
 
 # OVERALL SETTINGS
 voxel_size = 40
-agent_count = 5
+agent_count = 25
 wait_to_diffuse = 25
 
 # BUILD SETTINGS
@@ -49,8 +49,8 @@ stacked_chances = True
 reset_after_build = True
 
 # pheromon sensitivity
-queen_pheromon_min_to_build = 0.005
-queen_pheromon_max_to_build = 10
+queen_pheromon_min_to_build = 0.05
+queen_pheromon_max_to_build = 0.5
 queen_pheromon_build_strength = 1
 queen_ph_build_flat_strength = True
 
@@ -71,13 +71,16 @@ move_dir_prefer_to_down = 0
 move_dir_prefer_strength = 0
 
 # general
-check_collision = False
+check_collision = True
 keep_in_bounds = True
 
 # PHEROMON SETTINGS
 # queen bee:
-queen_box_1 = [10,15,20,25,1,30]
+queen_box_1 = [10,11,10,11,1,4]
 queens_place_array = make_solid_box_xxyyzz(voxel_size, *queen_box_1)
+
+# queen_box_1 = [10,11,10,11,1,4]
+# queens_place_array = make_solid_box_xxyyzz(voxel_size, *queen_box_1)
 queen_bee_pheromon_gravity_ratio = 0
 
 # ENVIRONMENT GEO
@@ -109,7 +112,7 @@ def layer_setup(iterations):
     queen_bee_pheromon = Layer('queen_bee_pheromon', voxel_size=voxel_size, rgb = [i/255 for i in rgb_queen], flip_colors = True)
 
     queen_bee_pheromon.diffusion_ratio = 1/7
-    queen_bee_pheromon.decay_ratio = 1/1000
+    queen_bee_pheromon.decay_ratio = 1/10000
     queen_bee_pheromon.gradient_resolution = 0
     queen_bee_pheromon.gravity_dir = 5
     queen_bee_pheromon.gravity_ratio = queen_bee_pheromon_gravity_ratio
@@ -133,7 +136,7 @@ def layer_setup(iterations):
 def diffuse_environment(layers):
     ground = layers['ground']
     queen_bee_pheromon = layers['queen_bee_pheromon']
-    pheromon_loop(queen_bee_pheromon, emmission_array=queens_place_array, blocking_layer=ground, gravity_shift_bool=True)
+    pheromon_loop(queen_bee_pheromon, emmission_array=queens_place_array, blocking_layer=ground, gravity_shift_bool=False)
     pass
 
 def setup_agents(layers):
@@ -183,10 +186,10 @@ def move_agent(agent, layers):
 
     # move by queen_ph
     layer = layers['queen_bee_pheromon']
-    # domain = [queen_pheromon_min_to_build, queen_pheromon_max_to_build]
+    domain = [queen_pheromon_min_to_build, queen_pheromon_max_to_build]
     strength = move_ph_queen_bee_strength
-    # ph_cube_1 = agent.get_direction_cube_values_for_layer_domain(layer, domain, strength)
-    ph_cube_1 = agent.get_direction_cube_values_for_layer(layer, strength)
+    ph_cube_1 = agent.get_direction_cube_values_for_layer_domain(layer, domain, strength)
+    # ph_cube_1 = agent.get_direction_cube_values_for_layer(layer, strength)
     # get random directions cube
     random_cube = np.random.random(26) * move_ph_random_strength
 
@@ -202,7 +205,7 @@ def move_agent(agent, layers):
         up, side, down = move_dir_preferences
         cube += agent.direction_preference_26_pheromones_v2(up, side, down) * move_dir_prefer_strength
     
-    moved = agent.move_on_ground_by_cube(ground=layers['ground'], pheromon_cube=cube, voxel_size=voxel_size, fly = False, only_bounds = keep_in_bounds, check_self_collision = True)
+    moved = agent.move_on_ground_by_cube(ground=layers['ground'], pheromon_cube=cube, voxel_size=voxel_size, fly = False, only_bounds = keep_in_bounds, check_self_collision = check_collision)
     
     # check if in bounds
     if 0 > np.min(agent.pose) or np.max(agent.pose) >= voxel_size :

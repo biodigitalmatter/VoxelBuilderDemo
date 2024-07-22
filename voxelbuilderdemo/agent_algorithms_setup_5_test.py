@@ -45,8 +45,8 @@ stacked_chances = True
 reset_after_build = True
 
 # pheromon sensitivity
-queen_pheromon_min_to_build = 3
-queen_pheromon_max_to_build = 4
+queen_pheromon_min_to_build = 0.05
+queen_pheromon_max_to_build = 0.5
 queen_pheromon_build_strength = 1
 queen_ph_build_flat_strength = True
 

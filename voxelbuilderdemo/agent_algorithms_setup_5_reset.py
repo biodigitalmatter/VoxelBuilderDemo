@@ -11,8 +11,8 @@ testing build setups
 """
 
 # MAIN SETTINGS
-note = 'build_by_queen_self_collision'
-iterations = 100
+note = 'setup5reset_build_by_queen_self_collision'
+iterations = 500
 time__ = timestamp_now
 save_json_every_nth = 100
 trim_floor = False
@@ -25,7 +25,7 @@ show_animation = False
 # img plot type
 show_scatter_img_bool = False
 show_voxel_img_bool = True
-color_4D = True
+color_4D = False
 scale_colors = 1
 
 # select_layers to plot settings
@@ -67,7 +67,7 @@ move_dir_prefer_to_down = 0
 move_dir_prefer_strength = 0
 
 # general
-check_collision = False
+check_collision = True
 keep_in_bounds = True
 
 # PHEROMON SETTINGS
@@ -200,7 +200,8 @@ def move_agent(agent, layers):
         up, side, down = move_dir_preferences
         cube += agent.direction_preference_26_pheromones_v2(up, side, down) * move_dir_prefer_strength
     
-    moved = agent.move_on_ground_by_cube(ground=layers['ground'], pheromon_cube=cube, voxel_size=voxel_size, fly = False, only_bounds = keep_in_bounds, check_self_collision = True)
+    moved = agent.move_on_ground_by_cube(ground=layers['ground'], pheromon_cube=cube, voxel_size=voxel_size, 
+                                         fly = False, only_bounds = keep_in_bounds, check_self_collision = check_collision)
     
     # check if in bounds
     if 0 > np.min(agent.pose) or np.max(agent.pose) >= voxel_size :

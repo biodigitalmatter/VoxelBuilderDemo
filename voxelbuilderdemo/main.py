@@ -8,10 +8,10 @@ from class_layer import Layer
 from voxelbuilderdemo import IMG_DIR
 
 # SELECT ALGORITM PRESET FOR IMPORT
-# from agent_algorithms_setup_5_reset import *
+from agent_algorithms_setup_5_reset import *
 # from agent_algorithms_setup_5_test import *
 # from agent_algorithms_setup_6_moisture import *
-from algoritm_7 import *
+# from algoritm_7 import *
 
 
 # PREP
@@ -61,21 +61,15 @@ def simulate(frame):
 
     # 3. make frame for animation
     if show_animation or save_animation:
-        scatter_layers(axes, layers_to_scatter, trim_below=1)
+        scatter_layers(axes, layers_to_scatter, trim_below=ground_level_Z)
     simulate.counter += 1
 
     # 4. DUMP JSON
     if save_json:
         suffix = "%s_a%s_i%s" % (note, agent_count, iterations)
         if simulate.counter % save_json_every_nth == 0:
-            # if trim_floor:
-            #     # trim floor
-            #     a1 = layers['clay_moisture_layer'].array.copy()
-            #     a1[:,:,:ground_level_Z] = 0
-            # else:
-            #     a1 = layers['clay_moisture_layer'].array.copy()
-            # save points
             a1 = layers["ground"].array.copy()
+            a1[:,:,:ground_level_Z] = 0
             sortedpts, values = sort_pts_by_values(a1, multiply=100)
             list_to_dump = {"pt_list": sortedpts, "values": values}
             filename = "data/json/points_values/pts_%s_%s.json" % (time__, suffix)
@@ -116,7 +110,7 @@ if __name__ == "__main__":
         axes.set_xticks([])
         axes.set_yticks([])
         axes.set_zticks([])
-        scatter_layers(axes, layers_to_scatter)
+        scatter_layers(axes, layers_to_scatter, trim_below=ground_level_Z)
 
         suffix = "%s_a%s_i%s" % (note, agent_count, iterations)
 
@@ -150,20 +144,7 @@ if __name__ == "__main__":
                 axes.set_xticks([])
                 axes.set_yticks([])
                 axes.set_zticks([])
-
-                # # scatter plot special
-                # a1 = ground.array.copy()
-                # a1[:,:,:ground_level_Z] = 0
-                # pts_built = convert_array_to_points(a1, False)
-                # agent_space_pts = convert_array_to_points(layers['agent_space'].array, False)
-                # arrays_to_show = [pts_built, agent_space_pts]
-                # colors = [layers['clay_moisture_layer'].rgb, agent_space.rgb]
-                # for array, color in zip(arrays_to_show, colors):
-                #     p = array.transpose()
-                #     axes.scatter(p[0, :], p[1, :], p[2, :], marker = 's', s = 1, facecolor = color)
-
-                # scatter plot as preset:
-                scatter_layers(axes, layers_to_scatter)
+                scatter_layers(axes, layers_to_scatter, trim_below=ground_level_Z)
 
             elif show_voxel_img_bool:
                 if not color_4D:
@@ -180,7 +161,7 @@ if __name__ == "__main__":
                         for layer in layers_to_scatter
                     ]
                     voxel_grids = [layer.array for layer in layers_to_scatter]
-                plot_voxels_2(axes, voxel_grids, colors, edgecolor=None)
+                plot_voxels_2(axes, voxel_grids, colors, edgecolor=None, trim_below=ground_level_Z)
                 suffix = "%s_a%s_i%s" % (note, agent_count, iterations)
 
             if save_img:
