@@ -1,3 +1,5 @@
+import json
+
 from voxel_builder_library import *
 from show_voxel_plt import *
 from helpers import *
@@ -16,7 +18,9 @@ from algoritm_7 import *
 
 # PREP
 def prep_simulation():
-    global layers, layers_to_scatter, agents
+    global layers, layers_to_scatter, agents, global_sim_counter
+
+    global_sim_counter = 0
 
     # SETUP ENVIRONMENT
     settings, layers = layer_setup(iterations)
@@ -62,12 +66,12 @@ def simulate(frame):
     # 3. make frame for animation
     if show_animation or save_animation:
         scatter_layers(axes, layers_to_scatter, trim_below=1)
-    simulate.counter += 1
+    global_sim_counter += 1
 
     # 4. DUMP JSON
     if save_json:
         suffix = "%s_a%s_i%s" % (note, agent_count, iterations)
-        if simulate.counter % save_json_every_nth == 0:
+        if global_sim_counter % save_json_every_nth == 0:
             # if trim_floor:
             #     # trim floor
             #     a1 = layers['clay_moisture_layer'].array.copy()
@@ -99,10 +103,7 @@ def simulate(frame):
                 json.dump(values, file)
 
             print("\ncompas_pointcloud saved as %s:\n" % filename)
-    print(simulate.counter)
-
-
-simulate.counter = 0
+    print(global_sim_counter)
 
 # RUN
 if __name__ == "__main__":
@@ -120,7 +121,7 @@ if __name__ == "__main__":
 
         suffix = "%s_a%s_i%s" % (note, agent_count, iterations)
 
-        simulate.counter = 0
+        global_sim_counter = 0
         anim = animation.FuncAnimation(fig, simulate, frames=iterations, interval=1)
 
         if save_animation:
