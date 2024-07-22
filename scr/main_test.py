@@ -7,9 +7,10 @@ from class_agent import Agent
 from class_layer import Layer
 
 # SELECT ALGORITM PRESET FOR IMPORT
-from agent_algorithms_setup_5_reset import *
+# from agent_algorithms_setup_5_reset import *
 # from agent_algorithms_setup_5_test import *
 # from agent_algorithms_setup_6_moisture import *
+from algoritm_7 import *
 
 # PREP
 def prep_simulation():
