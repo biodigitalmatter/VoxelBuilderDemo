@@ -6,49 +6,26 @@ from matplotlib import animation
 from class_agent import Agent
 from class_layer import Layer
 
-# import presets from here
+# SELECT ALGORITM PRESET FOR IMPORT
 from agent_algorithms_setup_5_reset import *
+# from agent_algorithms_setup_5_test import *
+# from agent_algorithms_setup_6_moisture import *
 
-note = 'test_self_collision'
-iterations = 100
-time__ = timestamp_now
-save_json_every_nth = 100
-trim_floor = False
-voxel_size = 30
-agent_count = 2
+# PREP
+def prep_simulation():
+    global layers, layers_to_scatter, agents
+    
+    # SETUP ENVIRONMENT
+    settings, layers = layer_setup(iterations)
+    print('env made. voxel size:',voxel_size)
+    layers_to_scatter = select_layers_to_show(layers, selected_to_plot)
+    
+    # prediffuse
+    for i in range(wait_to_diffuse):
+        diffuse_environment(layers)
 
-### SAVE
-save_img = False
-save_json = False
-save_animation = False
-show_animation = True
-# img plot type
-show_scatter_img_bool = False
-show_voxel_img_bool = True
-
-# SETUP ENVIRONMENT
-settings, layers = layer_setup(iterations)
-print('env made. voxel size:',voxel_size)
-
-# PLOT SETTINGS
-# call layers
-agent_space = layers['agent_space']
-ground = layers['ground']
-# clay = layers['clay_moisture_layer']
-# select layers to show
-global layers_to_scatter
-layers_to_scatter = []
-# layers_to_scatter = [agent_space, ground]
-layers_to_scatter = [agent_space]
-color_4D = True
-scale_colors = 1
-
-# prediffuse
-for i in range(wait_to_diffuse):
-    diffuse_environment(layers)
-
-# MAKE AGENTS
-agents = setup_agents(layers)
+    # MAKE AGENTS
+    agents = setup_agents(layers)
 
 # SIMULATION FUNCTION
 def simulate(frame):
@@ -59,6 +36,7 @@ def simulate(frame):
     for agent in agents:
         # MOVE
         moved = move_agent(agent, layers)
+        # print(agent.pose)
         # print(moved)
         if not moved:
             reset_agent(agent)
@@ -94,7 +72,7 @@ def simulate(frame):
             # else:
             #     a1 = layers['clay_moisture_layer'].array.copy()
             # save points
-            a1 = ground.array.copy()
+            a1 = layers['ground'].array.copy()
             sortedpts, values = sort_pts_by_values(a1, multiply=100)
             list_to_dump = {'pt_list' : sortedpts, 'values' : values}
             filename = 'data/json/points_values/pts_%s_%s.json' %(time__, suffix)
@@ -121,6 +99,7 @@ simulate.counter = 0
 
 # RUN
 if __name__ == '__main__':
+    prep_simulation()
     if show_animation or save_animation: 
         scale = voxel_size
         fig = plt.figure(figsize = [4, 4], dpi = 200)

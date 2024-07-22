@@ -2,18 +2,40 @@
 from voxel_builder_library import pheromon_loop, make_solid_box_z, make_solid_box_xxyyzz
 from class_agent import Agent
 from class_layer import Layer
-# from voxel_builder_library import get_chance_by_climb_style, get_chance_by_relative_position, get_chances_by_density
 import numpy as np
-from main import voxel_size, agent_count
+from show_voxel_plt import timestamp_now
 
 """
 SETUP GOAL
 testing build setups
 """
 
+# MAIN SETTINGS
+note = 'build_by_queen_self_collision'
+iterations = 100
+time__ = timestamp_now
+save_json_every_nth = 100
+trim_floor = False
+
+### SAVE
+save_img = True
+save_json = False
+save_animation = False
+show_animation = False
+# img plot type
+show_scatter_img_bool = False
+show_voxel_img_bool = True
+color_4D = True
+scale_colors = 1
+
+# select_layers to plot settings
+selected_to_plot = [
+    'ground'
+]
+
 # overal settings
-# voxel_size = 40
-# agent_count = 50
+voxel_size = 40
+agent_count = 50
 wait_to_diffuse = 25
 
 # BUILD SETTINGS
@@ -62,14 +84,6 @@ solid_box = None
 # solid_box = [25,26,0,30,ground_level_Z,12]
 # solid_box = [10,20,10,20,0,6]
 # solid_box = [0,1,0,1,0,1]
-
-def margin_boundaries(size, parts):
-    """return margin start and end integrers"""
-    n = parts
-    boundary_a = int(1 / n * size)
-    boundary_b = int((1 - 1 / n) * size)
-    return boundary_a, boundary_b
-
 
 def layer_setup(iterations):
     """
@@ -150,21 +164,6 @@ def reset_agent(agent):
     agent.erase_chance = 0
     agent.move_history = []
 
-def get_direction_cube_values_for_layer_domain(agent, layer, domain, strength):
-    # mirrored above domain end and squezed with the domain length
-    # centered at 1
-    ph_cube = agent.get_nb_26_cell_values(layer, agent.pose)
-    start , end = domain
-    center = (start + end) / 2
-    # ph_cube -= center
-    ph_cube = ((np.absolute(ph_cube - center) * -1) + center) * strength
-    # print(ph_cube)
-    return ph_cube
-
-def get_direction_cube_values_for_layer(agent, layer, strength):
-    ph_cube = agent.get_nb_26_cell_values(layer, agent.pose)
-    return ph_cube * strength
-
 def move_agent(agent, layers):
     """moves agents in a calculated direction
     calculate weigthed sum of slices of layers makes the direction_cube
@@ -184,7 +183,7 @@ def move_agent(agent, layers):
     layer = layers['queen_bee_pheromon']
     domain = [queen_pheromon_min_to_build, queen_pheromon_max_to_build]
     strength = move_ph_queen_bee_strength
-    ph_cube_1 = get_direction_cube_values_for_layer_domain(agent, layer, domain, strength)
+    ph_cube_1 = agent.get_direction_cube_values_for_layer_domain(layer, domain, strength)
 
     # get random directions cube
     random_cube = np.random.random(26) * move_ph_random_strength

@@ -397,6 +397,21 @@ class Agent:
         """use move_on_ground or move_on_ground_by_cube"""
         return None
 
+    
+    def get_direction_cube_values_for_layer_domain(self, layer, domain, strength):
+        # mirrored above domain end and squezed with the domain length
+        # centered at 1
+        ph_cube = self.get_nb_26_cell_values(layer, self.pose)
+        start , end = domain
+        center = (start + end) / 2
+        # ph_cube -= center
+        ph_cube = ((np.absolute(ph_cube - center) * -1) + center) * strength
+        # print(ph_cube)
+        return ph_cube
+
+    def get_direction_cube_values_for_layer(self, layer, strength):
+        ph_cube = self.get_nb_26_cell_values(layer, self.pose)
+        return ph_cube * strength
 
     # def follow_pheromones(self, pheromone_cube, check_collision = False, fly = False):
     #     # check ground condition

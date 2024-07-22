@@ -179,6 +179,21 @@ def pheromon_loop(pheromon_layer, emmission_array = None, i = 1, blocking_layer 
         if pheromon_layer.gradient_resolution != 0:
             pheromon_layer.grade()
 
+def margin_boundaries(size, parts):
+    """return margin start and end integrers"""
+    n = parts
+    boundary_a = int(1 / n * size)
+    boundary_b = int((1 - 1 / n) * size)
+    return boundary_a, boundary_b
+
+def select_layers_to_show(layers, keys = ['agent_space']):
+    # global layers_to_scatter
+    layers_to_scatter = []
+    for name in keys:
+        layer = layers[name]
+        layers_to_scatter.append(layer)
+    return layers_to_scatter
+
 
 
 # def get_chance_by_climb_style(
