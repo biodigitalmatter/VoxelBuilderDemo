@@ -11,16 +11,15 @@ play with build by pheromon definition
 and edit with density build later
 
 """
-
 # MAIN SETTINGS
-note = ''
-iterations = 100
+note = 'queen_box'
+iterations = 500
 time__ = timestamp_now
 save_json_every_nth = 100
 trim_floor = False
 
 ### SAVE
-save_img = False
+save_img = True
 save_json = False
 save_animation = False
 show_animation = True
@@ -44,14 +43,14 @@ agent_count = 5
 wait_to_diffuse = 25
 
 # BUILD SETTINGS
-reach_to_build = 0.5
+reach_to_build = 1
 reach_to_erase = 1
 stacked_chances = True
 reset_after_build = True
 
 # pheromon sensitivity
-queen_pheromon_min_to_build = 0.05
-queen_pheromon_max_to_build = 0.5
+queen_pheromon_min_to_build = 0.005
+queen_pheromon_max_to_build = 10
 queen_pheromon_build_strength = 1
 queen_ph_build_flat_strength = True
 
@@ -184,10 +183,10 @@ def move_agent(agent, layers):
 
     # move by queen_ph
     layer = layers['queen_bee_pheromon']
-    domain = [queen_pheromon_min_to_build, queen_pheromon_max_to_build]
+    # domain = [queen_pheromon_min_to_build, queen_pheromon_max_to_build]
     strength = move_ph_queen_bee_strength
-    ph_cube_1 = agent.get_direction_cube_values_for_layer_domain(layer, domain, strength)
-
+    # ph_cube_1 = agent.get_direction_cube_values_for_layer_domain(layer, domain, strength)
+    ph_cube_1 = agent.get_direction_cube_values_for_layer(layer, strength)
     # get random directions cube
     random_cube = np.random.random(26) * move_ph_random_strength
 
@@ -365,5 +364,3 @@ def build(agent, layers, build_chance, erase_chance):
     return built, erased
 
 
-
-    
