@@ -6,9 +6,9 @@ optional terminal input to select the nth newest file to show"""
 import os
 from compas.colors import Color
 from compas.geometry import Pointcloud
-from helpers import *
-
 import argparse
+from helpers import get_nth_newest_file_in_folder
+
 # Create the parser
 parser = argparse.ArgumentParser(description="provide int variable: i.")
 # Add an argument
