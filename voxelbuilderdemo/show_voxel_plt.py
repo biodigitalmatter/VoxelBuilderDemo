@@ -2,11 +2,7 @@ import matplotlib.pyplot as plt
 from datetime import datetime
 from numpy import clip
 from helpers import convert_array_to_points
-from voxelbuilderdemo import IMG_DIR
-
-global timestamp_now
-timestamp = datetime.now()
-timestamp_now = timestamp.strftime("%y%m%d_%H%M%S")
+from voxelbuilderdemo import IMG_DIR, TIMESTAMP
 
 def plot_voxels_2(ax, voxel_grids, colors, edgecolor=None, clear_ax=True, trim_below = 1):
     if clear_ax:

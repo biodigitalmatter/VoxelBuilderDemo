@@ -3,7 +3,7 @@ from voxel_builder_library import pheromon_loop, make_solid_box_z, make_solid_bo
 from class_agent import Agent
 from class_layer import Layer
 import numpy as np
-from show_voxel_plt import timestamp_now
+from voxelbuilderdemo import TIMESTAMP
 
 """
 SETUP GOAL
@@ -13,7 +13,7 @@ testing build setups
 # MAIN SETTINGS
 note = '-'
 iterations = 100
-time__ = timestamp_now
+time__ = TIMESTAMP
 save_json_every_nth = 100
 trim_floor = False
 

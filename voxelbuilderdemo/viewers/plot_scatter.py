@@ -2,13 +2,9 @@ from helpers import *
 import argparse
 import json
 import numpy as np
-from voxelbuilderdemo import IMG_DIR
+from voxelbuilderdemo import IMG_DIR, TIMESTAMP
 from datetime import datetime
 import matplotlib.pyplot as plt
-
-global timestamp_now
-timestamp = datetime.now()
-timestamp_now = timestamp.strftime("%y%m%d_%H%M%S")
 
 """ 'standalone' point_scatter plotter to show json pointcloud
 """
@@ -33,7 +29,7 @@ def init_fig(title="img", suffix="", bottom_line=""):
     ax.set_proj_type("persp", focal_length=0.4)
 
     # style
-    fig.suptitle("%s_%s_%s.png" % (title, timestamp_now, suffix), fontsize=5)
+    fig.suptitle("%s_%s_%s.png" % (title, TIMESTAMP, suffix), fontsize=5)
     fig.text(0, 0, s=bottom_line, fontsize=3.4, verticalalignment="baseline")
 
     ax.set_xticks([])
