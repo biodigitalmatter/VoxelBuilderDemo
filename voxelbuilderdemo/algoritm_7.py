@@ -49,8 +49,8 @@ stacked_chances = True
 reset_after_build = True
 
 # pheromon sensitivity
-queen_pheromon_min_to_build = 0.05
-queen_pheromon_max_to_build = 0.5
+queen_pheromon_min_to_build = 0.005
+queen_pheromon_max_to_build = 0.05
 queen_pheromon_build_strength = 1
 queen_ph_build_flat_strength = True
 
@@ -78,7 +78,7 @@ keep_in_bounds = True
 # queen bee:
 queen_box_1 = [10,11,10,11,1,4]
 queens_place_array = make_solid_box_xxyyzz(voxel_size, *queen_box_1)
-
+queens_place_array *= 1 / (2 * 2 * 3)
 # queen_box_1 = [10,11,10,11,1,4]
 # queens_place_array = make_solid_box_xxyyzz(voxel_size, *queen_box_1)
 queen_bee_pheromon_gravity_ratio = 0
@@ -112,7 +112,7 @@ def layer_setup(iterations):
     queen_bee_pheromon = Layer('queen_bee_pheromon', voxel_size=voxel_size, rgb = [i/255 for i in rgb_queen], flip_colors = True)
 
     queen_bee_pheromon.diffusion_ratio = 1/7
-    queen_bee_pheromon.decay_ratio = 1/10000
+    queen_bee_pheromon.decay_ratio = 1/1000
     queen_bee_pheromon.gradient_resolution = 0
     queen_bee_pheromon.gravity_dir = 5
     queen_bee_pheromon.gravity_ratio = queen_bee_pheromon_gravity_ratio
