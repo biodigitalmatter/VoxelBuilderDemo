@@ -5,7 +5,7 @@ from class_layer import Layer
 # from voxel_builder_library import get_chance_by_climb_style, get_chance_by_relative_position, get_chances_by_density
 import numpy as np
 import random as rand
-from show_voxel_plt import timestamp_now
+from voxelbuilderdemo import TIMESTAMP
 
 """
 SETUP GOAL
@@ -19,7 +19,7 @@ can erase if too dense
 # MAIN SETTINGS
 note = 'build_by_queen_self_collision'
 iterations = 100
-time__ = timestamp_now
+time__ = TIMESTAMP
 save_json_every_nth = 100
 trim_floor = False
 
