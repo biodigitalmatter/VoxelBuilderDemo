@@ -22,18 +22,20 @@ def set_value_at_index(layer, index = [0,0,0], value = 1):
         print('set value error:%s' %e)
     return layer
 
-def get_layer_value_at_index(layer, index = [0,0,0], reintroduce = True):
-    # print('get value at index', index)
-    if reintroduce:
-        index2 = np.mod(index, layer.voxel_size)
-    else:
-        index2 = index
-    i,j,k = index2
-    try:
-        v = layer.array[i][j][k]
-    except:
-        v = 0
-    return v
+# moved to Agent class
+
+# def get_layer_value_at_index(layer, index = [0,0,0], reintroduce = True):
+#     # print('get value at index', index)
+#     if reintroduce:
+#         index2 = np.mod(index, layer.voxel_size)
+#     else:
+#         index2 = index
+#     i,j,k = index2
+#     try:
+#         v = layer.array[i][j][k]
+#     except:
+#         v = 0
+#     return v
 
 def get_cube_array_indices(self_contain = False):
     """26 nb indicies, ordered: top-middle-bottom"""
