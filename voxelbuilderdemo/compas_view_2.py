@@ -1,9 +1,12 @@
+"""represent voxel with transformation using compas
+view in compas.view_2 
+load geometry data from json
+optional terminal input to select the nth newest file to show"""
 
 import os
 from compas.colors import Color
 from compas.geometry import Pointcloud, Capsule, Box, Frame, Line, Sphere
 from compas.geometry import Transformation, Translation, matrix_from_frame_to_frame, Scale, matrix_from_scale_factors
-
 from compas_view2.app import App
 
 def get_newest_file_in_folder(folder_path):

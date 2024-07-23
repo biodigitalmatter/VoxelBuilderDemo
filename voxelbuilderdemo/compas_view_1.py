@@ -1,3 +1,7 @@
+"""represent voxel with pointcloud
+view in compas.view_2 
+load geometry data from json
+optional terminal input to select the nth newest file to show"""
 
 import os
 from compas.colors import Color
