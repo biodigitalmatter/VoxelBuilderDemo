@@ -106,19 +106,12 @@ def simulate(frame):
 
 # RUN
 if __name__ == "__main__":
-<<<<<<< Updated upstream
     global_sim_state = SimulationState(algo.iterations, algo.voxel_size, algo.selected_to_plot)
-
+    global_sim_state.counter = 0
     suffix = f"{algo.note}_a{algo.agent_count}_i{algo.iterations}"
 
     if algo.show_animation or algo.save_animation:
         scale = algo.voxel_size
-=======
-    global_sim_counter = 0
-    prep_simulation()
-    if show_animation or save_animation:
-        scale = voxel_size
->>>>>>> Stashed changes
         fig = plt.figure(figsize=[4, 4], dpi=200)
         axes = plt.axes(
             xlim=(0, scale), ylim=(0, scale), zlim=(0, scale), projection="3d"
@@ -128,16 +121,10 @@ if __name__ == "__main__":
         axes.set_zticks([])
         scatter_layers(axes, global_sim_state.layers_to_scatter, trim_below=algo.ground_level_Z)
 
-        global_sim_state.counter = 0
+        
         anim = animation.FuncAnimation(fig, simulate, frames=algo.iterations, interval=1)
 
-<<<<<<< Updated upstream
         if algo.save_animation:
-=======
-        anim = animation.FuncAnimation(fig, simulate, frames=iterations, interval=1)
-
-        if save_animation:
->>>>>>> Stashed changes
             anim.save(f"{IMG_DIR}/gif/gif_{timestamp_now}_{suffix}.gif")
             print("animation saved")
 
