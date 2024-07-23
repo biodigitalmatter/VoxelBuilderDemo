@@ -1,9 +1,10 @@
 from voxel_builder_library import *
+from voxelbuilderdemo import NB_INDEX_DICT
 
 class Agent:
     def __init__(self, 
         pose = [0,0,0], 
-        compass_array = direction_dict_np,
+        compass_array = NB_INDEX_DICT,
         ground_layer = None,
         space_layer = None,
         track_layer = None,
@@ -71,71 +72,25 @@ class Agent:
             raise ValueError("Chance must be a number")
         self._erase_chance = value
 
-    # def move(self, i, voxel_size = 0):
-    #     """move to a neighbor voxel based on the compas dictonary key index """
-    #     v = self.compass_array[self.compass_keys[i]]
-    #     self.pose += v
-    #     # reintroduce agent if n nonzero
-    #     n = voxel_size
-    #     if n != 0:
-    #         self.pose = np.mod(self.pose, np.asarray([n,n,n]))
-    #     if self.save_move_history: 
-    #         self.move_history.append(self.compass_keys[i])
-    
-    # def move_26(self, dir, voxel_size = 0, keep_in_range_z = True, reintroduce = True):
-    #     """move to a neighbor voxel based on dir vector """
-    #     self.pose += dir
-    #     # reintroduce agent if n nonzero
-    #     n = voxel_size
-    #     if keep_in_range_z:
-    #         self.pose[2] = min(n, max(self.pose[2], 0))
-    #     if reintroduce and voxel_size != 0:
-    #         self.pose = np.mod(self.pose, np.asarray([n,n,n]))
-    #     if self.save_move_history:
-    #         if dir[2] == 1:
-    #             self.move_history.append('up')
-    #         elif dir[2] == 0:
-    #             self.move_history.append('side')
-    #         elif dir[2] == -1:
-    #             self.move_history.append('down')
-
-    # def move_key(self, key, voxel_size = 0):
-    #     """move to a neighbor voxel based on the compas dictonary key"""
-    #     v = self.compass_array[key]
-    #     self.pose += v
-    #     # reintroduce agent if n nonzero
-    #     n = voxel_size
-    #     if n != 0:
-    #         self.pose = np.mod(self.pose, np.asarray([n,n,n]))
-    #     if self.save_move_history: 
-    #         self.move_history.append(key)
+    NB_INDEX_DICT = {
+        'up' : np.asarray([0,0,1]),
+        'left' : np.asarray([-1,0,0]),
+        'down' : np.asarray([0,0,-1]),
+        'right' : np.asarray([1,0,0]),
+        'front' : np.asarray([0,-1,0]),
+        'back' : np.asarray([0,1,0])
+    }
 
     def analyze_relative_position(self, layer):
         """check if there is sg around the agent
         return list of bool:
             [below, aside, above]"""
-        # place = self.pose
-        # f = direction_dict_np['front']
-        # b = direction_dict_np['back']
-        # l = direction_dict_np['left']
-        # r = direction_dict_np['right']
-        # u = direction_dict_np['up']
-        # d = direction_dict_np['down']
         values = self.get_nb_values_6(layer, self.pose)
         values = values.tolist()
         above = values.pop(0)
         below = values.pop(1)
         sides = sum(values)
 
-        # print(above, below, sides)
-        # self.compass_array.keys()
-        # above = layer.array[place + u]
-        # print(above)
-        # below = layer.array[place + d] 
-        # sides = 0
-        # for i in [f,b,r,l]:
-        #     sides += layer.array[place + direction_dict_np['right']] 
-        # sides = np.sum(sides)
         if sides > 0:
             aside = True
         else: 
@@ -150,23 +105,7 @@ class Agent:
         self.relative_booleans_bottom_up = [below, aside, above] 
         return below, aside, above
     
-    direction_dict_np = {
-    'up' : np.asarray([0,0,1]),
-    'left' : np.asarray([-1,0,0]),
-    'down' : np.asarray([0,0,-1]),
-    'right' : np.asarray([1,0,0]),
-    'front' : np.asarray([0,-1,0]),
-    'back' : np.asarray([0,1,0])
-}
-
-    # def random_move(self, voxel_size = 0):
-    #     i = np.random.randint(0,5)
-    #     keys = self.compass_array.keys()
-    #     key = keys[i]
-    #     self.move_key(key, voxel_size)
     
-    # def update_space(self):
-    #     self.space_layer.set_layer_value_at_index(self.pose, 1)
     def direction_preference_6_pheromones(self, x = 0.5, up = True):
         """up = 1
         side = x
@@ -260,12 +199,12 @@ class Agent:
     def get_cube_array_indices(self, self_contain = False):
         """26 nb indicies, ordered: top-middle-bottom"""
         # horizontal
-        f = direction_dict_np['front']
-        b = direction_dict_np['back']
-        l = direction_dict_np['left']
-        r = direction_dict_np['right']
-        u = direction_dict_np['up']
-        d = direction_dict_np['down']
+        f = NB_INDEX_DICT['front']
+        b = NB_INDEX_DICT['back']
+        l = NB_INDEX_DICT['left']
+        r = NB_INDEX_DICT['right']
+        u = NB_INDEX_DICT['up']
+        d = NB_INDEX_DICT['down']
         # first_story in level:
         story_1 = [ f + l, f, f + r, l, r, b + l, b, b + r]
         story_0 = [i + d for i in story_1]
@@ -292,21 +231,6 @@ class Agent:
     #     elif format_values == 2:
     #         return v
     #     else: return v
-
-
-    # def get_cube_nbs_value_sums(self, layer, nb_pose):
-    #     value_sum = 0
-    #     nb_cube_array = self.cube_array + nb_pose
-    #     for p in nb_cube_array:
-    #         v = self.get_layer_value_at_index(layer, p)
-    #         value_sum += v
-    #     return value_sum
-    
-    # def get_cube_nbs_value_sums_with_mask(self, layer, nb_pose):
-    #     nb_cube_array = self.cube_array + nb_pose
-    #     v = np.where(layer.array.indicies() == nb_cube_array, 1, 0)
-    #     value_sum = np.sum(v)
-    #     return value_sum
 
     def get_move_mask_6(self, ground_layer):
         """return ground directions as bools
@@ -447,71 +371,6 @@ class Agent:
         ph_cube = self.get_nb_values_26(layer, self.pose)
         return ph_cube * strength
 
-    # def get_build_flag_by_probability(self, limit):
-    #     if limit < self.build_probability:
-    #         return True
-    #     else: 
-    #         return False
-    
-    # def get_build_flag_by_pheromones(self, pheromon_layer, limit1, limit2):
-    #     """agent builds on construction_layer, if pheromon value in cell hits limit
-    #     return bool"""
-    #     v = self.get_layer_value_at_index(pheromon_layer, self.pose)
-    #     # build
-    #     if limit1 <= v <= limit2:
-    #         return True
-    #     else: 
-    #         return False 
-
-    # def get_build_flag_after_history(self, last_step_NOR = ['up', 'down'], previous_steps_AND = ['up', 'up', 'up', 'up'], last_step_len = 1):
-    #     """agent builds on construction_layer, if pheromon value in cell hits limit
-    #     return bool"""
-    #     x = -1 * last_step_len
-    #     h = self.move_history
-    #     l = len(previous_steps_AND) - x
-    #     if len(h) < l: return False
-    #     last_step = h[x]
-    #     prev_steps = h[-l : x]
-    #     # print(last_step, prev_steps)
-    #     if last_step not in set(last_step_NOR) and prev_steps == previous_steps_AND:
-    #         build_flag = True
-    #         # print(prev_steps)
-    #     else:
-    #         build_flag = False
-    #     return build_flag
-    
-    # def analyze_move_history(self):
-    #     last_moves = self.move_history[-3:]
-    #     if last_moves == ['up', 'up', 'up']:
-    #         climb_style = 'climb'
-    #     elif last_moves == ['up', 'up', 'side']:
-    #         climb_style = 'top'
-    #     elif last_moves == ['side', 'side', 'side']:
-    #         climb_style = 'walk' 
-    #     elif last_moves == ['down', 'down', 'down']:
-    #         climb_style = 'descend' 
-    #     return climb_style      
-
-    # def add_build_probability_by_move_history(self, add = 1, climb = 0, top = 0, walk = 0, descend = 0):
-    #     """add : base value of increase
-    #     style_weights:
-    #         climb = 0
-    #         top = 0
-    #         walk = 0
-    #         descend = 0
-    #         return self.build_probability increase"""
-    #     a = self.build_probability
-    #     if self.climb_style == 'climb':
-    #         self.build_probability += climb * add
-    #     elif self.climb_style == 'top':
-    #         self.build_probability += top * add
-    #     elif self.climb_style == 'walk':
-    #         self.build_probability += walk * add
-    #     elif self.climb_style == 'descend':
-    #         self.build_probability += descend * add
-    #     b = self.build_probability
-    #     return b - a
-    
     # METHODS TO CALCULATE BUILD PROPABILITIES
 
     def get_chances_by_density(
@@ -651,13 +510,6 @@ class Agent:
             bool_ = False
         return bool_
 
-    # def check_offset(self, offset_layer):
-    #     """        return ground directions as bools"""
-    #     # get nb cell indicies
-    #     nbs_values = self.get_nb_cell_values(offset_layer, self.pose)
-    #     exclude_pheromones = np.logical_not(nbs_values == 0)
-    #     return exclude_pheromones
-    
     def check_build_conditions(self, layer, only_face_nbs = True):
         if only_face_nbs:
             v = self.get_nb_values_6(layer, self.pose)
