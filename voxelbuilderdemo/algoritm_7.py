@@ -12,8 +12,8 @@ and edit with density build later
 
 """
 # MAIN SETTINGS
-note = 'queen_box'
-iterations = 500
+note = 'test_refactoring_a7'
+iterations = 50
 time__ = TIMESTAMP
 save_json_every_nth = 100
 trim_floor = False
@@ -22,7 +22,7 @@ trim_floor = False
 save_img = True
 save_json = False
 save_animation = False
-show_animation = False
+show_animation = True
 # img plot type
 show_scatter_img_bool = False
 show_voxel_img_bool = True
@@ -325,7 +325,7 @@ def build_over_limits(agent, layers, build_chance, erase_chance):
     if build_condition:
         # build
         if agent.build_chance >= reach_to_build:
-            built = agent.build(ground)
+            built = agent.build()
         # erase
         elif agent.erase_chance >= reach_to_erase:
             erased = agent.erase(ground)
@@ -352,7 +352,7 @@ def build_roll_a_dice(agent, layers, build_chance, erase_chance):
     min_chance_to_build = np.random.random(1) * reach_to_build
     min_chance_to_erase = np.random.random(1) * reach_to_erase
     if agent.build_chance >= min_chance_to_build and build_condition == True:
-        built = agent.build(ground)
+        built = agent.build()
     elif agent.erase_chance >= min_chance_to_erase and build_condition == True:
         erased = agent.erase(ground)
 

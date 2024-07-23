@@ -41,11 +41,12 @@ class Agent:
     
     @property
     def cube_array(self):
-        self.cube_array = self.get_cube_array_indices()
+        self._cube_array = self.get_cube_array_indices()
+        return self._cube_array
     
     @cube_array.setter
     def cube_array(self, value):
-        if not isinstance(value, (float, int)):
+        if not isinstance(value, (list)):
             raise ValueError("Chance must be a list of np arrays. Yes, indeed")
         self._cube_array = value
     
@@ -166,8 +167,41 @@ class Agent:
     
     # def update_space(self):
     #     self.space_layer.set_layer_value_at_index(self.pose, 1)
+    def direction_preference_6_pheromones(self, x = 0.5, up = True):
+        """up = 1
+        side = x
+        down = 0.1"""
+        if up:
+            direction_preference = np.asarray([1, x, 0.1, x, x, x])
+        else:
+            direction_preference = np.ones(6)
+        return direction_preference
+
+    def direction_preference_26_pheromones(self, x = 0.5, up = True):
+        """up = 1
+        side = x
+        down = 0.1"""
+        if up:
+            u = [1] * 9
+            m = [x] * 8
+            b = [0.1] * 9
+            direction_preference =  np.asarray(u + m + b)
+        else:
+            direction_preference = np.ones(26)
+        return direction_preference
     
-    # INTERCTION WITH LAYERS
+    def direction_preference_26_pheromones_v2(self, up = 1, side = 0.5, down = 0):
+        """up = 1
+        side = x
+        down = 0.1"""
+
+        u = [up] * 9
+        m = [side] * 8
+        b = [down] * 9
+        direction_preference =  np.asarray(u + m + b)
+        return direction_preference
+    
+    # INTERACTION WITH LAYERS
     def get_layer_value_at_index(self, layer, index = [0,0,0], reintroduce = True):
         # print('get value at index', index)
         if reintroduce:
