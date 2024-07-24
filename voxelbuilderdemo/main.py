@@ -5,9 +5,9 @@ from matplotlib import animation
 import numpy as np
 from compas.geometry import Pointcloud
 
-from voxelbuilderdemo import IMG_DIR
+from voxelbuilderdemo import IMG_DIR, TIMESTAMP
 from voxelbuilderdemo.helpers import sort_pts_by_values
-from voxelbuilderdemo.show_voxel_plt import plot_voxels_2, scatter_layers, timestamp_now
+from voxelbuilderdemo.show_voxel_plt import plot_voxels_2, scatter_layers
 from voxelbuilderdemo.voxel_builder_library import select_layers_to_show
 
 # import voxelbuilderdemo.agent_algorithms_setup_5_reset as algo
@@ -125,11 +125,11 @@ if __name__ == "__main__":
         anim = animation.FuncAnimation(fig, simulate, frames=algo.iterations, interval=1)
 
         if algo.save_animation:
-            anim.save(f"{IMG_DIR}/gif/gif_{timestamp_now}_{suffix}.gif")
+            anim.save(f"{IMG_DIR}/gif/gif_{TIMESTAMP}_{suffix}.gif")
             print("animation saved")
 
             plt.savefig(
-                f"{IMG_DIR}/img_{timestamp_now}_{suffix}.png",
+                f"{IMG_DIR}/img_{TIMESTAMP}_{suffix}.png",
                 bbox_inches="tight",
                 dpi=200,
             )
@@ -180,7 +180,7 @@ if __name__ == "__main__":
 
             if algo.save_img:
                 plt.savefig(
-                    f"{IMG_DIR}/img_{timestamp_now}_{suffix}.png",
+                    f"{IMG_DIR}/img_{TIMESTAMP}_{suffix}.png",
                     bbox_inches="tight",
                     dpi=200,
                 )

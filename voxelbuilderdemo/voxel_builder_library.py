@@ -1,5 +1,6 @@
 import numpy as np
 from math_functions import *
+from voxelbuilderdemo import NB_INDEX_DICT
 
 def create_zero_array(n):
     # create voxel-like array
@@ -22,28 +23,30 @@ def set_value_at_index(layer, index = [0,0,0], value = 1):
         print('set value error:%s' %e)
     return layer
 
-def get_layer_value_at_index(layer, index = [0,0,0], reintroduce = True):
-    # print('get value at index', index)
-    if reintroduce:
-        index2 = np.mod(index, layer.voxel_size)
-    else:
-        index2 = index
-    i,j,k = index2
-    try:
-        v = layer.array[i][j][k]
-    except:
-        v = 0
-    return v
+# moved to Agent class
+
+# def get_layer_value_at_index(layer, index = [0,0,0], reintroduce = True):
+#     # print('get value at index', index)
+#     if reintroduce:
+#         index2 = np.mod(index, layer.voxel_size)
+#     else:
+#         index2 = index
+#     i,j,k = index2
+#     try:
+#         v = layer.array[i][j][k]
+#     except:
+#         v = 0
+#     return v
 
 def get_cube_array_indices(self_contain = False):
     """26 nb indicies, ordered: top-middle-bottom"""
     # horizontal
-    f = direction_dict_np['front']
-    b = direction_dict_np['back']
-    l = direction_dict_np['left']
-    r = direction_dict_np['right']
-    u = direction_dict_np['up']
-    d = direction_dict_np['down']
+    f = NB_INDEX_DICT['front']
+    b = NB_INDEX_DICT['back']
+    l = NB_INDEX_DICT['left']
+    r = NB_INDEX_DICT['right']
+    u = NB_INDEX_DICT['up']
+    d = NB_INDEX_DICT['down']
     # first_story in level:
     story_1 = [ f + l, f, f + r, l, r, b + l, b, b + r]
     story_0 = [i + d for i in story_1]
@@ -54,26 +57,26 @@ def get_cube_array_indices(self_contain = False):
         nbs_w_corners = story_2 + [u] + story_1 + story_0 + [d]
     return nbs_w_corners
 
-def get_nb_cell_directions_w_edges():
-    # horizontal
-    f = direction_dict_np['front']
-    b = direction_dict_np['back']
-    l = direction_dict_np['left']
-    r = direction_dict_np['right']
-    u = direction_dict_np['up']
-    d = direction_dict_np['down']
-    # first_story in level:
-    story_1 = [f, f + l, f + r, l, r, b, b + l, b + r]
-    story_0 = [i + d for i in [f,b,l,r]]
-    story_2 = [i + u for i in [f,b,l,r]]
-    nbs_w_corners = story_1 + story_0 + story_2 + [u] + [d] + [np.asarray([0,0,0])]
-    return nbs_w_corners
+# def get_nb_cell_directions_w_edges():
+#     # horizontal
+#     f = NB_INDEX_DICT['front']
+#     b = NB_INDEX_DICT['back']
+#     l = NB_INDEX_DICT['left']
+#     r = NB_INDEX_DICT['right']
+#     u = NB_INDEX_DICT['up']
+#     d = NB_INDEX_DICT['down']
+#     # first_story in level:
+#     story_1 = [f, f + l, f + r, l, r, b, b + l, b + r]
+#     story_0 = [i + d for i in [f,b,l,r]]
+#     story_2 = [i + u for i in [f,b,l,r]]
+#     nbs_w_corners = story_1 + story_0 + story_2 + [u] + [d] + [np.asarray([0,0,0])]
+#     return nbs_w_corners
 
-def get_nb_cell_directions_w_edges():
-    # horizontal
-    face_nbs = list(direction_dict_np.values())
-    nbs_w_edges = face_nbs + [np.asarray([0,0,0])]
-    return nbs_w_edges
+# def get_nb_cell_directions_w_edges():
+#     # horizontal
+#     face_nbs = list(NB_INDEX_DICT.values())
+#     nbs_w_edges = face_nbs + [np.asarray([0,0,0])]
+#     return nbs_w_edges
 
 def conditional_fill(array, n, condition = '<', value = 0.5, override_self = False):
     """returns new voxel_array with 0,1 values based on condition"""
@@ -137,19 +140,6 @@ def get_sub_array(array, offset_radius, center = None, format_values = None):
     else: 
         return v
 
-global direction_dict_np, direction_keys
-
-direction_dict_np = {
-    'up' : np.asarray([0,0,1]),
-    'left' : np.asarray([-1,0,0]),
-    'down' : np.asarray([0,0,-1]),
-    'right' : np.asarray([1,0,0]),
-    'front' : np.asarray([0,-1,0]),
-    'back' : np.asarray([0,1,0])
-}
-direction_keys = list(direction_dict_np.keys())
-# print(direction_keys)[5]
-
 def pheromon_loop(pheromon_layer, emmission_array = None, i = 1, blocking_layer = None, gravity_shift_bool = False, diffuse_bool = True, decay = True, decay_linear = False):
     """gravity direction: 0:left, 1:right, 2:front, 3:back, 4:down, 5:up"""
     for i in range(i):
@@ -193,71 +183,3 @@ def select_layers_to_show(layers, keys = ['agent_space']):
         layer = layers[name]
         layers_to_scatter.append(layer)
     return layers_to_scatter
-
-
-
-# def get_chance_by_climb_style(
-#         agent, 
-#         climb = 0.5,
-#         top = 2,
-#         walk = 0.1,
-#         descend = -0.05,
-#         chance_weight = 1):
-#     "chance is updated based on the direction values and chance_weight"
-
-#     last_moves = agent.move_history[-3:]
-#     if last_moves == ['up', 'up', 'up']:
-#         # climb_style = 'climb'
-#         build_chance = climb
-#     elif last_moves == ['up', 'up', 'side']:
-#         # climb_style = 'top'
-#         build_chance = top
-#     elif last_moves == ['side', 'side', 'side']:
-#         # climb_style = 'walk' 
-#         build_chance = walk
-#     elif last_moves == ['down', 'down', 'down']:
-#         # climb_style = 'descend' 
-#         build_chance = descend
-
-#     build_chance *= chance_weight
-
-#     return build_chance
-
-# def get_chance_by_relative_position(
-#         agent,
-#         layer,
-#         build_below = -1,
-#         build_aside = -1,
-#         build_above = 1,
-#         build_strength = 1):
-#     b, s, t = agent.analyze_relative_position(layer)
-#     build_chance = (build_below * b + build_aside * s + build_above * t) * build_strength
-#     return build_chance
-
-# def get_chances_by_density(
-#         agent, 
-#         pheromone_layer,
-#         radius,        
-#         build_if_over = 0,
-#         build_if_below = 5,
-#         erase_if_over = 27,
-#         erase_if_below = 0,
-#         build_strength = 1):
-#     """
-#     returns build_chance, erase_chance
-#     if layer nb value sum is between 
-#     """
-#     v = agent.scan_neighborhood_values(pheromone_layer, radius, agent.pose, format_values=0)
-
-    
-#     if build_if_over < v < build_if_below:
-#         build_chance = build_strength
-#     else:
-#         build_chance = 0
-#     if erase_if_over < v < erase_if_below:
-#         erase_chance = 0
-#     else:
-#         erase_chance = build_strength
-    
-#     return build_chance, erase_chance
-

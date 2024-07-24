@@ -1,9 +1,27 @@
-from show_voxel_plt import *
-from helpers import *
+# from show_voxel_plt import *
+import matplotlib.pyplot as plt
+from voxelbuilderdemo import IMG_DIR, TIMESTAMP
+from helpers import get_nth_newest_file_in_folder
 import argparse
 import json
 import numpy as np
 
+""" 'standalone' voxel plotter to show json pointcloud
+"""
+
+def init_fig(title="img", suffix="", bottom_line=""):
+    fig = plt.figure(figsize=[4, 4], dpi=200)
+    ax = fig.add_subplot(projection="3d")
+    ax.set_proj_type("persp", focal_length=0.4)
+
+    # style
+    fig.suptitle("%s_%s_%s.png" % (title, TIMESTAMP, suffix), fontsize=5)
+    fig.text(0, 0, s=bottom_line, fontsize=3.4, verticalalignment="baseline")
+
+    ax.set_xticks([])
+    ax.set_yticks([])
+    ax.set_zticks([])
+    return fig, ax
 
 def load_json_w_parse(n=0):
     # Create the parser
@@ -48,7 +66,7 @@ def show_voxel_main(
 
     if save:
         plt.savefig(
-            f"{IMG_DIR}/{title}_{timestamp_now}_{suffix}.png",
+            f"{IMG_DIR}/{title}_{TIMESTAMP}_{suffix}.png",
             bbox_inches="tight",
             dpi=200,
         )
