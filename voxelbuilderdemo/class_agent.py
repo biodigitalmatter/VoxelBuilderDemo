@@ -106,28 +106,28 @@ class Agent:
         return below, aside, above
     
     
-    def direction_preference_6_pheromones(self, x = 0.5, up = True):
-        """up = 1
-        side = x
-        down = 0.1"""
-        if up:
-            direction_preference = np.asarray([1, x, 0.1, x, x, x])
-        else:
-            direction_preference = np.ones(6)
-        return direction_preference
+    # def direction_preference_6_pheromones(self, x = 0.5, up = True):
+    #     """up = 1
+    #     side = x
+    #     down = 0.1"""
+    #     if up:
+    #         direction_preference = np.asarray([1, x, 0.1, x, x, x])
+    #     else:
+    #         direction_preference = np.ones(6)
+    #     return direction_preference
 
-    def direction_preference_26_pheromones(self, x = 0.5, up = True):
-        """up = 1
-        side = x
-        down = 0.1"""
-        if up:
-            u = [1] * 9
-            m = [x] * 8
-            b = [0.1] * 9
-            direction_preference =  np.asarray(u + m + b)
-        else:
-            direction_preference = np.ones(26)
-        return direction_preference
+    # def direction_preference_26_pheromones(self, x = 0.5, up = True):
+    #     """up = 1
+    #     side = x
+    #     down = 0.1"""
+    #     if up:
+    #         u = [1] * 9
+    #         m = [x] * 8
+    #         b = [0.1] * 9
+    #         direction_preference =  np.asarray(u + m + b)
+    #     else:
+    #         direction_preference = np.ones(26)
+    #     return direction_preference
     
     def direction_preference_26_pheromones_v2(self, up = 1, side = 0.5, down = 0):
         """up = 1
@@ -215,22 +215,71 @@ class Agent:
             nbs_w_corners = story_2 + [u] + story_1 + story_0 + [d]
         return nbs_w_corners
 
-    # def scan_neighborhood_values(self, array, offset_radius = 1, pose = None, format_values = 0):
-    #     """takes sub array around pose, in 'offset_radius'
-    #     format values: returns sum '0', avarage '1', or all_values: '2'"""
-    #     if isinstance(pose, bool):
-    #         pose = self.pose
-    #     x,y,z = pose
-    #     n = offset_radius
-    #     v = array[x - n : x + n][y - n : y + n][z - n : z - n]
+    def get_nb_slice(self, array, 
+            x_radius = 1,
+            pose = None, format_values = 0, pad_values = 0):
+        """takes sub array around pose, in x/y/z radius optionally offsetted
+        format values: returns sum '0', avarage '1', or entire_array_slice: '2'"""
+        if not isinstance(pose, (np.dtype, list)):
+            pose = self.pose
+
+        pad_x = x_radius
+
+        a = int(x - x_radius) + pad_x
+        b = int(x + x_radius + 1) + pad_x
+
+        c = pad_values
+        np.pad(array, ((pad_x,pad_x),(pad_x,pad_x),( pad_x, pad_x)), 'constant', constant_values=((c,c),(c,c),(c,c)))
+        v = array[a:b,a:b,a:b]
+        # print(array)
+        # print(v)
+    
+
+        if format_values == 0:
+            return np.sum(v)
+        elif format_values == 1:
+            return np.average(v)
+        elif format_values == 2:
+            return v
+        else: return v
+
+    def get_nb_slice_parametric(self, array, 
+            x_radius = 1, y_radius = 1, z_radius = 0, 
+            x_offset = 0, y_offset = 0, z_offset = 0, 
+            pose = None, format_values = 0, pad_values = 0):
+        """takes sub array around pose, in x/y/z radius optionally offsetted
+        format values: returns sum '0', avarage '1', or entire_array_slice: '2'"""
+        if not isinstance(pose, (np.dtype, list)):
+            pose = self.pose
+
+        x,y,z = pose
+        x,y,z = [x + x_offset, y + y_offset, z + z_offset]
+
+        pad_x = x_radius + abs(x_offset) 
+        pad_y = y_radius + abs(y_offset) 
+        pad_z = z_radius + abs(z_offset)
+
+        a = int(x - x_radius) + pad_x
+        b = int(x + x_radius + 1) + pad_x
+        c = int(y - y_radius) + pad_y
+        d = int(y + y_radius + 1) + pad_y
+        e = int(z - z_radius) + pad_z
+        f = int(z + z_radius + 1) + pad_z
+
+        c = pad_values
+        np.pad(array, ((pad_x,pad_x),(pad_y,pad_y),( pad_z, pad_z)), 'constant', constant_values=((c,c),(c,c),(c,c)))
+        v = array[a:b,c:d,e:f]
         
-    #     if format_values == 0:
-    #         return np.sum(v)
-    #     elif format_values == 1:
-    #         return np.average(v)
-    #     elif format_values == 2:
-    #         return v
-    #     else: return v
+        # print(v)
+        # print(array)
+
+        if format_values == 0:
+            return np.sum(v)
+        elif format_values == 1:
+            return np.average(v)
+        elif format_values == 2:
+            return v
+        else: return v
 
     def get_move_mask_6(self, ground_layer):
         """return ground directions as bools
@@ -374,6 +423,32 @@ class Agent:
     # METHODS TO CALCULATE BUILD PROPABILITIES
 
     def get_chances_by_density(
+            self, 
+            pheromone_layer,       
+            build_if_over = 0,
+            build_if_below = 5,
+            erase_if_over = 27,
+            erase_if_below = 0,
+            build_strength = 1):
+        """
+        returns build_chance, erase_chance
+        if layer nb value sum is between 
+        """
+        v = self.get_nb_values_26(pheromone_layer, self.pose)
+        v = np.sum(v)
+
+        
+        if build_if_over < v < build_if_below:
+            build_chance = build_strength
+        else:
+            build_chance = 0
+        if erase_if_over < v < erase_if_below:
+            erase_chance = 0
+        else:
+            erase_chance = build_strength
+        return build_chance, erase_chance
+    
+    def get_chances_by_density_below(
             self, 
             pheromone_layer,       
             build_if_over = 0,

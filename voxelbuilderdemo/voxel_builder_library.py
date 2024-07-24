@@ -57,26 +57,26 @@ def get_cube_array_indices(self_contain = False):
         nbs_w_corners = story_2 + [u] + story_1 + story_0 + [d]
     return nbs_w_corners
 
-def get_nb_cell_directions_w_edges():
-    # horizontal
-    f = NB_INDEX_DICT['front']
-    b = NB_INDEX_DICT['back']
-    l = NB_INDEX_DICT['left']
-    r = NB_INDEX_DICT['right']
-    u = NB_INDEX_DICT['up']
-    d = NB_INDEX_DICT['down']
-    # first_story in level:
-    story_1 = [f, f + l, f + r, l, r, b, b + l, b + r]
-    story_0 = [i + d for i in [f,b,l,r]]
-    story_2 = [i + u for i in [f,b,l,r]]
-    nbs_w_corners = story_1 + story_0 + story_2 + [u] + [d] + [np.asarray([0,0,0])]
-    return nbs_w_corners
+# def get_nb_cell_directions_w_edges():
+#     # horizontal
+#     f = NB_INDEX_DICT['front']
+#     b = NB_INDEX_DICT['back']
+#     l = NB_INDEX_DICT['left']
+#     r = NB_INDEX_DICT['right']
+#     u = NB_INDEX_DICT['up']
+#     d = NB_INDEX_DICT['down']
+#     # first_story in level:
+#     story_1 = [f, f + l, f + r, l, r, b, b + l, b + r]
+#     story_0 = [i + d for i in [f,b,l,r]]
+#     story_2 = [i + u for i in [f,b,l,r]]
+#     nbs_w_corners = story_1 + story_0 + story_2 + [u] + [d] + [np.asarray([0,0,0])]
+#     return nbs_w_corners
 
-def get_nb_cell_directions_w_edges():
-    # horizontal
-    face_nbs = list(NB_INDEX_DICT.values())
-    nbs_w_edges = face_nbs + [np.asarray([0,0,0])]
-    return nbs_w_edges
+# def get_nb_cell_directions_w_edges():
+#     # horizontal
+#     face_nbs = list(NB_INDEX_DICT.values())
+#     nbs_w_edges = face_nbs + [np.asarray([0,0,0])]
+#     return nbs_w_edges
 
 def conditional_fill(array, n, condition = '<', value = 0.5, override_self = False):
     """returns new voxel_array with 0,1 values based on condition"""
